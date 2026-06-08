@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JSON Diff Viewer</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f5f5f4;
+  --bg-tertiary: #eeede9;
+  --text-primary: #1a1a1a;
+  --text-secondary: #6b6b6b;
+  --text-tertiary: #9a9a9a;
+  --border: rgba(0,0,0,0.12);
+  --border-md: rgba(0,0,0,0.22);
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --font-mono: 'Consolas', 'Monaco', 'Courier New', monospace;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-primary: #1e1e1e;
+    --bg-secondary: #2a2a2a;
+    --bg-tertiary: #242424;
+    --text-primary: #e8e8e8;
+    --text-secondary: #a0a0a0;
+    --text-tertiary: #666666;
+    --border: rgba(255,255,255,0.1);
+    --border-md: rgba(255,255,255,0.2);
+  }
+  .status-ok { background: #1a3a1a !important; color: #6dbf6d !important; }
+  .status-err { background: #3a1a1a !important; color: #e07070 !important; }
+  .stat-add { background: #1a3a1a !important; color: #6dbf6d !important; }
+  .stat-rem { background: #3a1a1a !important; color: #e07070 !important; }
+  .stat-chg { background: #3a2a0a !important; color: #d4a340 !important; }
+  .stat-same { background: var(--bg-secondary) !important; color: var(--text-secondary) !important; }
+  .row-add { background: #1a3a1a22 !important; }
+  .row-rem { background: #3a1a1a22 !important; }
+  .row-chg { background: #3a2a0a22 !important; }
+  .row-add td.code { color: #6dbf6d !important; }
+  .row-rem td.code { color: #e07070 !important; }
+  .row-chg td.code { color: #d4a340 !important; }
+  .row-add td.sign { color: #6dbf6d !important; }
+  .row-rem td.sign { color: #e07070 !important; }
+  .row-chg td.sign { color: #d4a340 !important; }
+  .tree-add { color: #6dbf6d !important; }
+  .tree-rem { color: #e07070 !important; }
+  .tree-chg { color: #d4a340 !important; }
+  .list-old { color: #e07070 !important; }
+  .list-new { color: #6dbf6d !important; }
+  .list-badge.stat-add { background: #1a3a1a !important; color: #6dbf6d !important; }
+  .list-badge.stat-rem { background: #3a1a1a !important; color: #e07070 !important; }
+  .list-badge.stat-chg { background: #3a2a0a !important; color: #d4a340 !important; }
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  padding: 24px 16px;
+}
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+h1 {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text-primary);
+  flex: 1;
+  letter-spacing: -0.3px;
+}
+
+.mode-btn {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  padding: 5px 14px;
+  border-radius: 99px;
+  border: 0.5px solid var(--border-md);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.mode-btn.active {
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  border-color: var(--text-primary);
+}
+.mode-btn:hover:not(.active) {
+  background: var(--bg-secondary);
+}
+
+.act-btn {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  padding: 5px 14px;
+  border-radius: var(--radius-md);
+  border: 0.5px solid var(--border-md);
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.act-btn:hover { background: var(--bg-secondary); }
+
+.fmt-btn {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  padding: 2px 10px;
+  border-radius: var(--radius-md);
+  border: 0.5px solid var(--border-md);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.fmt-btn:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+.fmt-btn.copied { background: #EAF3DE; color: #3B6D11; border-color: #3B6D11; }
+.fmt-fix { color: #854F0B; border-color: #d4a340; }
+.fmt-fix:hover { background: #FAEEDA; color: #6b3c06; }
+@media (prefers-color-scheme: dark) {
+  .fmt-btn.copied { background: #1a3a1a !important; color: #6dbf6d !important; border-color: #6dbf6d !important; }
+  .fmt-fix { color: #d4a340 !important; border-color: #d4a340 !important; }
+  .fmt-fix:hover { background: #3a2a0a !important; }
+}
+
+/* Toast notification */
+#toast-container { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 8px; z-index: 9999; pointer-events: none; }
+.toast { font-family: var(--font-sans); font-size: 12px; padding: 10px 16px; border-radius: var(--radius-lg); background: var(--bg-primary); border: 0.5px solid var(--border-md); box-shadow: 0 4px 20px rgba(0,0,0,0.12); color: var(--text-primary); max-width: 320px; line-height: 1.6; animation: toastIn 0.2s ease; }
+.toast.toast-fix { border-left: 3px solid #BA7517; }
+.toast.toast-ok { border-left: 3px solid #3B6D11; }
+.toast.toast-err { border-left: 3px solid #E24B4A; }
+.toast-title { font-weight: 600; margin-bottom: 2px; }
+.toast-body { color: var(--text-secondary); }
+@keyframes toastIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: translateY(0); } }
+@keyframes toastOut { from { opacity:1; } to { opacity:0; } }
+
+.editors {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+@media (max-width: 600px) {
+  .editors { grid-template-columns: 1fr; }
+}
+
+.editor-box { display: flex; flex-direction: column; gap: 6px; }
+
+.editor-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.editor-status {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 99px;
+}
+.status-ok { background: #EAF3DE; color: #3B6D11; }
+.status-err { background: #FCEBEB; color: #A32D2D; }
+
+textarea {
+  width: 100%;
+  height: 320px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 10px 12px;
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.15s;
+  line-height: 1.65;
+}
+textarea:focus { border-color: var(--border-md); }
+textarea.invalid { border-color: #E24B4A; }
+
+.summary {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  min-height: 28px;
+}
+
+.stat {
+  font-size: 12px;
+  padding: 4px 14px;
+  border-radius: 99px;
+  font-weight: 500;
+}
+.stat-add { background: #EAF3DE; color: #3B6D11; }
+.stat-rem { background: #FCEBEB; color: #A32D2D; }
+.stat-chg { background: #FAEEDA; color: #854F0B; }
+.stat-same { background: var(--bg-secondary); color: var(--text-secondary); }
+
+.result-box {
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-primary);
+  min-height: 140px;
+  overflow: auto;
+}
+
+.diff-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.diff-table td {
+  padding: 2px 12px;
+  vertical-align: top;
+  line-height: 1.75;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+.diff-table .ln {
+  color: var(--text-tertiary);
+  font-size: 11px;
+  text-align: right;
+  width: 32px;
+  user-select: none;
+}
+.sign { width: 18px; text-align: center; }
+
+.row-add { background: #EAF3DE33; }
+.row-rem { background: #FCEBEB33; }
+.row-chg { background: #FAEEDA33; }
+.row-add td.code { color: #3B6D11; }
+.row-rem td.code { color: #A32D2D; }
+.row-chg td.code { color: #854F0B; }
+.row-add td.sign { color: #639922; font-weight: 500; }
+.row-rem td.sign { color: #E24B4A; font-weight: 500; }
+.row-chg td.sign { color: #BA7517; font-weight: 500; }
+
+.tree-view {
+  padding: 14px 16px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 2.1;
+}
+.tree-add { color: #3B6D11; }
+.tree-rem { color: #A32D2D; }
+.tree-chg { color: #854F0B; }
+.tree-same { color: var(--text-tertiary); }
+.tree-path { font-weight: 500; }
+.tree-val { opacity: 0.85; }
+
+.list-view {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.list-item {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 12px;
+}
+.list-badge {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  padding: 2px 10px;
+  border-radius: 99px;
+  font-weight: 500;
+  min-width: 52px;
+  text-align: center;
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+.list-content {
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+  line-height: 1.7;
+}
+.list-old { color: #A32D2D; text-decoration: line-through; opacity: 0.8; margin-right: 6px; }
+.list-new { color: #3B6D11; }
+
+.empty-hint {
+  padding: 2.5rem;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-tertiary);
+}
+
+.divider {
+  width: 0.5px;
+  background: var(--border);
+  self-align: stretch;
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="toolbar">
+    <h1>JSON Diff Viewer</h1>
+    <button class="act-btn" onclick="loadExample()">ตัวอย่าง</button>
+    <button class="act-btn" onclick="clearAll()">ล้าง</button>
+    <button class="mode-btn active" onclick="setMode('side')" id="btn-side">Side-by-side</button>
+    <button class="mode-btn" onclick="setMode('tree')" id="btn-tree">Tree</button>
+    <button class="mode-btn" onclick="setMode('list')" id="btn-list">รายการ</button>
+  </div>
+
+  <div class="editors">
+    <div class="editor-box">
+      <div class="editor-label">
+        <span>JSON A (ต้นฉบับ)</span>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <button class="fmt-btn fmt-fix" onclick="autoFixJSON('a')" title="พยายาม fix JSON อัตโนมัติ">✦ Auto-fix</button>
+          <button class="fmt-btn" onclick="formatJSON('a')" title="จัดรูปแบบ JSON">Format</button>
+          <button class="fmt-btn" onclick="minifyJSON('a')" title="ย่อ JSON">Minify</button>
+          <button class="fmt-btn" onclick="copyJSON('a')" id="copy-a" title="คัดลอก">Copy</button>
+          <span class="editor-status" id="sta-a"></span>
+        </div>
+      </div>
+      <textarea id="ta-a" placeholder='{"key": "value"}' oninput="onInput()"></textarea>
+    </div>
+    <div class="editor-box">
+      <div class="editor-label">
+        <span>JSON B (เปรียบเทียบ)</span>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <button class="fmt-btn fmt-fix" onclick="autoFixJSON('b')" title="พยายาม fix JSON อัตโนมัติ">✦ Auto-fix</button>
+          <button class="fmt-btn" onclick="formatJSON('b')" title="จัดรูปแบบ JSON">Format</button>
+          <button class="fmt-btn" onclick="minifyJSON('b')" title="ย่อ JSON">Minify</button>
+          <button class="fmt-btn" onclick="copyJSON('b')" id="copy-b" title="คัดลอก">Copy</button>
+          <span class="editor-status" id="sta-b"></span>
+        </div>
+      </div>
+      <textarea id="ta-b" placeholder='{"key": "new value"}' oninput="onInput()"></textarea>
+    </div>
+  </div>
+
+  <div class="summary" id="summary"></div>
+  <div class="result-box" id="result">
+    <div class="empty-hint">วาง JSON ในกล่องด้านบนเพื่อดูความแตกต่าง</div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+let mode = 'side';
+
+// ---- Toast ----
+function showToast(title, body, type) {
+  var tc = document.getElementById('toast-container');
+  var t = document.createElement('div');
+  t.className = 'toast toast-' + (type||'fix');
+  t.innerHTML = '<div class="toast-title">'+esc(title)+'</div>'+(body?'<div class="toast-body">'+esc(body)+'</div>':'');
+  tc.appendChild(t);
+  setTimeout(function(){
+    t.style.animation = 'toastOut 0.2s ease forwards';
+    setTimeout(function(){ tc.removeChild(t); }, 200);
+  }, 3500);
+}
+
+// ---- Auto-fix engine ----
+function attemptFix(raw) {
+  var s = raw;
+  var fixes = [];
+
+  // 1. ตัด BOM / zero-width chars
+  s = s.replace(/^\uFEFF/, '').replace(/[\u200B-\u200D\uFEFF]/g, '');
+
+  // 2. ตัด single-line comments //
+  var prev = '';
+  while (prev !== s) {
+    prev = s;
+    s = s.replace(/\/\/[^\n\r]*/g, function(){ fixes.push('ลบ comment //'); return ''; });
+  }
+
+  // 3. ตัด block comments /* */
+  if (/\/\*[\s\S]*?\*\//.test(s)) {
+    s = s.replace(/\/\*[\s\S]*?\*\//g, '');
+    fixes.push('ลบ block comment /* */');
+  }
+
+  // 4. แปลง single quote → double quote (keys & string values)
+  if (/'/.test(s)) {
+    s = s.replace(/'([^'\\]*(\\.[^'\\]*)*)'/g, function(m, inner){
+      return '"' + inner.replace(/"/g, '\\"') + '"';
+    });
+    fixes.push("แปลง ' → \"");
+  }
+
+  // 5. เพิ่ม quote ให้ unquoted keys: {key: → {"key":
+  if (/[{,]\s*([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/.test(s)) {
+    s = s.replace(/([{,])\s*([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/g, function(m, pre, key){
+      return pre + '"' + key + '":';
+    });
+    fixes.push('เพิ่ม quote ให้ unquoted keys');
+  }
+
+  // 6. ลบ trailing comma ก่อน } หรือ ]
+  if (/,\s*[}\]]/.test(s)) {
+    s = s.replace(/,(\s*[}\]])/g, '$1');
+    fixes.push('ลบ trailing comma');
+  }
+
+  // 7. แปลง undefined → null
+  if (/\bundefined\b/.test(s)) {
+    s = s.replace(/\bundefined\b/g, 'null');
+    fixes.push('แปลง undefined → null');
+  }
+
+  // 8. แปลง True/False/None (Python style)
+  if (/\b(True|False|None)\b/.test(s)) {
+    s = s.replace(/\bTrue\b/g, 'true').replace(/\bFalse\b/g, 'false').replace(/\bNone\b/g, 'null');
+    fixes.push('แปลง Python literals (True/False/None)');
+  }
+
+  // 9. ลบ semicolon ท้าย
+  if (/;\s*$/.test(s.trim())) {
+    s = s.trim().replace(/;+$/, '');
+    fixes.push('ลบ semicolon ท้าย');
+  }
+
+  var result = tryParse(s);
+  if (result.ok) {
+    return { ok: true, fixed: s, fixes: fixes };
+  }
+  return { ok: false, fixes: fixes, err: result.err };
+}
+
+function autoFixJSON(side) {
+  var ta = document.getElementById('ta-'+side);
+  var val = ta.value.trim();
+  if (!val) return;
+
+  // ถ้า parse ได้อยู่แล้ว
+  if (tryParse(val).ok) {
+    showToast('JSON ถูกต้องอยู่แล้ว', 'ไม่จำเป็นต้อง fix', 'ok');
+    return;
+  }
+
+  var res = attemptFix(val);
+  if (res.ok) {
+    ta.value = JSON.stringify(JSON.parse(res.fixed), null, 2);
+    ta.classList.remove('invalid');
+    var fixList = res.fixes.length ? res.fixes.join(', ') : 'ปรับรูปแบบ';
+    showToast('✓ Auto-fix สำเร็จ', fixList, 'fix');
+    onInput();
+  } else {
+    var hint = res.fixes.length ? 'แก้ได้บางส่วน: ' + res.fixes.join(', ') + '\nแต่ยังมี error: ' + res.err : 'ไม่สามารถ fix ได้: ' + res.err;
+    showToast('✗ Auto-fix ไม่สำเร็จ', hint, 'err');
+  }
+}
+
+function setMode(m) {
+  mode = m;
+  ['side','tree','list'].forEach(x => {
+    document.getElementById('btn-'+x).classList.toggle('active', x===m);
+  });
+  onInput();
+}
+
+function tryParse(s) {
+  try { return { ok: true, val: JSON.parse(s.trim()) }; }
+  catch(e) { return { ok: false, err: e.message }; }
+}
+
+function setStatus(id, ok) {
+  const el = document.getElementById(id);
+  if (!ok) { el.textContent = 'JSON ไม่ถูกต้อง'; el.className = 'editor-status status-err'; }
+  else { el.textContent = 'ถูกต้อง'; el.className = 'editor-status status-ok'; }
+}
+
+function flatten(obj, prefix, out) {
+  prefix = prefix || '';
+  out = out || {};
+  if (obj === null || typeof obj !== 'object') { out[prefix] = obj; return out; }
+  if (Array.isArray(obj)) {
+    obj.forEach(function(v, i) { flatten(v, prefix ? prefix+'['+i+']' : '['+i+']', out); });
+  } else {
+    Object.keys(obj).forEach(function(k) {
+      var path = prefix ? prefix+'.'+k : k;
+      if (obj[k] !== null && typeof obj[k] === 'object') flatten(obj[k], path, out);
+      else out[path] = obj[k];
+    });
+  }
+  return out;
+}
+
+function diffFlat(a, b) {
+  var fa = flatten(a), fb = flatten(b);
+  var keys = {};
+  Object.keys(fa).forEach(function(k){ keys[k]=1; });
+  Object.keys(fb).forEach(function(k){ keys[k]=1; });
+  var added=[], removed=[], changed=[], same=[];
+  Object.keys(keys).forEach(function(k) {
+    if (!(k in fa)) added.push({k:k, v:fb[k]});
+    else if (!(k in fb)) removed.push({k:k, v:fa[k]});
+    else if (JSON.stringify(fa[k]) !== JSON.stringify(fb[k])) changed.push({k:k, old:fa[k], nw:fb[k]});
+    else same.push({k:k, v:fa[k]});
+  });
+  return {added:added, removed:removed, changed:changed, same:same};
+}
+
+function toLines(obj) {
+  return JSON.stringify(obj, null, 2).split('\n');
+}
+
+function renderSide(a, b, diff) {
+  var la = toLines(a), lb = toLines(b);
+  var fa = flatten(a), fb = flatten(b);
+  var changed={}, added={}, removed={};
+  diff.changed.forEach(function(d){ changed[d.k]=1; });
+  diff.added.forEach(function(d){ added[d.k]=1; });
+  diff.removed.forEach(function(d){ removed[d.k]=1; });
+
+  function classify(lines, flatObj, isB) {
+    return lines.map(function(line) {
+      var m = line.match(/^\s*"([^"]+)":/);
+      if (!m) return {line:line, cls:''};
+      var rawKey = m[1];
+      var matchKey = Object.keys(flatObj).find(function(k){ return k === rawKey || k.endsWith('.'+rawKey); });
+      if (!matchKey) return {line:line, cls:''};
+      if (isB && added[matchKey]) return {line:line, cls:'row-add'};
+      if (!isB && removed[matchKey]) return {line:line, cls:'row-rem'};
+      if (changed[matchKey]) return {line:line, cls:'row-chg'};
+      return {line:line, cls:''};
+    });
+  }
+
+  var ca = classify(la, fa, false);
+  var cb = classify(lb, fb, true);
+  var maxLen = Math.max(ca.length, cb.length);
+
+  var html = '<table class="diff-table"><colgroup><col style="width:32px"><col style="width:18px"><col><col style="width:32px"><col style="width:18px"><col></colgroup>';
+  for (var i=0; i<maxLen; i++) {
+    var ra = ca[i] || {line:'', cls:''};
+    var rb = cb[i] || {line:'', cls:''};
+    var rowCls = rb.cls || ra.cls;
+    var signA = ra.cls==='row-rem' ? '−' : ra.cls==='row-chg' ? '~' : '';
+    var signB = rb.cls==='row-add' ? '+' : rb.cls==='row-chg' ? '~' : '';
+    html += '<tr class="'+rowCls+'">'
+      +'<td class="ln">'+(i+1)+'</td>'
+      +'<td class="sign">'+signA+'</td>'
+      +'<td class="code">'+esc(ra.line)+'</td>'
+      +'<td class="ln">'+(i+1)+'</td>'
+      +'<td class="sign">'+signB+'</td>'
+      +'<td class="code">'+esc(rb.line)+'</td>'
+      +'</tr>';
+  }
+  html += '</table>';
+  return html;
+}
+
+function renderTree(diff) {
+  if (!diff.added.length && !diff.removed.length && !diff.changed.length && !diff.same.length)
+    return '<div class="empty-hint">ไม่มีข้อมูลให้แสดง</div>';
+  var html = '<div class="tree-view">';
+  diff.added.forEach(function(d){
+    html += '<div class="tree-add"><span class="tree-path">+ '+esc(d.k)+'</span>  <span class="tree-val">= '+esc(JSON.stringify(d.v))+'</span></div>';
+  });
+  diff.removed.forEach(function(d){
+    html += '<div class="tree-rem"><span class="tree-path">− '+esc(d.k)+'</span>  <span class="tree-val">= '+esc(JSON.stringify(d.v))+'</span></div>';
+  });
+  diff.changed.forEach(function(d){
+    html += '<div class="tree-chg"><span class="tree-path">~ '+esc(d.k)+'</span>  <span class="tree-val">'+esc(JSON.stringify(d.old))+' → '+esc(JSON.stringify(d.nw))+'</span></div>';
+  });
+  diff.same.forEach(function(d){
+    html += '<div class="tree-same"><span class="tree-path">  '+esc(d.k)+'</span>  <span class="tree-val">= '+esc(JSON.stringify(d.v))+'</span></div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+function renderList(diff) {
+  if (!diff.added.length && !diff.removed.length && !diff.changed.length)
+    return '<div class="empty-hint">ไม่พบความแตกต่าง — JSON ทั้งสองเหมือนกัน ✓</div>';
+  var html = '<div class="list-view">';
+  diff.added.forEach(function(d){
+    html += '<div class="list-item"><span class="list-badge stat-add">เพิ่ม</span><div class="list-content"><span class="tree-path">'+esc(d.k)+'</span>  <span class="list-new">'+esc(JSON.stringify(d.v))+'</span></div></div>';
+  });
+  diff.removed.forEach(function(d){
+    html += '<div class="list-item"><span class="list-badge stat-rem">ลบ</span><div class="list-content"><span class="tree-path">'+esc(d.k)+'</span>  <span class="list-old">'+esc(JSON.stringify(d.v))+'</span></div></div>';
+  });
+  diff.changed.forEach(function(d){
+    html += '<div class="list-item"><span class="list-badge stat-chg">แก้ไข</span><div class="list-content"><span class="tree-path">'+esc(d.k)+'</span>  <span class="list-old">'+esc(JSON.stringify(d.old))+'</span><span class="list-new">'+esc(JSON.stringify(d.nw))+'</span></div></div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function formatJSON(side) {
+  var ta = document.getElementById('ta-'+side);
+  var val = ta.value.trim();
+  if (!val) return;
+  var p = tryParse(val);
+  if (!p.ok) { ta.classList.add('invalid'); return; }
+  ta.value = JSON.stringify(p.val, null, 2);
+  ta.classList.remove('invalid');
+  onInput();
+}
+
+function minifyJSON(side) {
+  var ta = document.getElementById('ta-'+side);
+  var val = ta.value.trim();
+  if (!val) return;
+  var p = tryParse(val);
+  if (!p.ok) { ta.classList.add('invalid'); return; }
+  ta.value = JSON.stringify(p.val);
+  ta.classList.remove('invalid');
+  onInput();
+}
+
+function copyJSON(side) {
+  var ta = document.getElementById('ta-'+side);
+  var val = ta.value;
+  if (!val) return;
+  navigator.clipboard.writeText(val).then(function() {
+    var btn = document.getElementById('copy-'+side);
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(function(){ btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1500);
+  });
+}
+
+function onInput() {
+  var va = document.getElementById('ta-a').value.trim();
+  var vb = document.getElementById('ta-b').value.trim();
+  var pa = va ? tryParse(va) : null;
+  var pb = vb ? tryParse(vb) : null;
+
+  if (va) { document.getElementById('ta-a').classList.toggle('invalid', !pa.ok); setStatus('sta-a', pa.ok); }
+  else { document.getElementById('ta-a').classList.remove('invalid'); document.getElementById('sta-a').textContent=''; }
+  if (vb) { document.getElementById('ta-b').classList.toggle('invalid', !pb.ok); setStatus('sta-b', pb.ok); }
+  else { document.getElementById('ta-b').classList.remove('invalid'); document.getElementById('sta-b').textContent=''; }
+
+  var res = document.getElementById('result');
+  var sum = document.getElementById('summary');
+
+  if (!va || !vb) { res.innerHTML='<div class="empty-hint">วาง JSON ในกล่องด้านบนเพื่อดูความแตกต่าง</div>'; sum.innerHTML=''; return; }
+  if (!pa.ok || !pb.ok) { res.innerHTML='<div class="empty-hint">กรุณาแก้ไข JSON ให้ถูกต้องก่อน</div>'; sum.innerHTML=''; return; }
+
+  var diff = diffFlat(pa.val, pb.val);
+  sum.innerHTML =
+    '<span class="stat stat-add">+ เพิ่ม '+diff.added.length+'</span>'+
+    '<span class="stat stat-rem">− ลบ '+diff.removed.length+'</span>'+
+    '<span class="stat stat-chg">~ แก้ไข '+diff.changed.length+'</span>'+
+    '<span class="stat stat-same">= เหมือน '+diff.same.length+'</span>';
+
+  if (mode==='side') res.innerHTML = renderSide(pa.val, pb.val, diff);
+  else if (mode==='tree') res.innerHTML = renderTree(diff);
+  else res.innerHTML = renderList(diff);
+}
+
+function loadExample() {
+  document.getElementById('ta-a').value = JSON.stringify({
+    "name": "Alice", "age": 30, "role": "developer",
+    "address": {"city": "Bangkok", "zip": "10110"},
+    "tags": ["javascript", "python"]
+  }, null, 2);
+  document.getElementById('ta-b').value = JSON.stringify({
+    "name": "Alice", "age": 31, "role": "senior developer",
+    "address": {"city": "Bangkok", "zip": "10120", "country": "Thailand"},
+    "tags": ["javascript", "python", "go"],
+    "email": "alice@example.com"
+  }, null, 2);
+  onInput();
+}
+
+function clearAll() {
+  document.getElementById('ta-a').value = '';
+  document.getElementById('ta-b').value = '';
+  document.getElementById('sta-a').textContent = '';
+  document.getElementById('sta-b').textContent = '';
+  document.getElementById('ta-a').classList.remove('invalid');
+  document.getElementById('ta-b').classList.remove('invalid');
+  document.getElementById('result').innerHTML = '<div class="empty-hint">วาง JSON ในกล่องด้านบนเพื่อดูความแตกต่าง</div>';
+  document.getElementById('summary').innerHTML = '';
+}
+</script>
+</body>
+</html>
