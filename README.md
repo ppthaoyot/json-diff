@@ -2,8 +2,7 @@
 
 > Real-time JSON diff viewer — side-by-side, tree & list views, auto-fix malformed JSON. Zero dependencies, single HTML file.
 
-🔗 **Demo:** [https://username.github.io/json-diff](https://username.github.io/json-diff)
-> แก้ไข URL ด้านบนหลัง deploy จริง
+🔗 **Demo:** [https://ppthaoyot.github.io/json-diff](https://username.github.io/json-diff)
 
 ---
 
