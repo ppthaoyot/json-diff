@@ -1394,7 +1394,16 @@ canvas#dino-game {
                 <option value="🧑‍💻">🧑‍💻 พนักงานทั่วไป</option>
               </select>
             </div>
-            <div style="margin-top:4px;">คะแนนความว่าง: <span id="scoreText">0</span></div>
+            <div style="margin-top:6px;">
+              ระดับความเร็ว:
+              <select class="dino-char-select" id="dino-speed" onchange="changeDinoSpeed()">
+                <option value="baby">👶 เบบี๋ (ช้ามาก)</option>
+                <option value="easy">💼 ออฟฟิศซินโดรม (ง่าย)</option>
+                <option value="normal" selected>⚖️ กลางๆ (ปกติ)</option>
+                <option value="hard">🔥 กร้านโลก (เร็วทะลุนรก)</option>
+              </select>
+            </div>
+            <div style="margin-top:6px;">คะแนนความว่าง: <span id="scoreText">0</span></div>
             <div>ระดับ: <span id="levelText">ยังพอทำงานอยู่</span></div>
           </div>
         </div>
@@ -2542,7 +2551,9 @@ const dinoObstacleTypes = [
 const dinoPowerupTypes = [
   { emoji: "🍵", label: "ชาไข่มุกต่อชีวิต" },
   { emoji: "🚽", label: "อู้ไปขี้" },
-  { emoji: "🚬", label: "สูดอากาศแป๊บ" }
+  { emoji: "🚬", label: "สูดอากาศแป๊บ" },
+  { emoji: "❤️", label: "เติมพลัง" },
+  { emoji: "💊", label: "พาราเซตามอล" }
 ];
 
 const dinoLevels = [
@@ -2561,6 +2572,15 @@ const dinoLevels = [
 
 function changeDinoChar() {
   dinoConfig.playerEmoji = document.getElementById("dino-char").value;
+}
+
+function changeDinoSpeed() {
+  const mode = document.getElementById("dino-speed").value;
+  if (mode === "baby") { dinoConfig.baseSpeed = 3.5; dinoConfig.maxSpeed = 8; }
+  else if (mode === "easy") { dinoConfig.baseSpeed = 4.5; dinoConfig.maxSpeed = 11; }
+  else if (mode === "normal") { dinoConfig.baseSpeed = 5.5; dinoConfig.maxSpeed = 14; }
+  else if (mode === "hard") { dinoConfig.baseSpeed = 7.5; dinoConfig.maxSpeed = 19; }
+  resetDinoGame();
 }
 
 function resetDinoGame() {
