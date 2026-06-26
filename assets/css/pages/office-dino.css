@@ -227,6 +227,10 @@ canvas#dino-game {
   line-height: 1.7;
 }
 
+.office-dino-sidebar [onclick="syncDinoGlobalLeaderboard(true)"] {
+  display: none !important;
+}
+
 @media (max-width: 768px) {
   .office-dino-layout {
     grid-template-columns: 1fr;

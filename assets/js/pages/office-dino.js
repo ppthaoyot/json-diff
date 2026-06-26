@@ -717,7 +717,7 @@ document.addEventListener("keyup", function(e) {
 dinoCanvas.addEventListener("click", dinoJump);
 
 renderDinoLeaderboard();
-renderDinoGlobalLeaderboard([], getDinoGlobalLeaderboardEndpoint() ? "Press sync to load the latest global board." : "Configure the Google Apps Script URL to start the shared leaderboard.");
+renderDinoGlobalLeaderboard([], getDinoGlobalLeaderboardEndpoint() ? "Loading the latest global leaderboard..." : "Configure the Google Apps Script URL to start the shared leaderboard.");
 if (getDinoGlobalLeaderboardEndpoint()) {
   syncDinoGlobalLeaderboard(false);
 }

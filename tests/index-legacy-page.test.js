@@ -12,10 +12,16 @@ test("legacy index uses an in-page minigame tab again", () => {
   assert.doesNotMatch(html, /id="ptab-minigame"[\s\S]*?href="pages\/office-dino\.html"/i);
 });
 
-test("legacy index advertises a top 20 leaderboard and share actions", () => {
+test("legacy index keeps both local and global Office Dino leaderboards", () => {
   const html = fs.readFileSync(indexPath, "utf8");
 
   assert.match(html, /Top 20 Office Dino/i);
-  assert.match(html, /copyDinoLeaderboard\(\)/i);
-  assert.match(html, /importDinoLeaderboardFromPrompt\(\)/i);
+  assert.match(html, /Global Top 20/i);
+});
+
+test("legacy index styles Office Dino like a stage plus side panel", () => {
+  const html = fs.readFileSync(indexPath, "utf8");
+
+  assert.match(html, /#mg-hub-dino\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*2fr\)\s*minmax\(300px,\s*1fr\)/i);
+  assert.match(html, /\.dino-meta-panel\s*\{[\s\S]*grid-column:\s*2/i);
 });

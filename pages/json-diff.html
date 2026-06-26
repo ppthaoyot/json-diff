@@ -41,6 +41,9 @@
           <button class="mode-btn active" data-mode="side" type="button" data-i18n="jsonDiff.modeSide">Side by side</button>
           <button class="mode-btn" data-mode="tree" type="button" data-i18n="jsonDiff.modeTree">Tree</button>
           <button class="mode-btn" data-mode="list" type="button" data-i18n="jsonDiff.modeList">List</button>
+          <button class="tool-chip is-primary" id="line-number-toggle" type="button" data-i18n="jsonDiff.lineNumbersOn">Line numbers: on</button>
+          <button class="tool-chip" id="json-tree-expand-all" type="button" data-i18n="jsonDiff.expandAll">Expand all</button>
+          <button class="tool-chip" id="json-tree-collapse-all" type="button" data-i18n="jsonDiff.collapseAll">Collapse all</button>
         </div>
       </section>
 
@@ -55,8 +58,13 @@
             <button class="action-btn" id="format-a-btn" type="button" data-i18n="jsonDiff.format">Format</button>
             <button class="action-btn" id="minify-a-btn" type="button" data-i18n="jsonDiff.minify">Minify</button>
             <button class="action-btn" id="copy-a-btn" type="button" data-i18n="jsonDiff.copy">Copy</button>
+            <button class="action-btn json-structure-toggle" id="json-structure-toggle-a" data-side="a" data-view="raw" type="button" data-i18n="jsonDiff.structureView">Structure</button>
           </div>
-          <textarea class="tool-textarea" id="ta-a" placeholder='{"key":"value"}'></textarea>
+          <div class="json-editor-shell" id="json-editor-shell-a">
+            <div class="json-line-numbers" id="line-numbers-a" aria-hidden="true">1</div>
+            <textarea class="tool-textarea json-editor-textarea" id="ta-a" placeholder='{"key":"value"}'></textarea>
+            <div class="json-tree-panel" id="json-tree-panel-a" hidden></div>
+          </div>
         </article>
 
         <article class="tool-panel">
@@ -69,8 +77,13 @@
             <button class="action-btn" id="format-b-btn" type="button" data-i18n="jsonDiff.format">Format</button>
             <button class="action-btn" id="minify-b-btn" type="button" data-i18n="jsonDiff.minify">Minify</button>
             <button class="action-btn" id="copy-b-btn" type="button" data-i18n="jsonDiff.copy">Copy</button>
+            <button class="action-btn json-structure-toggle" id="json-structure-toggle-b" data-side="b" data-view="raw" type="button" data-i18n="jsonDiff.structureView">Structure</button>
           </div>
-          <textarea class="tool-textarea" id="ta-b" placeholder='{"key":"new value"}'></textarea>
+          <div class="json-editor-shell" id="json-editor-shell-b">
+            <div class="json-line-numbers" id="line-numbers-b" aria-hidden="true">1</div>
+            <textarea class="tool-textarea json-editor-textarea" id="ta-b" placeholder='{"key":"new value"}'></textarea>
+            <div class="json-tree-panel" id="json-tree-panel-b" hidden></div>
+          </div>
         </article>
       </section>
 
@@ -93,6 +106,7 @@
   <script src="../assets/js/shared/i18n.js"></script>
   <script src="../assets/js/shared/ui.js"></script>
   <script src="../assets/js/shared/storage.js"></script>
+  <script src="../assets/js/shared/json-diff-core.js"></script>
   <script src="../assets/js/pages/json-diff.js"></script>
 </body>
 </html>

@@ -1,12 +1,24 @@
 document.addEventListener("DOMContentLoaded", function() {
   var i18n = window.I18N;
+  var core = window.JsonDiffCore;
   var mode = "side";
+  var showLineNumbers = true;
+  var structureViewBySide = { a: false, b: false };
   var textareaA = document.getElementById("ta-a");
   var textareaB = document.getElementById("ta-b");
+  var lineNumbersA = document.getElementById("line-numbers-a");
+  var lineNumbersB = document.getElementById("line-numbers-b");
+  var treePanelA = document.getElementById("json-tree-panel-a");
+  var treePanelB = document.getElementById("json-tree-panel-b");
+  var shellA = document.getElementById("json-editor-shell-a");
+  var shellB = document.getElementById("json-editor-shell-b");
   var resultEl = document.getElementById("result");
   var summaryEl = document.getElementById("summary");
   var statusA = document.getElementById("sta-a");
   var statusB = document.getElementById("sta-b");
+  var lineNumberToggle = document.getElementById("line-number-toggle");
+  var expandAllButton = document.getElementById("json-tree-expand-all");
+  var collapseAllButton = document.getElementById("json-tree-collapse-all");
 
   document.querySelectorAll("[data-mode]").forEach(function(button) {
     button.addEventListener("click", function() {
@@ -14,6 +26,16 @@ document.addEventListener("DOMContentLoaded", function() {
       document.querySelectorAll("[data-mode]").forEach(function(item) {
         item.classList.toggle("active", item === button);
       });
+      syncTreeToolbar();
+      onInput();
+    });
+  });
+
+  document.querySelectorAll(".json-structure-toggle").forEach(function(button) {
+    button.addEventListener("click", function() {
+      var side = button.getAttribute("data-side");
+      structureViewBySide[side] = !structureViewBySide[side];
+      updateEditorShell(side);
       onInput();
     });
   });
@@ -28,8 +50,41 @@ document.addEventListener("DOMContentLoaded", function() {
   document.getElementById("copy-b-btn").addEventListener("click", function() { copyJSON("b"); });
   document.getElementById("fix-a-btn").addEventListener("click", function() { autoFixJSON("a"); });
   document.getElementById("fix-b-btn").addEventListener("click", function() { autoFixJSON("b"); });
-  textareaA.addEventListener("input", onInput);
-  textareaB.addEventListener("input", onInput);
+
+  [textareaA, textareaB].forEach(function(textarea) {
+    textarea.addEventListener("input", onInput);
+    textarea.addEventListener("scroll", function() {
+      var gutter = textarea === textareaA ? lineNumbersA : lineNumbersB;
+      gutter.scrollTop = textarea.scrollTop;
+    });
+  });
+
+  lineNumberToggle.addEventListener("click", function() {
+    showLineNumbers = !showLineNumbers;
+    lineNumberToggle.classList.toggle("is-primary", showLineNumbers);
+    updateLineNumberToggleLabel();
+    updateEditorShell("a");
+    updateEditorShell("b");
+    onInput();
+  });
+
+  expandAllButton.addEventListener("click", function() {
+    setTreeExpansion(document, false);
+  });
+
+  collapseAllButton.addEventListener("click", function() {
+    setTreeExpansion(document, true);
+  });
+
+  document.addEventListener("click", function(event) {
+    var toggle = event.target.closest("[data-tree-toggle]");
+    if (!toggle) return;
+    var node = toggle.closest("[data-tree-node]");
+    if (!node) return;
+    node.classList.toggle("is-collapsed");
+    toggle.textContent = node.classList.contains("is-collapsed") ? "+" : "−";
+    toggle.setAttribute("aria-expanded", String(!node.classList.contains("is-collapsed")));
+  });
 
   function tryParse(value) {
     try {
@@ -50,138 +105,62 @@ document.addEventListener("DOMContentLoaded", function() {
     element.className = "tool-status ok";
   }
 
-  function flatten(obj, prefix, out) {
-    prefix = prefix || "";
-    out = out || {};
-    if (obj === null || typeof obj !== "object") {
-      out[prefix] = obj;
-      return out;
-    }
-    if (Array.isArray(obj)) {
-      obj.forEach(function(item, index) {
-        flatten(item, prefix ? prefix + "[" + index + "]" : "[" + index + "]", out);
-      });
-      return out;
-    }
-    Object.keys(obj).forEach(function(key) {
-      var path = prefix ? prefix + "." + key : key;
-      if (obj[key] !== null && typeof obj[key] === "object") flatten(obj[key], path, out);
-      else out[path] = obj[key];
-    });
-    return out;
+  function updateLineNumbers(textarea, gutter) {
+    var lineCount = Math.max(1, textarea.value.split("\n").length);
+    var lines = [];
+    for (var index = 1; index <= lineCount; index++) lines.push(String(index));
+    gutter.textContent = lines.join("\n");
+    gutter.scrollTop = textarea.scrollTop;
   }
 
-  function diffFlat(a, b) {
-    var flatA = flatten(a);
-    var flatB = flatten(b);
-    var keys = {};
-    Object.keys(flatA).forEach(function(key) { keys[key] = true; });
-    Object.keys(flatB).forEach(function(key) { keys[key] = true; });
-    var added = [];
-    var removed = [];
-    var changed = [];
-    var same = [];
-    Object.keys(keys).sort().forEach(function(key) {
-      if (!(key in flatA)) added.push({ k: key, v: flatB[key] });
-      else if (!(key in flatB)) removed.push({ k: key, v: flatA[key] });
-      else if (JSON.stringify(flatA[key]) !== JSON.stringify(flatB[key])) changed.push({ k: key, old: flatA[key], nw: flatB[key] });
-      else same.push({ k: key, v: flatA[key] });
-    });
-    return { added: added, removed: removed, changed: changed, same: same };
+  function updateLineNumberToggleLabel() {
+    lineNumberToggle.textContent = i18n.t(showLineNumbers ? "jsonDiff.lineNumbersOn" : "jsonDiff.lineNumbersOff");
   }
 
-  function toLines(obj) {
-    return JSON.stringify(obj, null, 2).split("\n");
+  function updateStructureButton(side) {
+    var button = document.getElementById("json-structure-toggle-" + side);
+    var isStructure = structureViewBySide[side];
+    button.textContent = i18n.t(isStructure ? "jsonDiff.rawView" : "jsonDiff.structureView");
+    button.setAttribute("data-view", isStructure ? "structure" : "raw");
   }
 
-  function renderSide(a, b, diff) {
-    var linesA = toLines(a);
-    var linesB = toLines(b);
-    var flatA = flatten(a);
-    var flatB = flatten(b);
-    var changed = {};
-    var added = {};
-    var removed = {};
-
-    diff.changed.forEach(function(item) { changed[item.k] = true; });
-    diff.added.forEach(function(item) { added[item.k] = true; });
-    diff.removed.forEach(function(item) { removed[item.k] = true; });
-
-    function classify(lines, flatObj, isRight) {
-      return lines.map(function(line) {
-        var match = line.match(/^\s*"([^"]+)":/);
-        if (!match) return { line: line, cls: "" };
-        var rawKey = match[1];
-        var matchedPath = Object.keys(flatObj).find(function(key) {
-          return key === rawKey || key.endsWith("." + rawKey);
-        });
-        if (!matchedPath) return { line: line, cls: "" };
-        if (isRight && added[matchedPath]) return { line: line, cls: "row-add" };
-        if (!isRight && removed[matchedPath]) return { line: line, cls: "row-rem" };
-        if (changed[matchedPath]) return { line: line, cls: "row-chg" };
-        return { line: line, cls: "" };
-      });
-    }
-
-    var classifiedA = classify(linesA, flatA, false);
-    var classifiedB = classify(linesB, flatB, true);
-    var maxLength = Math.max(classifiedA.length, classifiedB.length);
-    var html = '<table class="diff-table"><tbody>';
-
-    for (var index = 0; index < maxLength; index++) {
-      var rowA = classifiedA[index] || { line: "", cls: "" };
-      var rowB = classifiedB[index] || { line: "", cls: "" };
-      var rowClass = rowB.cls || rowA.cls;
-      var signA = rowA.cls === "row-rem" ? "-" : rowA.cls === "row-chg" ? "~" : "";
-      var signB = rowB.cls === "row-add" ? "+" : rowB.cls === "row-chg" ? "~" : "";
-      html += '<tr class="' + rowClass + '">';
-      html += '<td class="ln">' + (index + 1) + "</td>";
-      html += '<td class="sign">' + signA + "</td>";
-      html += '<td class="code">' + esc(rowA.line) + "</td>";
-      html += '<td class="ln">' + (index + 1) + "</td>";
-      html += '<td class="sign">' + signB + "</td>";
-      html += '<td class="code">' + esc(rowB.line) + "</td>";
-      html += "</tr>";
-    }
-
-    return html + "</tbody></table>";
+  function updateEditorShell(side) {
+    var shell = side === "a" ? shellA : shellB;
+    shell.classList.toggle("is-structure", structureViewBySide[side]);
+    shell.classList.toggle("is-line-numbers-hidden", !showLineNumbers);
+    updateStructureButton(side);
   }
 
-  function renderTree(diff) {
-    if (!diff.added.length && !diff.removed.length && !diff.changed.length && !diff.same.length) {
-      return '<div class="empty-hint">' + esc(i18n.t("jsonDiff.empty")) + "</div>";
-    }
-    var html = '<div class="tree-view">';
-    diff.added.forEach(function(item) {
-      html += '<div class="tree-add"><strong class="tree-path">+ ' + esc(item.k) + '</strong><div class="tree-val">' + esc(JSON.stringify(item.v)) + "</div></div>";
+  function setTreeExpansion(scope, collapsed) {
+    scope.querySelectorAll("[data-tree-node]").forEach(function(node) {
+      if (!node.querySelector("[data-tree-toggle]")) return;
+      node.classList.toggle("is-collapsed", collapsed);
+      var toggle = node.querySelector("[data-tree-toggle]");
+      if (toggle) {
+        toggle.textContent = collapsed ? "+" : "−";
+        toggle.setAttribute("aria-expanded", String(!collapsed));
+      }
     });
-    diff.removed.forEach(function(item) {
-      html += '<div class="tree-rem"><strong class="tree-path">- ' + esc(item.k) + '</strong><div class="tree-val">' + esc(JSON.stringify(item.v)) + "</div></div>";
-    });
-    diff.changed.forEach(function(item) {
-      html += '<div class="tree-chg"><strong class="tree-path">~ ' + esc(item.k) + '</strong><div class="tree-val">' + esc(JSON.stringify(item.old)) + " -> " + esc(JSON.stringify(item.nw)) + "</div></div>";
-    });
-    diff.same.forEach(function(item) {
-      html += '<div class="tree-same"><strong class="tree-path">= ' + esc(item.k) + '</strong><div class="tree-val">' + esc(JSON.stringify(item.v)) + "</div></div>";
-    });
-    return html + "</div>";
   }
 
-  function renderList(diff) {
-    if (!diff.added.length && !diff.removed.length && !diff.changed.length) {
-      return '<div class="empty-hint">' + esc(i18n.t("jsonDiff.match")) + "</div>";
+  function syncTreeToolbar() {
+    var enabled = mode === "tree";
+    expandAllButton.disabled = !enabled;
+    collapseAllButton.disabled = !enabled;
+  }
+
+  function renderEditorTree(side, parsed) {
+    var panel = side === "a" ? treePanelA : treePanelB;
+    if (!structureViewBySide[side]) {
+      panel.hidden = true;
+      return;
     }
-    var html = '<div class="list-view">';
-    diff.added.forEach(function(item) {
-      html += '<div class="list-item"><span class="stat stat-add list-badge">' + esc(i18n.t("jsonDiff.added")) + '</span><div class="list-content"><strong class="tree-path">' + esc(item.k) + '</strong><span class="list-new">' + esc(JSON.stringify(item.v)) + "</span></div></div>";
-    });
-    diff.removed.forEach(function(item) {
-      html += '<div class="list-item"><span class="stat stat-rem list-badge">' + esc(i18n.t("jsonDiff.removed")) + '</span><div class="list-content"><strong class="tree-path">' + esc(item.k) + '</strong><span class="list-old">' + esc(JSON.stringify(item.v)) + "</span></div></div>";
-    });
-    diff.changed.forEach(function(item) {
-      html += '<div class="list-item"><span class="stat stat-chg list-badge">' + esc(i18n.t("jsonDiff.changed")) + '</span><div class="list-content"><strong class="tree-path">' + esc(item.k) + '</strong><span class="list-old">' + esc(JSON.stringify(item.old)) + '</span><span class="list-new">' + esc(JSON.stringify(item.nw)) + "</span></div></div>";
-    });
-    return html + "</div>";
+    panel.hidden = false;
+    if (!parsed || !parsed.ok) {
+      panel.innerHTML = '<div class="empty-hint">' + core.esc(i18n.t("jsonDiff.invalid")) + "</div>";
+      return;
+    }
+    panel.innerHTML = core.renderJsonTree(parsed.val, { collapsed: false });
   }
 
   function formatJSON(side) {
@@ -290,6 +269,11 @@ document.addEventListener("DOMContentLoaded", function() {
     var parsedA = valueA ? tryParse(valueA) : null;
     var parsedB = valueB ? tryParse(valueB) : null;
 
+    updateLineNumbers(textareaA, lineNumbersA);
+    updateLineNumbers(textareaB, lineNumbersB);
+    renderEditorTree("a", parsedA);
+    renderEditorTree("b", parsedB);
+
     if (valueA) {
       textareaA.classList.toggle("invalid", !parsedA.ok);
       setStatus(statusA, parsedA.ok);
@@ -307,25 +291,42 @@ document.addEventListener("DOMContentLoaded", function() {
 
     if (!valueA || !valueB) {
       summaryEl.innerHTML = "";
-      resultEl.innerHTML = '<div class="empty-hint">' + esc(i18n.t("jsonDiff.empty")) + "</div>";
+      resultEl.innerHTML = '<div class="empty-hint">' + core.esc(i18n.t("jsonDiff.empty")) + "</div>";
       return;
     }
     if (!parsedA.ok || !parsedB.ok) {
       summaryEl.innerHTML = "";
-      resultEl.innerHTML = '<div class="empty-hint">' + esc(i18n.t("jsonDiff.invalid")) + "</div>";
+      resultEl.innerHTML = '<div class="empty-hint">' + core.esc(i18n.t("jsonDiff.invalid")) + "</div>";
       return;
     }
 
-    var diff = diffFlat(parsedA.val, parsedB.val);
+    var diff = core.diffFlat(parsedA.val, parsedB.val);
     summaryEl.innerHTML =
-      '<span class="stat stat-add">+ ' + esc(i18n.t("jsonDiff.added")) + " " + diff.added.length + "</span>" +
-      '<span class="stat stat-rem">- ' + esc(i18n.t("jsonDiff.removed")) + " " + diff.removed.length + "</span>" +
-      '<span class="stat stat-chg">~ ' + esc(i18n.t("jsonDiff.changed")) + " " + diff.changed.length + "</span>" +
-      '<span class="stat stat-same">= ' + esc(i18n.t("jsonDiff.same")) + " " + diff.same.length + "</span>";
+      '<span class="stat stat-add">+ ' + core.esc(i18n.t("jsonDiff.added")) + " " + diff.added.length + "</span>" +
+      '<span class="stat stat-rem">- ' + core.esc(i18n.t("jsonDiff.removed")) + " " + diff.removed.length + "</span>" +
+      '<span class="stat stat-chg">~ ' + core.esc(i18n.t("jsonDiff.changed")) + " " + diff.changed.length + "</span>" +
+      '<span class="stat stat-same">= ' + core.esc(i18n.t("jsonDiff.same")) + " " + diff.same.length + "</span>";
 
-    if (mode === "side") resultEl.innerHTML = renderSide(parsedA.val, parsedB.val, diff);
-    else if (mode === "tree") resultEl.innerHTML = renderTree(diff);
+    if (mode === "side") resultEl.innerHTML = core.renderSide(parsedA.val, parsedB.val, diff, { showLineNumbers: showLineNumbers });
+    else if (mode === "tree") resultEl.innerHTML = core.renderDiffTree(diff, { collapsed: false });
     else resultEl.innerHTML = renderList(diff);
+  }
+
+  function renderList(diff) {
+    if (!diff.added.length && !diff.removed.length && !diff.changed.length) {
+      return '<div class="empty-hint">' + core.esc(i18n.t("jsonDiff.match")) + "</div>";
+    }
+    var html = '<div class="list-view">';
+    diff.added.forEach(function(item) {
+      html += '<div class="list-item"><span class="stat stat-add list-badge">' + core.esc(i18n.t("jsonDiff.added")) + '</span><div class="list-content"><strong class="tree-path">' + core.esc(item.k) + '</strong><span class="list-new">' + core.esc(JSON.stringify(item.v)) + "</span></div></div>";
+    });
+    diff.removed.forEach(function(item) {
+      html += '<div class="list-item"><span class="stat stat-rem list-badge">' + core.esc(i18n.t("jsonDiff.removed")) + '</span><div class="list-content"><strong class="tree-path">' + core.esc(item.k) + '</strong><span class="list-old">' + core.esc(JSON.stringify(item.v)) + "</span></div></div>";
+    });
+    diff.changed.forEach(function(item) {
+      html += '<div class="list-item"><span class="stat stat-chg list-badge">' + core.esc(i18n.t("jsonDiff.changed")) + '</span><div class="list-content"><strong class="tree-path">' + core.esc(item.k) + '</strong><span class="list-old">' + core.esc(JSON.stringify(item.old)) + '</span><span class="list-new">' + core.esc(JSON.stringify(item.nw)) + "</span></div></div>";
+    });
+    return html + "</div>";
   }
 
   function loadExample() {
@@ -355,9 +356,20 @@ document.addEventListener("DOMContentLoaded", function() {
     textareaA.classList.remove("invalid");
     textareaB.classList.remove("invalid");
     summaryEl.innerHTML = "";
-    resultEl.innerHTML = '<div class="empty-hint">' + esc(i18n.t("jsonDiff.empty")) + "</div>";
+    resultEl.innerHTML = '<div class="empty-hint">' + core.esc(i18n.t("jsonDiff.empty")) + "</div>";
+    onInput();
   }
 
-  window.addEventListener("i18n:updated", onInput);
+  window.addEventListener("i18n:updated", function() {
+    updateLineNumberToggleLabel();
+    updateStructureButton("a");
+    updateStructureButton("b");
+    onInput();
+  });
+
+  updateLineNumberToggleLabel();
+  updateEditorShell("a");
+  updateEditorShell("b");
+  syncTreeToolbar();
   onInput();
 });

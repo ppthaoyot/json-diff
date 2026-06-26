@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Legacy JSON Diff Workshop Tools</title>
+<title>Developer Tools</title>
 <meta name="description" content="Legacy all-in-one tools page for JSON diff, Base64 encode and decode, Thai ID testing, lucky draw, and links to the standalone SEO-first pages.">
 <link rel="canonical" href="/index.html">
-<meta property="og:title" content="Legacy JSON Diff Workshop Tools">
+<meta property="og:title" content="Developer Tools">
 <meta property="og:description" content="Use the original all-in-one page or jump to the new standalone pages for focused workflows and future SEO support.">
 <meta name="office-dino-global-endpoint" content="https://script.google.com/macros/s/AKfycbwV3jKhcFK6J1PJC61OmHIve7_xNyFxFAyWXBUOIgPCuESb0PZUf_pwWjrxVwYtmsXc9Q/exec">
 <link rel="stylesheet" href="assets/css/base.css">
@@ -93,6 +93,10 @@ body {
   gap: 12px;
   margin-bottom: 16px;
   flex-wrap: wrap;
+}
+
+.app-header + div[style*="background:var(--bg-primary)"][style*="margin-bottom:16px"] {
+  display: none !important;
 }
 
 .app-title {
@@ -264,6 +268,50 @@ textarea {
 }
 textarea:focus { border-color: var(--border-md); }
 textarea.invalid { border-color: #E24B4A; }
+.json-editor-shell {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--bg-primary);
+}
+.json-editor-shell.is-structure {
+  grid-template-columns: 1fr;
+}
+.json-editor-shell.is-structure .json-line-numbers,
+.json-editor-shell.is-structure .json-editor-textarea {
+  display: none;
+}
+.json-editor-shell.is-line-numbers-hidden {
+  grid-template-columns: 1fr;
+}
+.json-editor-shell.is-line-numbers-hidden .json-line-numbers {
+  display: none;
+}
+.json-editor-textarea {
+  border: 0;
+  border-radius: 0;
+}
+.json-line-numbers {
+  padding: 10px 8px;
+  background: var(--bg-secondary);
+  border-right: 0.5px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.65;
+  text-align: right;
+  color: var(--text-tertiary);
+  user-select: none;
+  white-space: pre;
+  overflow: hidden;
+}
+.json-tree-panel {
+  min-height: 320px;
+  padding: 12px;
+  overflow: auto;
+  background: var(--bg-secondary);
+}
 
 .summary {
   display: flex;
@@ -328,12 +376,53 @@ textarea.invalid { border-color: #E24B4A; }
   font-size: 12px;
   line-height: 2.1;
 }
+.json-tree-view {
+  display: grid;
+  gap: 8px;
+}
 .tree-add { color: #3B6D11; }
 .tree-rem { color: #A32D2D; }
 .tree-chg { color: #854F0B; }
 .tree-same { color: var(--text-tertiary); }
 .tree-path { font-weight: 500; }
 .tree-val { opacity: 0.85; }
+.json-tree-node {
+  display: grid;
+  gap: 6px;
+}
+.json-tree-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding-left: calc(var(--tree-depth, 0) * 18px);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.75;
+}
+.json-tree-toggle-btn,
+.json-tree-toggle-spacer {
+  width: 20px;
+  flex: 0 0 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.json-tree-toggle-btn {
+  min-height: 20px;
+  border: 0.5px solid var(--border-md);
+  border-radius: 99px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  cursor: pointer;
+  font: inherit;
+  line-height: 1;
+}
+.json-tree-key { font-weight: 700; color: var(--text-primary); }
+.json-tree-sep,
+.json-tree-summary { color: var(--text-secondary); }
+.json-tree-value { color: var(--text-primary); word-break: break-word; }
+.json-tree-children { display: grid; gap: 6px; }
+.json-tree-node.is-collapsed > .json-tree-children { display: none; }
 
 .list-view {
   padding: 14px 16px;
@@ -1078,6 +1167,12 @@ textarea.invalid { border-color: #E24B4A; }
 }
 
 /* ---- Office Dino Game ---- */
+#mg-hub-dino {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
+  gap: 16px;
+  align-items: start;
+}
 .dino-header {
   display: flex;
   justify-content: space-between;
@@ -1086,12 +1181,23 @@ textarea.invalid { border-color: #E24B4A; }
   margin-bottom: 10px;
   flex-wrap: wrap;
   text-align: left;
+  grid-column: 1 / -1;
 }
 .dino-title { font-size: 22px; font-weight: bold; color: var(--text-primary); }
 .dino-subtitle { font-size: 13px; color: var(--text-secondary); }
 .dino-score-panel { text-align: right; font-size: 14px; line-height: 1.6; color: var(--text-primary); }
 #levelText { font-weight: bold; font-size: 18px; color: #c0392b; }
 .dino-canvas-wrap { border: 3px solid var(--border-md); border-radius: var(--radius-md); overflow: hidden; background: #fff; }
+.dino-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+.dino-stage-panel,
+.dino-side-panel {
+  min-width: 0;
+}
 canvas#dino-game {
   width: 100%;
   height: auto;
@@ -1109,11 +1215,21 @@ canvas#dino-game {
   text-align: left;
 }
 .dino-meta-panel {
-  margin: 12px 0;
+  margin: 0;
   padding: 12px;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--bg-secondary);
+  grid-column: 2;
+  grid-row: 2 / span 2;
+}
+#mg-hub-dino .dino-leaderboard:first-of-type > div[style*="display:flex"][style*="flex-wrap:wrap"],
+#mg-hub-dino .dino-leaderboard:first-of-type > div[style*="font-size:12px"][style*="line-height:1.6"],
+#mg-hub-dino [onclick="copyDinoLeaderboard()"],
+#mg-hub-dino [onclick="importDinoLeaderboardFromPrompt()"],
+#mg-hub-dino [onclick="clearDinoLeaderboard()"],
+#mg-hub-dino [onclick="syncDinoGlobalLeaderboard(true)"] {
+  display: none !important;
 }
 .dino-player-form {
   display: flex;
@@ -1208,6 +1324,15 @@ canvas#dino-game {
   color: var(--text-primary);
   cursor: pointer;
 }
+@media (max-width: 900px) {
+  #mg-hub-dino {
+    grid-template-columns: 1fr;
+  }
+  .dino-meta-panel {
+    grid-column: 1;
+    grid-row: auto;
+  }
+}
 .hub-nav {
   display: flex;
   justify-content: center;
@@ -1275,6 +1400,9 @@ canvas#dino-game {
       <button class="mode-btn active" onclick="setMode('side')" id="btn-side">Side-by-side</button>
       <button class="mode-btn" onclick="setMode('tree')" id="btn-tree">Tree</button>
       <button class="mode-btn" onclick="setMode('list')" id="btn-list">รายการ</button>
+      <button class="mode-btn active" onclick="toggleLineNumbers()" id="line-number-toggle">Line numbers: on</button>
+      <button class="mode-btn" onclick="expandAllJsonTrees()" id="json-tree-expand-all">Expand all</button>
+      <button class="mode-btn" onclick="collapseAllJsonTrees()" id="json-tree-collapse-all">Collapse all</button>
     </div>
 
     <div class="editors">
@@ -1286,10 +1414,15 @@ canvas#dino-game {
             <button class="fmt-btn" onclick="formatJSON('a')" title="จัดรูปแบบ JSON">Format</button>
             <button class="fmt-btn" onclick="minifyJSON('a')" title="ย่อ JSON">Minify</button>
             <button class="fmt-btn" onclick="copyJSON('a')" id="copy-a" title="คัดลอก">Copy</button>
+            <button class="fmt-btn json-structure-toggle" onclick="toggleJsonStructure('a')" id="json-structure-toggle-a" title="Structure">Structure</button>
             <span class="editor-status" id="sta-a"></span>
           </div>
         </div>
-        <textarea id="ta-a" placeholder='{"key": "value"}' oninput="onInput()"></textarea>
+        <div class="json-editor-shell" id="json-editor-shell-a">
+          <div class="json-line-numbers" id="line-numbers-a" aria-hidden="true">1</div>
+          <textarea id="ta-a" class="json-editor-textarea" placeholder='{"key": "value"}' oninput="onInput()" onscroll="syncEditorScroll('a')"></textarea>
+          <div class="json-tree-panel" id="json-tree-panel-a" hidden></div>
+        </div>
       </div>
       <div class="editor-box">
         <div class="editor-label">
@@ -1299,10 +1432,15 @@ canvas#dino-game {
             <button class="fmt-btn" onclick="formatJSON('b')" title="จัดรูปแบบ JSON">Format</button>
             <button class="fmt-btn" onclick="minifyJSON('b')" title="ย่อ JSON">Minify</button>
             <button class="fmt-btn" onclick="copyJSON('b')" id="copy-b" title="คัดลอก">Copy</button>
+            <button class="fmt-btn json-structure-toggle" onclick="toggleJsonStructure('b')" id="json-structure-toggle-b" title="Structure">Structure</button>
             <span class="editor-status" id="sta-b"></span>
           </div>
         </div>
-        <textarea id="ta-b" placeholder='{"key": "new value"}' oninput="onInput()"></textarea>
+        <div class="json-editor-shell" id="json-editor-shell-b">
+          <div class="json-line-numbers" id="line-numbers-b" aria-hidden="true">1</div>
+          <textarea id="ta-b" class="json-editor-textarea" placeholder='{"key": "new value"}' oninput="onInput()" onscroll="syncEditorScroll('b')"></textarea>
+          <div class="json-tree-panel" id="json-tree-panel-b" hidden></div>
+        </div>
       </div>
     </div>
 
@@ -1466,7 +1604,7 @@ canvas#dino-game {
 
 <!-- ===================== PAGE: MINI GAME HUB ===================== -->
   <div class="page" id="page-minigame" role="tabpanel" aria-labelledby="ptab-minigame">
-    <div class="mg-wrap" style="max-width:940px;">
+    <div class="mg-wrap" style="max-width:1180px;">
       
       <div class="hub-nav">
         <button class="hub-btn active" id="hub-btn-dino" onclick="switchMgHub('dino')">🏃 Office Dino</button>
@@ -1625,6 +1763,7 @@ canvas#dino-game {
 <script src="assets/js/shared/ui.js"></script>
 <script src="assets/js/shared/storage.js"></script>
 <script src="assets/js/shared/global-leaderboard.js"></script>
+<script src="assets/js/shared/json-diff-core.js"></script>
 <script>
 // ============================================================
 //  PAGE SWITCHING
@@ -2127,6 +2266,109 @@ function downloadResult(sourceId, filename) {
 //  JSON DIFF (original code preserved)
 // ============================================================
 let mode = 'side';
+let showJsonLineNumbers = true;
+const jsonStructureViewBySide = { a: false, b: false };
+
+function getJsonDiffCore() {
+  return window.JsonDiffCore;
+}
+
+function updateJsonLineNumbers(side) {
+  const textarea = document.getElementById('ta-' + side);
+  const gutter = document.getElementById('line-numbers-' + side);
+  if (!textarea || !gutter) return;
+  const lineCount = Math.max(1, textarea.value.split('\n').length);
+  const lines = [];
+  for (let i = 1; i <= lineCount; i++) lines.push(String(i));
+  gutter.textContent = lines.join('\n');
+  gutter.scrollTop = textarea.scrollTop;
+}
+
+function syncEditorScroll(side) {
+  const textarea = document.getElementById('ta-' + side);
+  const gutter = document.getElementById('line-numbers-' + side);
+  if (!textarea || !gutter) return;
+  gutter.scrollTop = textarea.scrollTop;
+}
+
+function updateLineNumberToggleLabel() {
+  const btn = document.getElementById('line-number-toggle');
+  if (!btn) return;
+  btn.textContent = showJsonLineNumbers ? 'Line numbers: on' : 'Line numbers: off';
+  btn.classList.toggle('active', showJsonLineNumbers);
+}
+
+function updateJsonStructureButton(side) {
+  const button = document.getElementById('json-structure-toggle-' + side);
+  if (!button) return;
+  button.textContent = jsonStructureViewBySide[side] ? 'Back to JSON' : 'Structure';
+}
+
+function updateJsonEditorShell(side) {
+  const shell = document.getElementById('json-editor-shell-' + side);
+  if (!shell) return;
+  shell.classList.toggle('is-structure', jsonStructureViewBySide[side]);
+  shell.classList.toggle('is-line-numbers-hidden', !showJsonLineNumbers);
+  updateJsonStructureButton(side);
+}
+
+function toggleLineNumbers() {
+  showJsonLineNumbers = !showJsonLineNumbers;
+  updateLineNumberToggleLabel();
+  updateJsonEditorShell('a');
+  updateJsonEditorShell('b');
+  onInput();
+}
+
+function toggleJsonStructure(side) {
+  jsonStructureViewBySide[side] = !jsonStructureViewBySide[side];
+  updateJsonEditorShell(side);
+  onInput();
+}
+
+function renderJsonEditorTree(side, parsed) {
+  const panel = document.getElementById('json-tree-panel-' + side);
+  if (!panel) return;
+  if (!jsonStructureViewBySide[side]) {
+    panel.hidden = true;
+    return;
+  }
+  panel.hidden = false;
+  if (!parsed || !parsed.ok) {
+    panel.innerHTML = '<div class="empty-hint">à¸à¸£à¸¸à¸“à¸²à¹à¸à¹‰ JSON à¹ƒà¸«à¹‰à¸–à¸¹à¸à¸•à¹‰à¸­à¸‡à¸à¹ˆà¸­à¸™</div>';
+    return;
+  }
+  panel.innerHTML = getJsonDiffCore().renderJsonTree(parsed.val, { collapsed: false });
+}
+
+function setJsonTreeExpansion(collapsed) {
+  document.querySelectorAll('[data-tree-node]').forEach(function(node) {
+    const toggle = node.querySelector('[data-tree-toggle]');
+    if (!toggle) return;
+    node.classList.toggle('is-collapsed', collapsed);
+    toggle.textContent = collapsed ? '+' : '−';
+    toggle.setAttribute('aria-expanded', String(!collapsed));
+  });
+}
+
+function expandAllJsonTrees() {
+  setJsonTreeExpansion(false);
+}
+
+function collapseAllJsonTrees() {
+  setJsonTreeExpansion(true);
+}
+
+document.addEventListener('click', function(event) {
+  const toggle = event.target.closest('[data-tree-toggle]');
+  if (!toggle) return;
+  const node = toggle.closest('[data-tree-node]');
+  if (!node) return;
+  node.classList.toggle('is-collapsed');
+  const collapsed = node.classList.contains('is-collapsed');
+  toggle.textContent = collapsed ? '+' : '−';
+  toggle.setAttribute('aria-expanded', String(!collapsed));
+});
 
 function attemptFix(raw) {
   var s = raw;
@@ -2417,6 +2659,59 @@ function clearAll() {
   document.getElementById('result').innerHTML = '<div class="empty-hint">วาง JSON ในกล่องด้านบนเพื่อดูความแตกต่าง</div>';
   document.getElementById('summary').innerHTML = '';
 }
+
+function renderSide(a, b, diff) {
+  return getJsonDiffCore().renderSide(a, b, diff, { showLineNumbers: showJsonLineNumbers });
+}
+
+function renderTree(diff) {
+  if (!diff.added.length && !diff.removed.length && !diff.changed.length && !diff.same.length) {
+    return '<div class="empty-hint">à¹„à¸¡à¹ˆà¸¡à¸µà¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¹ƒà¸«à¹‰à¹à¸ªà¸”à¸‡</div>';
+  }
+  return getJsonDiffCore().renderDiffTree(diff, { collapsed: false });
+}
+
+function onInput() {
+  var taA = document.getElementById('ta-a');
+  var taB = document.getElementById('ta-b');
+  var va = taA.value.trim();
+  var vb = taB.value.trim();
+  var pa = va ? tryParse(va) : null;
+  var pb = vb ? tryParse(vb) : null;
+
+  updateJsonLineNumbers('a');
+  updateJsonLineNumbers('b');
+  renderJsonEditorTree('a', pa);
+  renderJsonEditorTree('b', pb);
+
+  if (va) { taA.classList.toggle('invalid', !pa.ok); setStatus('sta-a', pa.ok); }
+  else { taA.classList.remove('invalid'); document.getElementById('sta-a').textContent=''; }
+  if (vb) { taB.classList.toggle('invalid', !pb.ok); setStatus('sta-b', pb.ok); }
+  else { taB.classList.remove('invalid'); document.getElementById('sta-b').textContent=''; }
+
+  var res = document.getElementById('result');
+  var sum = document.getElementById('summary');
+
+  if (!va || !vb) { res.innerHTML='<div class="empty-hint">à¸§à¸²à¸‡ JSON à¹ƒà¸™à¸à¸¥à¹ˆà¸­à¸‡à¸”à¹‰à¸²à¸™à¸šà¸™à¹€à¸žà¸·à¹ˆà¸­à¸”à¸¹à¸„à¸§à¸²à¸¡à¹à¸•à¸à¸•à¹ˆà¸²à¸‡</div>'; sum.innerHTML=''; return; }
+  if (!pa.ok || !pb.ok) { res.innerHTML='<div class="empty-hint">à¸à¸£à¸¸à¸“à¸²à¹à¸à¹‰à¹„à¸‚ JSON à¹ƒà¸«à¹‰à¸–à¸¹à¸à¸•à¹‰à¸­à¸‡à¸à¹ˆà¸­à¸™</div>'; sum.innerHTML=''; return; }
+
+  var diff = getJsonDiffCore().diffFlat(pa.val, pb.val);
+  sum.innerHTML =
+    '<span class="stat stat-add">+ à¹€à¸žà¸´à¹ˆà¸¡ '+diff.added.length+'</span>'+
+    '<span class="stat stat-rem">âˆ’ à¸¥à¸š '+diff.removed.length+'</span>'+
+    '<span class="stat stat-chg">~ à¹à¸à¹‰à¹„à¸‚ '+diff.changed.length+'</span>'+
+    '<span class="stat stat-same">= à¹€à¸«à¸¡à¸·à¸­à¸™ '+diff.same.length+'</span>';
+
+  if (mode==='side') res.innerHTML = renderSide(pa.val, pb.val, diff);
+  else if (mode==='tree') res.innerHTML = renderTree(diff);
+  else res.innerHTML = renderList(diff);
+}
+
+updateLineNumberToggleLabel();
+updateJsonEditorShell('a');
+updateJsonEditorShell('b');
+updateJsonLineNumbers('a');
+updateJsonLineNumbers('b');
 
 // ============================================================
 //  MINI GAME
@@ -3388,7 +3683,7 @@ document.addEventListener("keyup", function(e) {
 dinoCanvas.addEventListener("click", dinoJump);
 
 renderDinoLeaderboard();
-renderDinoGlobalLeaderboard([], getDinoGlobalLeaderboardEndpoint() ? "กดซิงก์เพื่อโหลดอันดับรวมล่าสุด" : "ตั้งค่า Google Apps Script URL ก่อน แล้วอันดับรวมจะแสดงตรงนี้");
+renderDinoGlobalLeaderboard([], getDinoGlobalLeaderboardEndpoint() ? "กำลังโหลดอันดับรวมล่าสุด..." : "ตั้งค่า Google Apps Script URL ก่อน แล้วอันดับรวมจะแสดงตรงนี้");
 if (getDinoGlobalLeaderboardEndpoint()) {
   syncDinoGlobalLeaderboard(false);
 }

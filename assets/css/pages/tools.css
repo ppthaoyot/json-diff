@@ -199,6 +199,59 @@
   line-height: 1.55;
 }
 
+.json-editor-shell {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr);
+  border: 1px solid var(--border-md);
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--bg-primary);
+}
+
+.json-editor-shell.is-structure {
+  grid-template-columns: 1fr;
+}
+
+.json-editor-shell.is-structure .json-line-numbers,
+.json-editor-shell.is-structure .json-editor-textarea {
+  display: none;
+}
+
+.json-editor-shell.is-line-numbers-hidden {
+  grid-template-columns: 1fr;
+}
+
+.json-editor-shell.is-line-numbers-hidden .json-line-numbers {
+  display: none;
+}
+
+.json-editor-textarea {
+  border: 0;
+  border-radius: 0;
+  min-height: 280px;
+}
+
+.json-line-numbers {
+  padding: 14px 8px;
+  background: #f5f5f4;
+  border-right: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.55;
+  text-align: right;
+  color: var(--text-tertiary);
+  user-select: none;
+  white-space: pre;
+  overflow: hidden;
+}
+
+.json-tree-panel {
+  min-height: 280px;
+  padding: 12px;
+  overflow: auto;
+  background: #fafaf9;
+}
+
 .tool-textarea.is-compact {
   min-height: 170px;
 }
@@ -303,6 +356,7 @@
 }
 
 .tree-view,
+.json-tree-view,
 .list-view,
 .meta-grid,
 .history-list {
@@ -336,6 +390,65 @@
 .tree-path,
 .tree-val {
   word-break: break-word;
+}
+
+.json-tree-node {
+  display: grid;
+  gap: 6px;
+}
+
+.json-tree-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding-left: calc(var(--tree-depth, 0) * 18px);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.json-tree-toggle-btn,
+.json-tree-toggle-spacer {
+  width: 20px;
+  flex: 0 0 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.json-tree-toggle-btn {
+  min-height: 20px;
+  border: 1px solid var(--border-md);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--text-primary);
+  cursor: pointer;
+  font: inherit;
+  line-height: 1;
+}
+
+.json-tree-key {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.json-tree-sep,
+.json-tree-summary {
+  color: var(--text-secondary);
+}
+
+.json-tree-value {
+  color: var(--text-primary);
+  word-break: break-word;
+}
+
+.json-tree-children {
+  display: grid;
+  gap: 6px;
+}
+
+.json-tree-node.is-collapsed > .json-tree-children {
+  display: none;
 }
 
 .list-item {

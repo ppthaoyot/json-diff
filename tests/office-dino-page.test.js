@@ -17,6 +17,7 @@ test("office dino has its own standalone page shell", () => {
   assert.match(html, /id="dino-player-name"/i);
   assert.match(html, /id="dino-leaderboard-list"/i);
   assert.match(html, /id="dino-global-leaderboard-list"/i);
+  assert.match(html, /class="office-dino-sidebar"[\s\S]*id="dino-global-leaderboard-list"/i);
 });
 
 test("office dino page loads shared and page-specific assets", () => {
@@ -39,4 +40,11 @@ test("main index keeps Office Dino inside the legacy single-page flow", () => {
   const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
   assert.match(html, /id="ptab-minigame"[\s\S]*?switchPage\('minigame'\)/i);
   assert.doesNotMatch(html, /id="ptab-minigame"[\s\S]*?href="pages\/office-dino\.html"/i);
+});
+
+test("standalone office dino submits and refreshes the global board on game over", () => {
+  const script = fs.readFileSync(officeDinoScriptPath, "utf8");
+
+  assert.match(script, /function onDinoGameOver\(\)[\s\S]*submitDinoGlobalScore\(entry\)/i);
+  assert.match(script, /function submitDinoGlobalScore\(entry\)[\s\S]*syncDinoGlobalLeaderboard\(false\)/i);
 });
