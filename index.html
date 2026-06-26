@@ -2650,7 +2650,8 @@ function setDinoDuck(isDucking) {
 }
 
 function spawnDinoObstacle() {
-  const isPowerup = Math.random() < 0.08 && dinoScore > 100;
+  // Powerup spawns only if HP is missing (dinoHP < 3), has 20% chance, and score > 50
+  const isPowerup = dinoHP < 3 && Math.random() < 0.20 && dinoScore > 50;
   let type;
   if (isPowerup) {
     type = dinoPowerupTypes[Math.floor(Math.random() * dinoPowerupTypes.length)];
