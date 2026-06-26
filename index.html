@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JSON Diff & Base64 Tools</title>
+<title>JSON Diff & Base64 Tools | Thai ID & Lucky Draw</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -369,6 +369,343 @@ textarea.invalid { border-color: #E24B4A; }
   self-align: stretch;
 }
 
+/* ---- Thai ID Generator ---- */
+.id-gen-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 680px;
+  margin: 0 auto;
+}
+.id-display {
+  background: var(--bg-primary);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px 24px;
+  text-align: center;
+}
+.id-number {
+  font-family: var(--font-mono);
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+  transition: all 0.2s;
+}
+.id-number.rolling {
+  animation: rollNum 0.5s ease;
+}
+@keyframes rollNum {
+  0% { opacity:0; transform: scale(0.92); }
+  100% { opacity:1; transform: scale(1); }
+}
+.id-formatted {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--text-tertiary);
+  letter-spacing: 1px;
+  margin-bottom: 16px;
+}
+.id-gen-btn {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 32px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+}
+.id-gen-btn:hover { opacity: 0.85; }
+.id-gen-btn:active { transform: scale(0.97); }
+.id-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+.id-meta-card {
+  background: var(--bg-primary);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+}
+.id-meta-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+.id-meta-value {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+.id-history {
+  background: var(--bg-primary);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+}
+.id-history-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.id-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 160px;
+  overflow-y: auto;
+}
+.id-history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-secondary);
+  padding: 4px 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.id-history-item:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+.id-copy-hint {
+  font-size: 10px;
+  color: var(--text-tertiary);
+}
+.id-info {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  background: var(--bg-secondary);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  line-height: 1.8;
+}
+.id-info b { color: var(--text-secondary); }
+.id-controls {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.id-count-select {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: var(--radius-md);
+  border: 0.5px solid var(--border-md);
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+/* ---- Lucky Draw ---- */
+.lucky-wrap {
+  max-width: 580px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.lucky-header {
+  text-align: center;
+  padding: 8px 0 0;
+}
+.lucky-emoji-big {
+  font-size: 52px;
+  display: block;
+  line-height: 1;
+  margin-bottom: 4px;
+  animation: floatEmoji 3s ease-in-out infinite;
+}
+@keyframes floatEmoji {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.lucky-tagline {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+.lucky-mode-row {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.lucky-mode-btn {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 20px;
+  border-radius: 99px;
+  border: 0.5px solid var(--border-md);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.lucky-mode-btn.active {
+  background: #c0392b;
+  color: #fff;
+  border-color: #c0392b;
+}
+.lucky-mode-btn:hover:not(.active) {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+.lucky-result-box {
+  background: var(--bg-primary);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 32px 20px;
+  text-align: center;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  position: relative;
+  overflow: hidden;
+}
+.lucky-numbers {
+  font-family: var(--font-mono);
+  font-size: 52px;
+  font-weight: 800;
+  letter-spacing: 10px;
+  color: #c0392b;
+  text-shadow: 0 2px 12px rgba(192,57,43,0.18);
+  transition: all 0.2s;
+}
+.lucky-numbers.spinning {
+  animation: spinNum 0.6s cubic-bezier(0.25,0.46,0.45,0.94);
+}
+@keyframes spinNum {
+  0% { opacity:0; transform: scale(0.5) rotate(-5deg); }
+  60% { transform: scale(1.1) rotate(1deg); }
+  100% { opacity:1; transform: scale(1) rotate(0deg); }
+}
+.lucky-subtitle {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+.lucky-fortune {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  max-width: 340px;
+  padding: 10px 14px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  margin-top: 4px;
+}
+.lucky-stars {
+  font-size: 18px;
+  letter-spacing: 2px;
+  margin-top: 2px;
+}
+.lucky-spin-btn {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 700;
+  padding: 12px 40px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.15s;
+  box-shadow: 0 4px 16px rgba(192,57,43,0.25);
+  letter-spacing: 0.5px;
+}
+.lucky-spin-btn:hover { opacity: 0.88; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(192,57,43,0.32); }
+.lucky-spin-btn:active { transform: scale(0.97) translateY(0); }
+.lucky-spin-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.lucky-disclaimer {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  text-align: center;
+  line-height: 1.7;
+  padding: 8px 12px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  border: 0.5px solid var(--border);
+}
+.lucky-confetti {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.lucky-confetti-piece {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  animation: confettiFall linear forwards;
+}
+@keyframes confettiFall {
+  0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(200px) rotate(720deg); opacity: 0; }
+}
+.lucky-history {
+  background: var(--bg-primary);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+}
+.lucky-history-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+}
+.lucky-history-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.lucky-history-chip {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 4px 14px;
+  border-radius: 99px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 0.5px solid var(--border);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.lucky-history-chip:hover { background: var(--bg-tertiary); }
+.lucky-mode-info {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
 /* ---- Base64 Page ---- */
 .b64-layout {
   display: grid;
@@ -592,6 +929,12 @@ textarea.invalid { border-color: #E24B4A; }
     <button class="page-tab" id="ptab-b64decode" onclick="switchPage('b64decode')" role="tab" aria-selected="false" aria-controls="page-b64decode">
       <span class="tab-icon">🔓</span> ถอดรหัส Base64
     </button>
+    <button class="page-tab" id="ptab-thaiid" onclick="switchPage('thaiid')" role="tab" aria-selected="false" aria-controls="page-thaiid">
+      <span class="tab-icon">🪪</span> สุ่มเลขบัตรประชาชน
+    </button>
+    <button class="page-tab" id="ptab-lucky" onclick="switchPage('lucky')" role="tab" aria-selected="false" aria-controls="page-lucky">
+      <span class="tab-icon">🎰</span> เสี่ยงดวงสุ่มหวย
+    </button>
   </div>
 
   <!-- ===================== PAGE: JSON DIFF ===================== -->
@@ -688,7 +1031,101 @@ textarea.invalid { border-color: #E24B4A; }
     </div>
   </div>
 
-  <!-- ===================== PAGE: BASE64 DECODE ===================== -->
+  <!-- ===================== PAGE: THAI ID GENERATOR ===================== -->
+  <div class="page" id="page-thaiid" role="tabpanel" aria-labelledby="ptab-thaiid">
+    <div class="id-gen-wrap">
+      <div class="id-display">
+        <div class="id-number" id="id-number-display">- - - - - - - - - - - - -</div>
+        <div class="id-formatted" id="id-formatted-display">กด "สุ่มเลขใหม่" เพื่อเริ่มต้น</div>
+        <div class="id-controls" style="margin-top:12px;">
+          <select class="id-count-select" id="id-gen-count">
+            <option value="1">สุ่ม 1 เลข</option>
+            <option value="5">สุ่ม 5 เลข</option>
+            <option value="10">สุ่ม 10 เลข</option>
+          </select>
+          <select class="id-count-select" id="id-first-digit">
+            <option value="0">หลักแรก: สุ่มทั้งหมด (1-8)</option>
+            <option value="1">1 – เกิดก่อน 2524 (อำเภอ)</option>
+            <option value="2">2 – เกิดก่อน 2524 (สนท.)</option>
+            <option value="3">3 – เกิดหลัง 2524 (อำเภอ)</option>
+            <option value="4">4 – เกิดหลัง 2524 (สนท.)</option>
+            <option value="5">5 – มีทะเบียนบ้าน ไร้สัญชาติ</option>
+            <option value="6">6 – เข้าเมืองผิดกฎหมาย</option>
+            <option value="7">7 – ได้รับการผ่อนผัน</option>
+            <option value="8">8 – ได้รับสัญชาติไทย</option>
+          </select>
+          <button class="id-gen-btn" onclick="generateThaiID()">🎲 สุ่มเลขใหม่</button>
+        </div>
+      </div>
+
+      <div class="id-meta-grid" id="id-meta-grid" style="display:none;"></div>
+
+      <div class="id-history">
+        <div class="id-history-title">
+          <span>ประวัติการสุ่ม</span>
+          <button class="fmt-btn" onclick="clearIDHistory()">ล้าง</button>
+        </div>
+        <div class="id-history-list" id="id-history-list">
+          <div style="font-size:12px;color:var(--text-tertiary);text-align:center;padding:8px;">ยังไม่มีประวัติ</div>
+        </div>
+      </div>
+
+      <div class="id-info">
+        <b>⚠ สำหรับทดสอบระบบเท่านั้น</b><br>
+        เลขบัตรประชาชนที่สุ่มได้ผ่านอัลกอริทึม checksum ของกรมการปกครอง (หลักที่ 13 คำนวณจากหลักที่ 1-12)<br>
+        <b>ไม่ใช่เลขบัตรประชาชนจริงของบุคคลใด</b> ห้ามนำไปใช้ในทางที่ผิดกฎหมายโดยเด็ดขาด
+      </div>
+    </div>
+  </div>
+
+<!-- ===================== PAGE: LUCKY DRAW ===================== -->
+  <div class="page" id="page-lucky" role="tabpanel" aria-labelledby="ptab-lucky">
+    <div class="lucky-wrap">
+      <div class="lucky-header">
+        <span class="lucky-emoji-big">🎰</span>
+        <div style="font-size:18px;font-weight:700;color:var(--text-primary);">เสี่ยงดวงสุ่มหวย</div>
+        <div class="lucky-tagline">สุ่มตัวเลขมงคล ขอให้ถูก! (ถ้าไม่ถูกอย่ามาโทษผม 555)</div>
+      </div>
+
+      <div class="lucky-mode-row">
+        <button class="lucky-mode-btn active" id="lbtn-2" onclick="setLuckyMode(2)">🎯 2 ตัวท้าย</button>
+        <button class="lucky-mode-btn" id="lbtn-3" onclick="setLuckyMode(3)">🔥 3 ตัวท้าย</button>
+        <button class="lucky-mode-btn" id="lbtn-6" onclick="setLuckyMode(6)">💎 6 ตัว (กะเอารวย)</button>
+      </div>
+
+      <div class="lucky-mode-info" id="lucky-mode-info">เลือกประเภทหวย แล้วกดสุ่ม</div>
+
+      <div class="lucky-result-box" id="lucky-result-box">
+        <div class="lucky-confetti" id="lucky-confetti"></div>
+        <div class="lucky-numbers" id="lucky-numbers">??</div>
+        <div class="lucky-subtitle" id="lucky-subtitle">กดปุ่มด้านล่างเพื่อเสี่ยงดวง</div>
+        <div class="lucky-stars" id="lucky-stars"></div>
+        <div class="lucky-fortune" id="lucky-fortune" style="display:none;"></div>
+      </div>
+
+      <div style="text-align:center;">
+        <button class="lucky-spin-btn" id="lucky-spin-btn" onclick="spinLucky()">🙏 ขอเลขเด็ด!</button>
+      </div>
+
+      <div class="lucky-history">
+        <div class="lucky-history-label">
+          <span>เลขที่สุ่มล่าสุด</span>
+          <button class="fmt-btn" onclick="clearLuckyHistory()">ล้าง</button>
+        </div>
+        <div class="lucky-history-items" id="lucky-history-items">
+          <span style="font-size:12px;color:var(--text-tertiary);">ยังไม่มีประวัติ</span>
+        </div>
+      </div>
+
+      <div class="lucky-disclaimer">
+        ⚠️ <b>คำเตือน:</b> เว็บนี้สุ่มเลขแบบสุ่มจริงๆ ไม่ได้มีไสยศาสตร์ใดๆ 🙅‍♂️<br>
+        ผู้พัฒนาไม่รับผิดชอบหากซื้อแล้วไม่ถูก 😂 กรุณาเล่นหวยด้วยความพอดี<br>
+        <span style="color:#e74c3c;font-weight:600;">"หวยไม่ใช่ทางออก แต่ถ้าถูกก็ดีนะ 555"</span>
+      </div>
+    </div>
+  </div>
+
+<!-- ===================== PAGE: BASE64 DECODE ===================== -->
   <div class="page" id="page-b64decode" role="tabpanel" aria-labelledby="ptab-b64decode">
     <div class="b64-layout">
       <!-- Input -->
@@ -748,7 +1185,7 @@ textarea.invalid { border-color: #E24B4A; }
 //  PAGE SWITCHING
 // ============================================================
 function switchPage(name) {
-  ['diff','b64encode','b64decode'].forEach(function(p) {
+  ['diff','b64encode','b64decode','thaiid','lucky'].forEach(function(p) {
     document.getElementById('page-'+p).classList.toggle('active', p===name);
     var tab = document.getElementById('ptab-'+p);
     tab.classList.toggle('active', p===name);
@@ -769,6 +1206,241 @@ function showToast(title, body, type) {
     t.style.animation = 'toastOut 0.2s ease forwards';
     setTimeout(function(){ if(tc.contains(t)) tc.removeChild(t); }, 200);
   }, 3500);
+}
+
+// ============================================================
+//  THAI ID GENERATOR
+// ============================================================
+var idHistory = [];
+
+function calcThaiIDChecksum(digits12) {
+  // digits12: array of 12 numbers
+  var sum = 0;
+  for (var i = 0; i < 12; i++) sum += digits12[i] * (13 - i);
+  return (11 - (sum % 11)) % 10;
+}
+
+function randDigit() { return Math.floor(Math.random() * 10); }
+
+function genOneThaiID(firstDigitFixed) {
+  var digits = [];
+  // Digit 1
+  var d1 = (firstDigitFixed && firstDigitFixed > 0) ? firstDigitFixed : (Math.floor(Math.random() * 8) + 1);
+  digits.push(d1);
+  // Digits 2-12
+  for (var i = 1; i < 12; i++) digits.push(randDigit());
+  // Digit 13 checksum
+  digits.push(calcThaiIDChecksum(digits));
+  return digits.join('');
+}
+
+function formatThaiID(id) {
+  // X-XXXX-XXXXX-XX-X
+  return id[0] + '-' + id.slice(1,5) + '-' + id.slice(5,10) + '-' + id.slice(10,12) + '-' + id[12];
+}
+
+var FIRST_DIGIT_DESC = {
+  '1': 'เกิดก่อน 1/1/2524 ที่ว่าการอำเภอ',
+  '2': 'เกิดก่อน 1/1/2524 ที่สำนักทะเบียน',
+  '3': 'เกิดหลัง 1/1/2524 ที่ว่าการอำเภอ',
+  '4': 'เกิดหลัง 1/1/2524 ที่สำนักทะเบียน',
+  '5': 'มีทะเบียนบ้าน แต่ไม่มีสัญชาติไทย',
+  '6': 'เข้าเมืองโดยไม่ชอบด้วยกฎหมาย',
+  '7': 'ได้รับการผ่อนผันให้อยู่ในราชอาณาจักร',
+  '8': 'ได้รับสัญชาติไทยหรือได้รับอนุญาตมีถิ่นที่อยู่'
+};
+
+function generateThaiID() {
+  var count = parseInt(document.getElementById('id-gen-count').value);
+  var firstDigit = parseInt(document.getElementById('id-first-digit').value);
+  var ids = [];
+  for (var i = 0; i < count; i++) ids.push(genOneThaiID(firstDigit));
+
+  // Update display with the latest generated
+  var latest = ids[ids.length - 1];
+  var numEl = document.getElementById('id-number-display');
+  numEl.textContent = latest;
+  numEl.classList.remove('rolling');
+  void numEl.offsetWidth;
+  numEl.classList.add('rolling');
+
+  document.getElementById('id-formatted-display').textContent = formatThaiID(latest);
+
+  // Show meta
+  var metaGrid = document.getElementById('id-meta-grid');
+  metaGrid.style.display = 'grid';
+  metaGrid.innerHTML =
+    metaCard('รหัสหลักที่ 1', latest[0] + ' – ' + (FIRST_DIGIT_DESC[latest[0]] || '?')) +
+    metaCard('รหัสจังหวัด', latest.slice(1,3)) +
+    metaCard('รหัสอำเภอ/เขต', latest.slice(3,5)) +
+    metaCard('ลำดับทะเบียน', latest.slice(5,10)) +
+    metaCard('รหัสเพิ่มเติม', latest.slice(10,12)) +
+    metaCard('เลข Checksum (หลัก 13)', latest[12]);
+
+  // Add to history
+  ids.forEach(function(id) {
+    idHistory.unshift({ id: id, fmt: formatThaiID(id) });
+  });
+  if (idHistory.length > 50) idHistory = idHistory.slice(0, 50);
+  renderIDHistory();
+}
+
+function metaCard(label, value) {
+  return '<div class="id-meta-card"><div class="id-meta-label">' + esc(label) + '</div><div class="id-meta-value">' + esc(String(value)) + '</div></div>';
+}
+
+function renderIDHistory() {
+  var list = document.getElementById('id-history-list');
+  if (!idHistory.length) {
+    list.innerHTML = '<div style="font-size:12px;color:var(--text-tertiary);text-align:center;padding:8px;">ยังไม่มีประวัติ</div>';
+    return;
+  }
+  list.innerHTML = idHistory.slice(0, 20).map(function(item) {
+    return '<div class="id-history-item" onclick="copyToClipboard(\'' + item.id + '\')" title="คลิกเพื่อคัดลอก">' +
+      '<span>' + esc(item.fmt) + '</span>' +
+      '<span class="id-copy-hint">คัดลอก</span>' +
+      '</div>';
+  }).join('');
+}
+
+function clearIDHistory() {
+  idHistory = [];
+  renderIDHistory();
+  document.getElementById('id-number-display').textContent = '- - - - - - - - - - - - -';
+  document.getElementById('id-formatted-display').textContent = 'กด "สุ่มเลขใหม่" เพื่อเริ่มต้น';
+  document.getElementById('id-meta-grid').style.display = 'none';
+}
+
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).then(function() {
+    showToast('คัดลอกแล้ว', text, 'ok');
+  });
+}
+
+// ============================================================
+//  LUCKY DRAW
+// ============================================================
+var luckyMode = 2;
+var luckyHistory = [];
+var luckySpinning = false;
+
+var FORTUNES = [
+  { stars: 5, msg: '⭐⭐⭐⭐⭐ ดวงพุ่งแรงเหมือนจรวด! เลขนี้มีพลังงานสูง แม่จะโทรมาถามด้วยนะ 📱' },
+  { stars: 4, msg: '⭐⭐⭐⭐ ดวงดีมาก! ฝันถึงตัวเลขชุดนี้ไหม? ถ้าใช่นี่คือสัญญาณ 🌟' },
+  { stars: 3, msg: '⭐⭐⭐ ดวงปานกลาง... แต่บางทีปานกลางก็ถูกนะ! อย่าหมดหวัง 🤞' },
+  { stars: 2, msg: '⭐⭐ ดวงอ่อนนิดนึง แต่ซื้อไว้ก่อนเผื่อฟลุก ชีวิตไม่แน่นอน 😅' },
+  { stars: 1, msg: '⭐ ดวงตก... แต่ใครจะรู้? บางทีดวงตกแล้วโชคขึ้น คิดบวกไว้ 🙃' },
+  { stars: 5, msg: '⭐⭐⭐⭐⭐ เลขนี้ AI บอกว่าเด็ดมาก! (AI ก็ไม่รู้จริงๆ นะ แต่ฟังดูดี 🤖)' },
+  { stars: 4, msg: '⭐⭐⭐⭐ ตาแหวนกระพริบตอนเห็นเลขนี้ไหม? นั่นคือสัญญาณดี! 👁️' },
+  { stars: 3, msg: '⭐⭐⭐ เลขนี้ถูกสุ่มมาด้วยพลังงานจักรวาล... และ Math.random() 🌌' },
+  { stars: 2, msg: '⭐⭐ คนที่เกิดวันพุธดวงดีกว่าเล็กน้อย แต่ก็ยังไม่มีใครการันตีนะ 😂' },
+  { stars: 5, msg: '⭐⭐⭐⭐⭐ เลขมงคลสูงสุด! หมอดูดังกล่าวว่าตัวเลขนี้มีพลังแห่งความมั่งคั่ง 💰' },
+  { stars: 3, msg: '⭐⭐⭐ ลุงแมวกำลังนอนหลับ... ซึ่งไม่ได้บอกอะไร แต่ฟังดูลึกซึ้ง 🐱' },
+  { stars: 4, msg: '⭐⭐⭐⭐ เลขนี้ออกมาตอนดาวพฤหัสอยู่ในตำแหน่งดี (จริงหรือเปล่าไม่รู้ 😹)' }
+];
+
+var MODE_LABELS = { 2: '2 ตัวท้าย (00-99)', 3: '3 ตัวบน/ล่าง (000-999)', 6: '6 ตัว กะเอารวย! (000000-999999)' };
+
+function setLuckyMode(m) {
+  luckyMode = m;
+  [2,3,6].forEach(function(x) {
+    document.getElementById('lbtn-'+x).classList.toggle('active', x===m);
+  });
+  document.getElementById('lucky-numbers').textContent = m===2?'??': m===3?'???':'??????';
+  document.getElementById('lucky-subtitle').textContent = 'กดปุ่มด้านล่างเพื่อเสี่ยงดวง';
+  document.getElementById('lucky-stars').textContent = '';
+  document.getElementById('lucky-fortune').style.display = 'none';
+  document.getElementById('lucky-mode-info').textContent = MODE_LABELS[m];
+}
+
+function spinLucky() {
+  if (luckySpinning) return;
+  luckySpinning = true;
+  var btn = document.getElementById('lucky-spin-btn');
+  btn.disabled = true;
+  btn.textContent = '🙏 กำลังขอพร...';
+
+  var numEl = document.getElementById('lucky-numbers');
+  var subtitleEl = document.getElementById('lucky-subtitle');
+  var starsEl = document.getElementById('lucky-stars');
+  var fortuneEl = document.getElementById('lucky-fortune');
+
+  // Rolling animation
+  var ticks = 0;
+  var maxTicks = 18;
+  var rollInterval = setInterval(function() {
+    ticks++;
+    var dummy = genLuckyNumber(luckyMode);
+    numEl.textContent = dummy;
+    if (ticks >= maxTicks) {
+      clearInterval(rollInterval);
+      var final = genLuckyNumber(luckyMode);
+      numEl.textContent = final;
+      numEl.classList.remove('spinning');
+      void numEl.offsetWidth;
+      numEl.classList.add('spinning');
+
+      var fortune = FORTUNES[Math.floor(Math.random() * FORTUNES.length)];
+      subtitleEl.textContent = '✨ เลขเด็ดประจำงวด!';
+      starsEl.textContent = '★'.repeat(fortune.stars) + '☆'.repeat(5-fortune.stars);
+      fortuneEl.textContent = fortune.msg;
+      fortuneEl.style.display = '';
+
+      if (fortune.stars >= 4) spawnConfetti();
+
+      luckyHistory.unshift({ num: final, mode: luckyMode, stars: fortune.stars });
+      if (luckyHistory.length > 30) luckyHistory = luckyHistory.slice(0, 30);
+      renderLuckyHistory();
+
+      luckySpinning = false;
+      btn.disabled = false;
+      btn.textContent = '🙏 ขอเลขใหม่อีกครั้ง!';
+    }
+  }, 60);
+}
+
+function genLuckyNumber(mode) {
+  var n = Math.floor(Math.random() * Math.pow(10, mode));
+  return String(n).padStart(mode, '0');
+}
+
+function spawnConfetti() {
+  var container = document.getElementById('lucky-confetti');
+  container.innerHTML = '';
+  var colors = ['#e74c3c','#f39c12','#2ecc71','#3498db','#9b59b6','#f1c40f'];
+  for (var i = 0; i < 28; i++) {
+    (function(idx) {
+      setTimeout(function() {
+        var piece = document.createElement('div');
+        piece.className = 'lucky-confetti-piece';
+        piece.style.left = Math.random() * 100 + '%';
+        piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.animationDuration = (0.7 + Math.random() * 0.8) + 's';
+        piece.style.animationDelay = '0s';
+        piece.style.width = (6 + Math.random() * 6) + 'px';
+        piece.style.height = (6 + Math.random() * 6) + 'px';
+        container.appendChild(piece);
+        setTimeout(function() { if(container.contains(piece)) container.removeChild(piece); }, 1600);
+      }, idx * 40);
+    })(i);
+  }
+}
+
+function renderLuckyHistory() {
+  var el = document.getElementById('lucky-history-items');
+  if (!luckyHistory.length) {
+    el.innerHTML = '<span style="font-size:12px;color:var(--text-tertiary);">ยังไม่มีประวัติ</span>';
+    return;
+  }
+  el.innerHTML = luckyHistory.slice(0, 15).map(function(h) {
+    return '<span class="lucky-history-chip" title="' + MODE_LABELS[h.mode] + '" onclick="copyToClipboard(\'' + h.num + '\')">'
+      + h.num + '</span>';
+  }).join('');
+}
+
+function clearLuckyHistory() {
+  luckyHistory = [];
+  renderLuckyHistory();
 }
 
 // ============================================================
