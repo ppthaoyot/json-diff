@@ -1067,6 +1067,78 @@ textarea.invalid { border-color: #E24B4A; }
   80% { transform: scale(1) rotate(0deg); opacity: 1; }
   100% { transform: scale(1.5) rotate(10deg); opacity: 0; }
 }
+
+/* ---- Office Dino Game ---- */
+.dino-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  text-align: left;
+}
+.dino-title { font-size: 22px; font-weight: bold; color: var(--text-primary); }
+.dino-subtitle { font-size: 13px; color: var(--text-secondary); }
+.dino-score-panel { text-align: right; font-size: 14px; line-height: 1.6; color: var(--text-primary); }
+#levelText { font-weight: bold; font-size: 18px; color: #c0392b; }
+.dino-canvas-wrap { border: 3px solid var(--border-md); border-radius: var(--radius-md); overflow: hidden; background: #fff; }
+canvas#dino-game {
+  width: 100%;
+  height: auto;
+  display: block;
+  background: linear-gradient(#ffffff 0%, #ffffff 72%, #eeeeee 72%, #eeeeee 100%);
+}
+.dino-controls {
+  margin-top: 10px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  text-align: left;
+}
+.dino-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border: 1px solid var(--border-md);
+  border-radius: 4px;
+  background: var(--bg-secondary);
+  font-weight: bold;
+  font-family: var(--font-mono);
+}
+.dino-char-select {
+  padding: 4px 8px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-md);
+  font-size: 16px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.hub-nav {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.hub-btn {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  padding: 8px 16px;
+  border-radius: 99px;
+  border: 1px solid var(--border-md);
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.hub-btn.active {
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  border-color: var(--text-primary);
+}
 </style>
 </head>
 <body>
@@ -1095,7 +1167,7 @@ textarea.invalid { border-color: #E24B4A; }
       <span class="tab-icon">🎰</span> เสี่ยงดวงสุ่มหวย
     </button>
     <button class="page-tab" id="ptab-minigame" onclick="switchPage('minigame')" role="tab" aria-selected="false" aria-controls="page-minigame">
-      <span class="tab-icon">🎁</span> มินิเกมเปิดกล่อง
+      <span class="tab-icon">🎮</span> ศูนย์รวมมินิเกม
     </button>
   </div>
 
@@ -1296,21 +1368,64 @@ textarea.invalid { border-color: #E24B4A; }
     </div>
   </div>
 
-<!-- ===================== PAGE: MINI GAME ===================== -->
+<!-- ===================== PAGE: MINI GAME HUB ===================== -->
   <div class="page" id="page-minigame" role="tabpanel" aria-labelledby="ptab-minigame">
-    <div class="mg-wrap">
-      <div class="mg-header">🎁 เกมสลับกล่องเสี่ยงโชค</div>
-      <div class="mg-desc">มีเพชร 💎 ซ่อนอยู่ใน 1 กล่อง จับตาดูให้ดีแล้วเลือกให้ถูก!</div>
+    <div class="mg-wrap" style="max-width:940px;">
       
-      <div class="mg-board" id="mg-board">
-        <!-- Boxes injected by JS -->
+      <div class="hub-nav">
+        <button class="hub-btn active" id="hub-btn-dino" onclick="switchMgHub('dino')">🏃 Office Dino</button>
+        <button class="hub-btn" id="hub-btn-box" onclick="switchMgHub('box')">🎁 เกมสลับกล่อง</button>
       </div>
-      
-      <div style="min-height:28px;">
-        <button class="mg-btn" id="mg-start-btn" onclick="mgStartGame()">เริ่มเกม / สลับกล่อง!</button>
+
+      <!-- GAME: DINO -->
+      <div id="mg-hub-dino">
+        <div class="dino-header">
+          <div>
+            <div class="dino-title">Office Dino: มนุษย์เงินเดือนหลบงาน</div>
+            <div class="dino-subtitle">เกมวัดระดับความว่างในออฟฟิศ — ยิ่งรอดนาน ยิ่งน่าสงสัย</div>
+          </div>
+          <div class="dino-score-panel">
+            <div>
+              ตัวละคร: 
+              <select class="dino-char-select" id="dino-char" onchange="changeDinoChar()">
+                <option value="🤵">🤵 ผู้บริหาร</option>
+                <option value="👨‍💻" selected>👨‍💻 โปรแกรมเมอร์หนุ่ม</option>
+                <option value="👩‍💼">👩‍💼 สาวออฟฟิศ</option>
+                <option value="🧑‍💻">🧑‍💻 พนักงานทั่วไป</option>
+              </select>
+            </div>
+            <div style="margin-top:4px;">คะแนนความว่าง: <span id="scoreText">0</span></div>
+            <div>ระดับ: <span id="levelText">ยังพอทำงานอยู่</span></div>
+          </div>
+        </div>
+
+        <div class="dino-canvas-wrap">
+          <canvas id="dino-game" width="900" height="300"></canvas>
+        </div>
+
+        <div class="dino-controls">
+          <div>
+            <span class="dino-badge">Space / ↑</span> กระโดด
+            <span class="dino-badge">↓</span> หมอบ
+            <span class="dino-badge">R</span> เริ่มใหม่
+          </div>
+          <div style="color:var(--text-tertiary);">หลบงานด่วน แฟ้มเอกสาร และหัวหน้าให้รอด!</div>
+        </div>
       </div>
-      
-      <div class="mg-result" id="mg-result"></div>
+
+      <!-- GAME: BOX -->
+      <div id="mg-hub-box" style="display:none;">
+        <div class="mg-header">🎁 เกมสลับกล่องเสี่ยงโชค</div>
+        <div class="mg-desc">มีเพชร 💎 ซ่อนอยู่ใน 1 กล่อง จับตาดูให้ดีแล้วเลือกให้ถูก!</div>
+        <div class="mg-board" id="mg-board">
+          <!-- Boxes injected by JS -->
+        </div>
+        <div style="min-height:28px;">
+          <button class="mg-btn" id="mg-start-btn" onclick="mgStartGame()">เริ่มเกม / สลับกล่อง!</button>
+        </div>
+        <div class="mg-result" id="mg-result"></div>
+      </div>
+
     </div>
   </div>
   
@@ -2324,7 +2439,7 @@ function mgEpicWin() {
 
 // Initial init for mini game
 window.addEventListener('resize', function() {
-  if (document.getElementById('page-minigame').classList.contains('active')) {
+  if (document.getElementById('page-minigame').classList.contains('active') && document.getElementById('mg-hub-box').style.display !== 'none') {
     var board = document.getElementById('mg-board');
     if (!board.children.length) return;
     var centerOffset = (board.offsetWidth - (3 * boxWidth + 2 * boxGap)) / 2;
@@ -2334,12 +2449,362 @@ window.addEventListener('resize', function() {
     }
   }
 });
-// Render board initially when switching to tab
-document.getElementById('ptab-minigame').addEventListener('click', function() {
-  if (!document.getElementById('mg-board').children.length) {
+
+function switchMgHub(game) {
+  document.getElementById('mg-hub-box').style.display = (game === 'box') ? 'block' : 'none';
+  document.getElementById('mg-hub-dino').style.display = (game === 'dino') ? 'block' : 'none';
+  
+  document.getElementById('hub-btn-box').classList.toggle('active', game === 'box');
+  document.getElementById('hub-btn-dino').classList.toggle('active', game === 'dino');
+  
+  if (game === 'box' && !document.getElementById('mg-board').children.length) {
     mgInitBoard();
   }
+  if (game === 'dino' && !dinoLoopStarted) {
+    dinoLoopStarted = true;
+    dinoLoop();
+  }
+}
+
+// Render board initially when switching to tab
+document.getElementById('ptab-minigame').addEventListener('click', function() {
+  if (document.getElementById('mg-hub-box').style.display !== 'none' && !document.getElementById('mg-board').children.length) {
+    mgInitBoard();
+  }
+  if (document.getElementById('mg-hub-dino').style.display !== 'none' && !dinoLoopStarted) {
+    dinoLoopStarted = true;
+    dinoLoop();
+  }
 });
+
+// ============================================================
+//  OFFICE DINO GAME
+// ============================================================
+const dinoCanvas = document.getElementById("dino-game");
+const dinoCtx = dinoCanvas.getContext("2d");
+
+const dinoScoreText = document.getElementById("scoreText");
+const dinoLevelText = document.getElementById("levelText");
+
+const dW = dinoCanvas.width;
+const dH = dinoCanvas.height;
+const dinoGroundY = 235;
+
+const dinoConfig = {
+  playerEmoji: "👨‍💻",
+  gravity: 0.75,
+  jumpPower: -14,
+  baseSpeed: 5.5,
+  maxSpeed: 14
+};
+
+let dinoState = "ready";
+let dinoFrame = 0;
+let dinoScore = 0;
+let dinoHighScore = Number(localStorage.getItem("officeDinoHighScore") || 0);
+let dinoSpeed = dinoConfig.baseSpeed;
+let dinoNextSpawn = 90;
+let dinoObstacles = [];
+let dinoParticles = [];
+let dinoLoopStarted = false;
+
+const dinoPlayer = {
+  x: 80,
+  y: dinoGroundY - 58,
+  w: 46,
+  h: 58,
+  vy: 0,
+  grounded: true,
+  ducking: false
+};
+
+const dinoObstacleTypes = [
+  { emoji: "📄", label: "กระดาษ", w: 42, h: 48 },
+  { emoji: "📁", label: "แฟ้มเอกสาร", w: 46, h: 54 },
+  { emoji: "🔥", label: "งานด่วน", w: 46, h: 56 },
+  { emoji: "📊", label: "Excel พัง", w: 52, h: 52 },
+  { emoji: "💬", label: "หัวหน้าด่า", w: 56, h: 58 },
+  { emoji: "☕", label: "กาแฟหมด", w: 46, h: 50 },
+  { emoji: "📞", label: "ลูกค้าโทร", w: 50, h: 52 },
+  { emoji: "🐞", label: "Bug Prod", w: 50, h: 52 },
+  { emoji: "🧑‍💼", label: "PM ตามงาน", w: 62, h: 58 },
+  { emoji: "📌", label: "งานฝาก", w: 46, h: 50 },
+  { emoji: "💸", label: "หักเงินเดือน", w: 52, h: 52 },
+  { emoji: "🤡", label: "เพื่อนโยนขี้", w: 56, h: 56 }
+];
+
+const dinoLevels = [
+  { score: 0, text: "ยังพอทำงานอยู่" },
+  { score: 100, text: "ชิวๆ" },
+  { score: 250, text: "ว่าง" },
+  { score: 450, text: "ว่างมาก" },
+  { score: 700, text: "มาทำไม" },
+  { score: 1000, text: "น่าจะลาอยู่บ้าน" },
+  { score: 1400, text: "ว่างจน HR สงสัย" },
+  { score: 1900, text: "ระดับตำนานประจำแผนก" },
+  { score: 2500, text: "CEO ยังต้องยอม" }
+];
+
+function changeDinoChar() {
+  dinoConfig.playerEmoji = document.getElementById("dino-char").value;
+}
+
+function resetDinoGame() {
+  dinoState = "running";
+  dinoFrame = 0;
+  dinoScore = 0;
+  dinoSpeed = dinoConfig.baseSpeed;
+  dinoNextSpawn = 80;
+  dinoObstacles = [];
+  dinoParticles = [];
+
+  dinoPlayer.y = dinoGroundY - 58;
+  dinoPlayer.vy = 0;
+  dinoPlayer.grounded = true;
+  dinoPlayer.ducking = false;
+  dinoPlayer.h = 58;
+}
+
+function getDinoLevel() {
+  let current = dinoLevels[0];
+  for (const level of dinoLevels) {
+    if (dinoScore >= level.score) current = level;
+  }
+  return current.text;
+}
+
+function dinoJump() {
+  if (dinoState === "ready" || dinoState === "gameover") {
+    resetDinoGame();
+    return;
+  }
+  if (dinoPlayer.grounded && !dinoPlayer.ducking) {
+    dinoPlayer.vy = dinoConfig.jumpPower;
+    dinoPlayer.grounded = false;
+    for (let i = 0; i < 6; i++) {
+      dinoParticles.push({
+        x: dinoPlayer.x + 10,
+        y: dinoGroundY - 8,
+        vx: -Math.random() * 2,
+        vy: -Math.random() * 2,
+        life: 20
+      });
+    }
+  }
+}
+
+function setDinoDuck(isDucking) {
+  if (dinoState !== "running") return;
+  dinoPlayer.ducking = isDucking && dinoPlayer.grounded;
+  dinoPlayer.h = dinoPlayer.ducking ? 34 : 58;
+  dinoPlayer.y = dinoGroundY - dinoPlayer.h;
+}
+
+function spawnDinoObstacle() {
+  const type = dinoObstacleTypes[Math.floor(Math.random() * dinoObstacleTypes.length)];
+  const floating = Math.random() < 0.25 && dinoScore > 300;
+
+  dinoObstacles.push({
+    x: dW + 20,
+    y: floating ? dinoGroundY - type.h - 44 : dinoGroundY - type.h,
+    w: type.w,
+    h: type.h,
+    emoji: type.emoji,
+    label: type.label,
+    floating
+  });
+
+  dinoNextSpawn = 70 + Math.floor(Math.random() * 70);
+  if (dinoScore > 800) dinoNextSpawn -= 15;
+  if (dinoScore > 1600) dinoNextSpawn -= 15;
+  dinoNextSpawn = Math.max(40, dinoNextSpawn);
+}
+
+let lastDinoHitReason = "";
+
+function checkDinoCollision() {
+  const pBox = { x: dinoPlayer.x + 8, y: dinoPlayer.y + 8, w: dinoPlayer.w - 16, h: dinoPlayer.h - 10 };
+  for (const obs of dinoObstacles) {
+    const oBox = { x: obs.x + 6, y: obs.y + 6, w: obs.w - 12, h: obs.h - 8 };
+    const hit = pBox.x < oBox.x + oBox.w && pBox.x + pBox.w > oBox.x && pBox.y < oBox.y + oBox.h && pBox.y + pBox.h > oBox.y;
+    if (hit) {
+      dinoState = "gameover";
+      if (dinoScore > dinoHighScore) {
+        dinoHighScore = dinoScore;
+        localStorage.setItem("officeDinoHighScore", String(dinoHighScore));
+      }
+      lastDinoHitReason = obs.label;
+      break;
+    }
+  }
+}
+
+function updateDino() {
+  if (dinoState !== "running") return;
+  dinoFrame++;
+  dinoScore += 1;
+  dinoSpeed = Math.min(dinoConfig.maxSpeed, dinoConfig.baseSpeed + dinoScore / 350);
+
+  dinoScoreText.textContent = dinoScore;
+  dinoLevelText.textContent = getDinoLevel();
+
+  dinoPlayer.vy += dinoConfig.gravity;
+  dinoPlayer.y += dinoPlayer.vy;
+
+  if (dinoPlayer.y + dinoPlayer.h >= dinoGroundY) {
+    dinoPlayer.y = dinoGroundY - dinoPlayer.h;
+    dinoPlayer.vy = 0;
+    dinoPlayer.grounded = true;
+  }
+
+  dinoNextSpawn--;
+  if (dinoNextSpawn <= 0) spawnDinoObstacle();
+
+  for (const obs of dinoObstacles) obs.x -= dinoSpeed;
+  dinoObstacles = dinoObstacles.filter(obs => obs.x + obs.w > -40);
+
+  for (const p of dinoParticles) {
+    p.x += p.vx; p.y += p.vy; p.life--;
+  }
+  dinoParticles = dinoParticles.filter(p => p.life > 0);
+
+  checkDinoCollision();
+}
+
+function drawDinoGround() {
+  dinoCtx.strokeStyle = "#333";
+  dinoCtx.lineWidth = 3;
+  dinoCtx.beginPath();
+  dinoCtx.moveTo(0, dinoGroundY);
+  dinoCtx.lineTo(dW, dinoGroundY);
+  dinoCtx.stroke();
+  dinoCtx.lineWidth = 1;
+
+  for (let i = 0; i < 40; i++) {
+    const x = (i * 55 - (dinoFrame * dinoSpeed) % 55);
+    dinoCtx.beginPath();
+    dinoCtx.moveTo(x, dinoGroundY + 10);
+    dinoCtx.lineTo(x + 20, dinoGroundY + 10);
+    dinoCtx.stroke();
+  }
+}
+
+function drawDinoBg() {
+  dinoCtx.font = "18px Tahoma";
+  dinoCtx.fillStyle = "#ddd";
+  const signs = ["OPEN OFFICE", "TODO", "ประชุม", "Deadline", "Coffee?"];
+  for (let i = 0; i < signs.length; i++) {
+    const x = 80 + i * 170 - ((dinoFrame * dinoSpeed * 0.25) % 170);
+    dinoCtx.fillText(signs[i], x, 55 + (i % 2) * 28);
+  }
+}
+
+function drawDinoPlayer() {
+  dinoCtx.save();
+  dinoCtx.font = dinoPlayer.ducking ? "34px Tahoma" : "44px Tahoma";
+  dinoCtx.textAlign = "center";
+  dinoCtx.textBaseline = "middle";
+  const bob = dinoPlayer.grounded ? Math.sin(dinoFrame / 5) * 2 : 0;
+  dinoCtx.fillText(dinoConfig.playerEmoji, dinoPlayer.x + dinoPlayer.w / 2, dinoPlayer.y + dinoPlayer.h / 2 + bob);
+  dinoCtx.font = "10px Tahoma";
+  dinoCtx.fillStyle = "#333";
+  dinoCtx.fillText("หนีงาน", dinoPlayer.x + dinoPlayer.w / 2, dinoPlayer.y - 8);
+  dinoCtx.restore();
+}
+
+function drawDinoObs(obs) {
+  dinoCtx.save();
+  dinoCtx.font = "34px Tahoma";
+  dinoCtx.textAlign = "center";
+  dinoCtx.textBaseline = "middle";
+  dinoCtx.fillText(obs.emoji, obs.x + obs.w / 2, obs.y + obs.h / 2);
+  dinoCtx.font = "11px Tahoma";
+  dinoCtx.fillStyle = "#333";
+  dinoCtx.fillText(obs.label, obs.x + obs.w / 2, obs.y - 8);
+  if (obs.floating) {
+    dinoCtx.font = "10px Tahoma";
+    dinoCtx.fillStyle = "#888";
+    dinoCtx.fillText("หมอบ!", obs.x + obs.w / 2, obs.y + obs.h + 14);
+  }
+  dinoCtx.restore();
+}
+
+function drawDinoParticles() {
+  dinoCtx.fillStyle = "#555";
+  for (const p of dinoParticles) {
+    dinoCtx.globalAlpha = p.life / 20;
+    dinoCtx.fillRect(p.x, p.y, 3, 3);
+  }
+  dinoCtx.globalAlpha = 1;
+}
+
+function drawDinoHud() {
+  dinoCtx.fillStyle = "#333";
+  dinoCtx.font = "16px Tahoma";
+  dinoCtx.textAlign = "right";
+  dinoCtx.fillText("HI " + dinoHighScore, dW - 24, 28);
+  dinoCtx.fillText("SCORE " + dinoScore, dW - 24, 52);
+}
+
+function drawDinoScreens() {
+  if (dinoState === "ready") {
+    dinoCtx.fillStyle = "rgba(255, 255, 255, 0.85)";
+    dinoCtx.fillRect(0, 0, dW, dH);
+    dinoCtx.fillStyle = "#333";
+    dinoCtx.textAlign = "center";
+    dinoCtx.font = "bold 28px Tahoma";
+    dinoCtx.fillText("Office Dino", dW / 2, 95);
+    dinoCtx.font = "18px Tahoma";
+    dinoCtx.fillText("มนุษย์เงินเดือนผู้ต้องหลบงานเพื่อรักษาความว่าง", dW / 2, 130);
+    dinoCtx.font = "15px Tahoma";
+    dinoCtx.fillText("กด Space หรือ ↑ เพื่อเริ่มเกม", dW / 2, 170);
+    dinoCtx.fillText("เจอสิ่งกีดขวางลอย ให้กด ↓ เพื่อหมอบ", dW / 2, 198);
+  } else if (dinoState === "gameover") {
+    dinoCtx.fillStyle = "rgba(255, 255, 255, 0.88)";
+    dinoCtx.fillRect(0, 0, dW, dH);
+    dinoCtx.fillStyle = "#333";
+    dinoCtx.textAlign = "center";
+    dinoCtx.font = "bold 28px Tahoma";
+    dinoCtx.fillText("หมดเวลาว่าง!", dW / 2, 82);
+    dinoCtx.font = "18px Tahoma";
+    dinoCtx.fillText("คุณพ่ายแพ้ให้กับ: " + lastDinoHitReason, dW / 2, 120);
+    dinoCtx.font = "16px Tahoma";
+    dinoCtx.fillText("คะแนนความว่าง: " + dinoScore, dW / 2, 155);
+    dinoCtx.fillText("ระดับสุดท้าย: " + getDinoLevel(), dW / 2, 184);
+    dinoCtx.font = "15px Tahoma";
+    dinoCtx.fillText("กด R หรือ Space เพื่อเริ่มใหม่", dW / 2, 225);
+  }
+}
+
+function renderDino() {
+  dinoCtx.clearRect(0, 0, dW, dH);
+  drawDinoBg();
+  drawDinoGround();
+  drawDinoParticles();
+  for (const obs of dinoObstacles) drawDinoObs(obs);
+  drawDinoPlayer();
+  drawDinoHud();
+  drawDinoScreens();
+}
+
+function dinoLoop() {
+  updateDino();
+  renderDino();
+  requestAnimationFrame(dinoLoop);
+}
+
+document.addEventListener("keydown", function(e) {
+  if (document.getElementById('mg-hub-dino').style.display === 'none' || !document.getElementById('page-minigame').classList.contains('active')) return;
+  if (e.code === "Space" || e.code === "ArrowUp") { e.preventDefault(); dinoJump(); }
+  if (e.code === "ArrowDown") { e.preventDefault(); setDinoDuck(true); }
+  if (e.code === "KeyR") { resetDinoGame(); }
+});
+
+document.addEventListener("keyup", function(e) {
+  if (e.code === "ArrowDown") setDinoDuck(false);
+});
+
+dinoCanvas.addEventListener("click", dinoJump);
 
 </script>
 </body>
