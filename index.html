@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JSON Diff Viewer</title>
+<title>JSON Diff & Base64 Tools</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -56,6 +56,13 @@
   .list-badge.stat-add { background: #1a3a1a !important; color: #6dbf6d !important; }
   .list-badge.stat-rem { background: #3a1a1a !important; color: #e07070 !important; }
   .list-badge.stat-chg { background: #3a2a0a !important; color: #d4a340 !important; }
+  .b64-result-box { background: var(--bg-secondary) !important; }
+  .b64-badge-encode { background: #1a3a2a !important; color: #6dbf9a !important; }
+  .b64-badge-decode { background: #1a2a3a !important; color: #6d9bbf !important; }
+  .b64-info { background: var(--bg-secondary) !important; border-color: var(--border) !important; color: var(--text-secondary) !important; }
+  .fmt-btn.copied { background: #1a3a1a !important; color: #6dbf6d !important; border-color: #6dbf6d !important; }
+  .fmt-fix { color: #d4a340 !important; border-color: #d4a340 !important; }
+  .fmt-fix:hover { background: #3a2a0a !important; }
 }
 
 body {
@@ -71,20 +78,76 @@ body {
   margin: 0 auto;
 }
 
+/* ---- App Header ---- */
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.app-title {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+  flex: 1;
+}
+
+/* ---- Page Tab Navigation ---- */
+.page-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--bg-secondary);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 4px;
+  margin-bottom: 16px;
+  width: fit-content;
+}
+
+.page-tab {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 7px 18px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.18s;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.page-tab .tab-icon {
+  font-size: 14px;
+  opacity: 0.8;
+}
+.page-tab.active {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.10);
+}
+.page-tab:hover:not(.active) {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+/* ---- Pages ---- */
+.page { display: none; }
+.page.active { display: block; }
+
+/* ---- Toolbar ---- */
 .toolbar {
   display: flex;
   align-items: center;
   gap: 8px;
   margin-bottom: 16px;
   flex-wrap: wrap;
-}
-
-h1 {
-  font-size: 18px;
-  font-weight: 500;
-  color: var(--text-primary);
-  flex: 1;
-  letter-spacing: -0.3px;
 }
 
 .mode-btn {
@@ -136,11 +199,6 @@ h1 {
 .fmt-btn.copied { background: #EAF3DE; color: #3B6D11; border-color: #3B6D11; }
 .fmt-fix { color: #854F0B; border-color: #d4a340; }
 .fmt-fix:hover { background: #FAEEDA; color: #6b3c06; }
-@media (prefers-color-scheme: dark) {
-  .fmt-btn.copied { background: #1a3a1a !important; color: #6dbf6d !important; border-color: #6dbf6d !important; }
-  .fmt-fix { color: #d4a340 !important; border-color: #d4a340 !important; }
-  .fmt-fix:hover { background: #3a2a0a !important; }
-}
 
 /* Toast notification */
 #toast-container { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 8px; z-index: 9999; pointer-events: none; }
@@ -153,19 +211,17 @@ h1 {
 @keyframes toastIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: translateY(0); } }
 @keyframes toastOut { from { opacity:1; } to { opacity:0; } }
 
+/* JSON Diff specific */
 .editors {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
   margin-bottom: 12px;
 }
-
 @media (max-width: 600px) {
   .editors { grid-template-columns: 1fr; }
 }
-
 .editor-box { display: flex; flex-direction: column; gap: 6px; }
-
 .editor-label {
   font-size: 12px;
   color: var(--text-secondary);
@@ -174,7 +230,6 @@ h1 {
   align-items: center;
   justify-content: space-between;
 }
-
 .editor-status {
   font-size: 11px;
   padding: 2px 8px;
@@ -208,7 +263,6 @@ textarea.invalid { border-color: #E24B4A; }
   flex-wrap: wrap;
   min-height: 28px;
 }
-
 .stat {
   font-size: 12px;
   padding: 4px 14px;
@@ -227,7 +281,6 @@ textarea.invalid { border-color: #E24B4A; }
   min-height: 140px;
   overflow: auto;
 }
-
 .diff-table {
   width: 100%;
   border-collapse: collapse;
@@ -310,66 +363,402 @@ textarea.invalid { border-color: #E24B4A; }
   font-size: 13px;
   color: var(--text-tertiary);
 }
-
 .divider {
   width: 0.5px;
   background: var(--border);
   self-align: stretch;
 }
+
+/* ---- Base64 Page ---- */
+.b64-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 680px) {
+  .b64-layout { grid-template-columns: 1fr; }
+}
+
+.b64-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.b64-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.b64-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.b64-badge-encode {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 99px;
+  background: #EAF7EF;
+  color: #2A6B48;
+  letter-spacing: 0.3px;
+}
+.b64-badge-decode {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 99px;
+  background: #E8F0FB;
+  color: #2A4B7C;
+  letter-spacing: 0.3px;
+}
+
+.b64-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.b64-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.b64-textarea {
+  height: 220px;
+  resize: vertical;
+}
+
+.b64-result-box {
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  min-height: 220px;
+  padding: 10px 12px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.75;
+  color: var(--text-primary);
+  word-break: break-all;
+  white-space: pre-wrap;
+  overflow: auto;
+  position: relative;
+}
+.b64-result-placeholder {
+  color: var(--text-tertiary);
+  font-style: italic;
+}
+
+.b64-center-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 8px 0;
+}
+
+.b64-arrow-btn {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 8px 18px;
+  border-radius: var(--radius-md);
+  border: 0.5px solid var(--border-md);
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.b64-arrow-btn:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+.b64-arrow-btn.primary {
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  border-color: var(--text-primary);
+}
+.b64-arrow-btn.primary:hover {
+  opacity: 0.85;
+}
+
+.b64-info {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  background: var(--bg-secondary);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  line-height: 1.7;
+  margin-top: 4px;
+}
+.b64-info b { color: var(--text-secondary); font-weight: 600; }
+
+.b64-swap-row {
+  display: flex;
+  justify-content: center;
+  margin: 4px 0;
+}
+.b64-swap-btn {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  padding: 4px 16px;
+  border-radius: 99px;
+  border: 0.5px solid var(--border-md);
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.b64-swap-btn:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+/* File upload */
+.b64-file-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.b64-file-label {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  padding: 4px 12px;
+  border-radius: var(--radius-md);
+  border: 0.5px solid var(--border-md);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.b64-file-label:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+#b64-file-input { display: none; }
+.b64-file-name {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 160px;
+}
+
+.b64-char-count {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  text-align: right;
+  margin-top: 2px;
+}
 </style>
 </head>
 <body>
 <div class="container">
-  <div class="toolbar">
-    <h1>JSON Diff Viewer</h1>
-    <button class="act-btn" onclick="loadExample()">ตัวอย่าง</button>
-    <button class="act-btn" onclick="clearAll()">ล้าง</button>
-    <button class="mode-btn active" onclick="setMode('side')" id="btn-side">Side-by-side</button>
-    <button class="mode-btn" onclick="setMode('tree')" id="btn-tree">Tree</button>
-    <button class="mode-btn" onclick="setMode('list')" id="btn-list">รายการ</button>
+
+  <!-- App Header -->
+  <div class="app-header">
+    <span class="app-title">🛠 Developer Tools</span>
   </div>
 
-  <div class="editors">
-    <div class="editor-box">
-      <div class="editor-label">
-        <span>JSON A (ต้นฉบับ)</span>
-        <div style="display:flex;gap:6px;align-items:center;">
-          <button class="fmt-btn fmt-fix" onclick="autoFixJSON('a')" title="พยายาม fix JSON อัตโนมัติ">✦ Auto-fix</button>
-          <button class="fmt-btn" onclick="formatJSON('a')" title="จัดรูปแบบ JSON">Format</button>
-          <button class="fmt-btn" onclick="minifyJSON('a')" title="ย่อ JSON">Minify</button>
-          <button class="fmt-btn" onclick="copyJSON('a')" id="copy-a" title="คัดลอก">Copy</button>
-          <span class="editor-status" id="sta-a"></span>
-        </div>
-      </div>
-      <textarea id="ta-a" placeholder='{"key": "value"}' oninput="onInput()"></textarea>
+  <!-- Page Tabs -->
+  <div class="page-tabs" role="tablist">
+    <button class="page-tab active" id="ptab-diff" onclick="switchPage('diff')" role="tab" aria-selected="true" aria-controls="page-diff">
+      <span class="tab-icon">⚖️</span> JSON Diff
+    </button>
+    <button class="page-tab" id="ptab-b64encode" onclick="switchPage('b64encode')" role="tab" aria-selected="false" aria-controls="page-b64encode">
+      <span class="tab-icon">🔒</span> เข้ารหัส Base64
+    </button>
+    <button class="page-tab" id="ptab-b64decode" onclick="switchPage('b64decode')" role="tab" aria-selected="false" aria-controls="page-b64decode">
+      <span class="tab-icon">🔓</span> ถอดรหัส Base64
+    </button>
+  </div>
+
+  <!-- ===================== PAGE: JSON DIFF ===================== -->
+  <div class="page active" id="page-diff" role="tabpanel" aria-labelledby="ptab-diff">
+    <div class="toolbar">
+      <button class="act-btn" onclick="loadExample()">ตัวอย่าง</button>
+      <button class="act-btn" onclick="clearAll()">ล้าง</button>
+      <button class="mode-btn active" onclick="setMode('side')" id="btn-side">Side-by-side</button>
+      <button class="mode-btn" onclick="setMode('tree')" id="btn-tree">Tree</button>
+      <button class="mode-btn" onclick="setMode('list')" id="btn-list">รายการ</button>
     </div>
-    <div class="editor-box">
-      <div class="editor-label">
-        <span>JSON B (เปรียบเทียบ)</span>
-        <div style="display:flex;gap:6px;align-items:center;">
-          <button class="fmt-btn fmt-fix" onclick="autoFixJSON('b')" title="พยายาม fix JSON อัตโนมัติ">✦ Auto-fix</button>
-          <button class="fmt-btn" onclick="formatJSON('b')" title="จัดรูปแบบ JSON">Format</button>
-          <button class="fmt-btn" onclick="minifyJSON('b')" title="ย่อ JSON">Minify</button>
-          <button class="fmt-btn" onclick="copyJSON('b')" id="copy-b" title="คัดลอก">Copy</button>
-          <span class="editor-status" id="sta-b"></span>
+
+    <div class="editors">
+      <div class="editor-box">
+        <div class="editor-label">
+          <span>JSON A (ต้นฉบับ)</span>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <button class="fmt-btn fmt-fix" onclick="autoFixJSON('a')" title="พยายาม fix JSON อัตโนมัติ">✦ Auto-fix</button>
+            <button class="fmt-btn" onclick="formatJSON('a')" title="จัดรูปแบบ JSON">Format</button>
+            <button class="fmt-btn" onclick="minifyJSON('a')" title="ย่อ JSON">Minify</button>
+            <button class="fmt-btn" onclick="copyJSON('a')" id="copy-a" title="คัดลอก">Copy</button>
+            <span class="editor-status" id="sta-a"></span>
+          </div>
         </div>
+        <textarea id="ta-a" placeholder='{"key": "value"}' oninput="onInput()"></textarea>
       </div>
-      <textarea id="ta-b" placeholder='{"key": "new value"}' oninput="onInput()"></textarea>
+      <div class="editor-box">
+        <div class="editor-label">
+          <span>JSON B (เปรียบเทียบ)</span>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <button class="fmt-btn fmt-fix" onclick="autoFixJSON('b')" title="พยายาม fix JSON อัตโนมัติ">✦ Auto-fix</button>
+            <button class="fmt-btn" onclick="formatJSON('b')" title="จัดรูปแบบ JSON">Format</button>
+            <button class="fmt-btn" onclick="minifyJSON('b')" title="ย่อ JSON">Minify</button>
+            <button class="fmt-btn" onclick="copyJSON('b')" id="copy-b" title="คัดลอก">Copy</button>
+            <span class="editor-status" id="sta-b"></span>
+          </div>
+        </div>
+        <textarea id="ta-b" placeholder='{"key": "new value"}' oninput="onInput()"></textarea>
+      </div>
+    </div>
+
+    <div class="summary" id="summary"></div>
+    <div class="result-box" id="result">
+      <div class="empty-hint">วาง JSON ในกล่องด้านบนเพื่อดูความแตกต่าง</div>
     </div>
   </div>
 
-  <div class="summary" id="summary"></div>
-  <div class="result-box" id="result">
-    <div class="empty-hint">วาง JSON ในกล่องด้านบนเพื่อดูความแตกต่าง</div>
+  <!-- ===================== PAGE: BASE64 ENCODE ===================== -->
+  <div class="page" id="page-b64encode" role="tabpanel" aria-labelledby="ptab-b64encode">
+    <div class="b64-layout">
+      <!-- Input -->
+      <div class="b64-panel">
+        <div class="b64-panel-header">
+          <div class="b64-panel-title">
+            <span class="b64-label">ข้อความต้นฉบับ (Plain Text)</span>
+          </div>
+          <div class="b64-actions">
+            <label class="b64-file-label" for="enc-file-input" title="โหลดจากไฟล์">📂 โหลดไฟล์</label>
+            <input type="file" id="enc-file-input" onchange="loadFileForEncode(event)">
+            <button class="fmt-btn" onclick="clearEncode()">ล้าง</button>
+            <button class="fmt-btn" onclick="copyText('enc-input', 'copy-enc-in')" id="copy-enc-in">Copy</button>
+          </div>
+        </div>
+        <textarea class="b64-textarea" id="enc-input" placeholder="พิมพ์หรือวางข้อความที่ต้องการเข้ารหัส..." oninput="onEncodeInput()"></textarea>
+        <div class="b64-char-count" id="enc-in-count">0 ตัวอักษร</div>
+        <div class="b64-info">
+          <b>Base64 Encode</b> แปลงข้อความหรือข้อมูลใดๆ ให้อยู่ในรูปแบบ Base64<br>
+          รองรับ Unicode และภาษาไทย (เข้ารหัสเป็น UTF-8 ก่อน)
+        </div>
+      </div>
+
+      <!-- Output -->
+      <div class="b64-panel">
+        <div class="b64-panel-header">
+          <div class="b64-panel-title">
+            <span class="b64-label">ผลลัพธ์ Base64</span>
+            <span class="b64-badge-encode">ENCODE</span>
+          </div>
+          <div class="b64-actions">
+            <button class="fmt-btn" onclick="copyResultText('enc-result', 'copy-enc-out')" id="copy-enc-out">Copy</button>
+            <button class="fmt-btn" onclick="downloadResult('enc-result', 'encoded.txt')">⬇ Download</button>
+          </div>
+        </div>
+        <div class="b64-result-box" id="enc-result">
+          <span class="b64-result-placeholder">ผลลัพธ์จะแสดงที่นี่...</span>
+        </div>
+        <div class="b64-char-count" id="enc-out-count"></div>
+        <div class="b64-swap-row">
+          <button class="b64-swap-btn" onclick="sendEncodeToDecodeTab()" title="ส่งผลลัพธ์ไปถอดรหัสที่แท็บถอดรหัส Base64">
+            🔁 ส่งไปถอดรหัส →
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
-</div>
+
+  <!-- ===================== PAGE: BASE64 DECODE ===================== -->
+  <div class="page" id="page-b64decode" role="tabpanel" aria-labelledby="ptab-b64decode">
+    <div class="b64-layout">
+      <!-- Input -->
+      <div class="b64-panel">
+        <div class="b64-panel-header">
+          <div class="b64-panel-title">
+            <span class="b64-label">ข้อความ Base64</span>
+          </div>
+          <div class="b64-actions">
+            <label class="b64-file-label" for="dec-file-input" title="โหลดจากไฟล์">📂 โหลดไฟล์</label>
+            <input type="file" id="dec-file-input" onchange="loadFileForDecode(event)">
+            <button class="fmt-btn" onclick="clearDecode()">ล้าง</button>
+            <button class="fmt-btn" onclick="copyText('dec-input', 'copy-dec-in')" id="copy-dec-in">Copy</button>
+          </div>
+        </div>
+        <textarea class="b64-textarea" id="dec-input" placeholder="วางข้อความ Base64 ที่ต้องการถอดรหัส..." oninput="onDecodeInput()"></textarea>
+        <div class="b64-char-count" id="dec-in-count">0 ตัวอักษร</div>
+        <div class="b64-info">
+          <b>Base64 Decode</b> แปลง Base64 กลับเป็นข้อความต้นฉบับ<br>
+          ถ้าผลลัพธ์เป็น binary หรือรูปภาพ จะแสดง preview อัตโนมัติ
+        </div>
+      </div>
+
+      <!-- Output -->
+      <div class="b64-panel">
+        <div class="b64-panel-header">
+          <div class="b64-panel-title">
+            <span class="b64-label">ผลลัพธ์ถอดรหัส</span>
+            <span class="b64-badge-decode">DECODE</span>
+          </div>
+          <div class="b64-actions">
+            <button class="fmt-btn" onclick="copyResultText('dec-result-text', 'copy-dec-out')" id="copy-dec-out">Copy</button>
+            <button class="fmt-btn" onclick="downloadResult('dec-result-text', 'decoded.txt')">⬇ Download</button>
+          </div>
+        </div>
+        <div class="b64-result-box" id="dec-result">
+          <span class="b64-result-placeholder" id="dec-result-placeholder">ผลลัพธ์จะแสดงที่นี่...</span>
+          <span id="dec-result-text" style="display:none;white-space:pre-wrap;word-break:break-all;"></span>
+          <img id="dec-result-img" style="display:none;max-width:100%;border-radius:6px;margin-top:4px;" alt="decoded image preview">
+        </div>
+        <div class="b64-char-count" id="dec-out-count"></div>
+        <div class="b64-swap-row">
+          <button class="b64-swap-btn" onclick="sendDecodeToEncodeTab()" title="ส่งผลลัพธ์ไปเข้ารหัสที่แท็บเข้ารหัส Base64">
+            🔁 ส่งไปเข้ารหัส →
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
 
 <div id="toast-container"></div>
 
 <script>
-let mode = 'side';
+// ============================================================
+//  PAGE SWITCHING
+// ============================================================
+function switchPage(name) {
+  ['diff','b64encode','b64decode'].forEach(function(p) {
+    document.getElementById('page-'+p).classList.toggle('active', p===name);
+    var tab = document.getElementById('ptab-'+p);
+    tab.classList.toggle('active', p===name);
+    tab.setAttribute('aria-selected', p===name ? 'true' : 'false');
+  });
+}
 
-// ---- Toast ----
+// ============================================================
+//  TOAST
+// ============================================================
 function showToast(title, body, type) {
   var tc = document.getElementById('toast-container');
   var t = document.createElement('div');
@@ -378,75 +767,282 @@ function showToast(title, body, type) {
   tc.appendChild(t);
   setTimeout(function(){
     t.style.animation = 'toastOut 0.2s ease forwards';
-    setTimeout(function(){ tc.removeChild(t); }, 200);
+    setTimeout(function(){ if(tc.contains(t)) tc.removeChild(t); }, 200);
   }, 3500);
 }
 
-// ---- Auto-fix engine ----
+// ============================================================
+//  BASE64 ENCODE PAGE
+// ============================================================
+function onEncodeInput() {
+  var input = document.getElementById('enc-input').value;
+  var countEl = document.getElementById('enc-in-count');
+  countEl.textContent = input.length.toLocaleString() + ' ตัวอักษร';
+
+  var resultEl = document.getElementById('enc-result');
+  var outCount = document.getElementById('enc-out-count');
+
+  if (!input) {
+    resultEl.innerHTML = '<span class="b64-result-placeholder">ผลลัพธ์จะแสดงที่นี่...</span>';
+    outCount.textContent = '';
+    return;
+  }
+
+  try {
+    // Encode to UTF-8 bytes, then base64
+    var encoded = btoa(unescape(encodeURIComponent(input)));
+    resultEl.textContent = encoded;
+    outCount.textContent = encoded.length.toLocaleString() + ' ตัวอักษร (Base64)';
+  } catch(e) {
+    resultEl.innerHTML = '<span style="color:#A32D2D;">⚠ เข้ารหัสไม่สำเร็จ: ' + esc(e.message) + '</span>';
+    outCount.textContent = '';
+  }
+}
+
+function clearEncode() {
+  document.getElementById('enc-input').value = '';
+  document.getElementById('enc-result').innerHTML = '<span class="b64-result-placeholder">ผลลัพธ์จะแสดงที่นี่...</span>';
+  document.getElementById('enc-in-count').textContent = '0 ตัวอักษร';
+  document.getElementById('enc-out-count').textContent = '';
+}
+
+function loadFileForEncode(event) {
+  var file = event.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    document.getElementById('enc-input').value = e.target.result;
+    onEncodeInput();
+    showToast('โหลดไฟล์แล้ว', file.name, 'ok');
+  };
+  reader.onerror = function() {
+    showToast('โหลดไฟล์ไม่สำเร็จ', '', 'err');
+  };
+  reader.readAsText(file, 'UTF-8');
+  event.target.value = '';
+}
+
+function sendEncodeToDecodeTab() {
+  var result = document.getElementById('enc-result').textContent;
+  if (!result || result.includes('ผลลัพธ์จะแสดงที่นี่')) {
+    showToast('ไม่มีผลลัพธ์', 'กรุณาเข้ารหัสก่อน', 'err');
+    return;
+  }
+  document.getElementById('dec-input').value = result;
+  onDecodeInput();
+  switchPage('b64decode');
+  showToast('ส่งไปถอดรหัสแล้ว', '', 'ok');
+}
+
+// ============================================================
+//  BASE64 DECODE PAGE
+// ============================================================
+function onDecodeInput() {
+  var input = document.getElementById('dec-input').value.trim();
+  var countEl = document.getElementById('dec-in-count');
+  countEl.textContent = input.length.toLocaleString() + ' ตัวอักษร';
+
+  var placeholder = document.getElementById('dec-result-placeholder');
+  var textEl = document.getElementById('dec-result-text');
+  var imgEl = document.getElementById('dec-result-img');
+  var outCount = document.getElementById('dec-out-count');
+  var copyBtn = document.getElementById('copy-dec-out');
+
+  // Reset
+  placeholder.style.display = 'none';
+  textEl.style.display = 'none';
+  imgEl.style.display = 'none';
+  imgEl.src = '';
+  outCount.textContent = '';
+
+  if (!input) {
+    placeholder.style.display = '';
+    placeholder.textContent = 'ผลลัพธ์จะแสดงที่นี่...';
+    return;
+  }
+
+  // Validate base64 characters (allow whitespace)
+  var clean = input.replace(/\s/g, '');
+  if (!/^[A-Za-z0-9+/]*={0,2}$/.test(clean)) {
+    placeholder.style.display = '';
+    placeholder.textContent = '';
+    textEl.style.display = '';
+    textEl.style.color = '#A32D2D';
+    textEl.textContent = '⚠ ข้อความไม่ใช่ Base64 ที่ถูกต้อง\nตรวจสอบว่ามีอักขระที่ไม่ถูกต้องหรือไม่';
+    return;
+  }
+
+  try {
+    var decoded = atob(clean);
+
+    // Check if it looks like an image (PNG / JPEG / GIF / WEBP / SVG)
+    var isPng  = decoded.startsWith('\x89PNG');
+    var isJpeg = decoded.startsWith('\xFF\xD8\xFF');
+    var isGif  = decoded.startsWith('GIF8');
+    var isWebP = decoded.slice(0,4)==='RIFF' && decoded.slice(8,12)==='WEBP';
+    var isSvg  = decoded.trimStart().startsWith('<svg') || decoded.trimStart().startsWith('<?xml');
+
+    if (isPng || isJpeg || isGif || isWebP || isSvg) {
+      var mime = isPng ? 'image/png' : isJpeg ? 'image/jpeg' : isGif ? 'image/gif' : isWebP ? 'image/webp' : 'image/svg+xml';
+      imgEl.src = 'data:' + mime + ';base64,' + clean;
+      imgEl.style.display = 'block';
+      outCount.textContent = '🖼 รูปภาพ ' + mime;
+      return;
+    }
+
+    // Attempt UTF-8 decode
+    var text;
+    try {
+      text = decodeURIComponent(escape(decoded));
+    } catch(e) {
+      text = decoded; // fallback to raw latin1
+    }
+
+    textEl.style.display = '';
+    textEl.style.color = '';
+    textEl.textContent = text;
+    outCount.textContent = text.length.toLocaleString() + ' ตัวอักษร';
+
+  } catch(e) {
+    placeholder.style.display = '';
+    placeholder.textContent = '';
+    textEl.style.display = '';
+    textEl.style.color = '#A32D2D';
+    textEl.textContent = '⚠ ถอดรหัสไม่สำเร็จ: ' + e.message;
+  }
+}
+
+function clearDecode() {
+  document.getElementById('dec-input').value = '';
+  document.getElementById('dec-result-placeholder').style.display = '';
+  document.getElementById('dec-result-placeholder').textContent = 'ผลลัพธ์จะแสดงที่นี่...';
+  document.getElementById('dec-result-text').style.display = 'none';
+  document.getElementById('dec-result-text').textContent = '';
+  document.getElementById('dec-result-img').style.display = 'none';
+  document.getElementById('dec-result-img').src = '';
+  document.getElementById('dec-in-count').textContent = '0 ตัวอักษร';
+  document.getElementById('dec-out-count').textContent = '';
+}
+
+function loadFileForDecode(event) {
+  var file = event.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    document.getElementById('dec-input').value = e.target.result.trim();
+    onDecodeInput();
+    showToast('โหลดไฟล์แล้ว', file.name, 'ok');
+  };
+  reader.onerror = function() {
+    showToast('โหลดไฟล์ไม่สำเร็จ', '', 'err');
+  };
+  reader.readAsText(file, 'UTF-8');
+  event.target.value = '';
+}
+
+function sendDecodeToEncodeTab() {
+  var textEl = document.getElementById('dec-result-text');
+  if (textEl.style.display === 'none' || !textEl.textContent) {
+    showToast('ไม่มีผลลัพธ์ข้อความ', 'ผลลัพธ์เป็นภาพหรือยังไม่ได้ถอดรหัส', 'err');
+    return;
+  }
+  document.getElementById('enc-input').value = textEl.textContent;
+  onEncodeInput();
+  switchPage('b64encode');
+  showToast('ส่งไปเข้ารหัสแล้ว', '', 'ok');
+}
+
+// ============================================================
+//  SHARED COPY / DOWNLOAD
+// ============================================================
+function copyText(sourceId, btnId) {
+  var val = document.getElementById(sourceId).value;
+  if (!val) return;
+  navigator.clipboard.writeText(val).then(function() {
+    flashCopied(btnId);
+  });
+}
+
+function copyResultText(sourceId, btnId) {
+  var el = document.getElementById(sourceId);
+  var text = el ? el.textContent : '';
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(function() {
+    flashCopied(btnId);
+  });
+}
+
+function flashCopied(btnId) {
+  var btn = document.getElementById(btnId);
+  if (!btn) return;
+  var orig = btn.textContent;
+  btn.textContent = 'Copied!';
+  btn.classList.add('copied');
+  setTimeout(function(){ btn.textContent = orig; btn.classList.remove('copied'); }, 1500);
+}
+
+function downloadResult(sourceId, filename) {
+  var el = document.getElementById(sourceId);
+  var text = el ? el.textContent : '';
+  if (!text) { showToast('ไม่มีข้อมูล', 'กรุณาประมวลผลก่อน', 'err'); return; }
+  var blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('ดาวน์โหลดแล้ว', filename, 'ok');
+}
+
+// ============================================================
+//  JSON DIFF (original code preserved)
+// ============================================================
+let mode = 'side';
+
 function attemptFix(raw) {
   var s = raw;
   var fixes = [];
-
-  // 1. ตัด BOM / zero-width chars
   s = s.replace(/^\uFEFF/, '').replace(/[\u200B-\u200D\uFEFF]/g, '');
-
-  // 2. ตัด single-line comments //
   var prev = '';
   while (prev !== s) {
     prev = s;
     s = s.replace(/\/\/[^\n\r]*/g, function(){ fixes.push('ลบ comment //'); return ''; });
   }
-
-  // 3. ตัด block comments /* */
   if (/\/\*[\s\S]*?\*\//.test(s)) {
     s = s.replace(/\/\*[\s\S]*?\*\//g, '');
     fixes.push('ลบ block comment /* */');
   }
-
-  // 4. แปลง single quote → double quote (keys & string values)
   if (/'/.test(s)) {
     s = s.replace(/'([^'\\]*(\\.[^'\\]*)*)'/g, function(m, inner){
       return '"' + inner.replace(/"/g, '\\"') + '"';
     });
     fixes.push("แปลง ' → \"");
   }
-
-  // 5. เพิ่ม quote ให้ unquoted keys: {key: → {"key":
   if (/[{,]\s*([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/.test(s)) {
     s = s.replace(/([{,])\s*([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/g, function(m, pre, key){
       return pre + '"' + key + '":';
     });
     fixes.push('เพิ่ม quote ให้ unquoted keys');
   }
-
-  // 6. ลบ trailing comma ก่อน } หรือ ]
   if (/,\s*[}\]]/.test(s)) {
     s = s.replace(/,(\s*[}\]])/g, '$1');
     fixes.push('ลบ trailing comma');
   }
-
-  // 7. แปลง undefined → null
   if (/\bundefined\b/.test(s)) {
     s = s.replace(/\bundefined\b/g, 'null');
     fixes.push('แปลง undefined → null');
   }
-
-  // 8. แปลง True/False/None (Python style)
   if (/\b(True|False|None)\b/.test(s)) {
     s = s.replace(/\bTrue\b/g, 'true').replace(/\bFalse\b/g, 'false').replace(/\bNone\b/g, 'null');
     fixes.push('แปลง Python literals (True/False/None)');
   }
-
-  // 9. ลบ semicolon ท้าย
   if (/;\s*$/.test(s.trim())) {
     s = s.trim().replace(/;+$/, '');
     fixes.push('ลบ semicolon ท้าย');
   }
-
   var result = tryParse(s);
-  if (result.ok) {
-    return { ok: true, fixed: s, fixes: fixes };
-  }
+  if (result.ok) { return { ok: true, fixed: s, fixes: fixes }; }
   return { ok: false, fixes: fixes, err: result.err };
 }
 
@@ -454,13 +1050,7 @@ function autoFixJSON(side) {
   var ta = document.getElementById('ta-'+side);
   var val = ta.value.trim();
   if (!val) return;
-
-  // ถ้า parse ได้อยู่แล้ว
-  if (tryParse(val).ok) {
-    showToast('JSON ถูกต้องอยู่แล้ว', 'ไม่จำเป็นต้อง fix', 'ok');
-    return;
-  }
-
+  if (tryParse(val).ok) { showToast('JSON ถูกต้องอยู่แล้ว', 'ไม่จำเป็นต้อง fix', 'ok'); return; }
   var res = attemptFix(val);
   if (res.ok) {
     ta.value = JSON.stringify(JSON.parse(res.fixed), null, 2);
