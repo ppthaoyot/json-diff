@@ -3050,6 +3050,7 @@ let dinoInvincible = 0;
 let dinoDashTimer = 0;
 let floatingTexts = [];
 let dinoCurrentPlayerName = "";
+let dinoLastDifficultyTier = "normal";
 
 const dinoPlayer = {
   x: 80,
@@ -3074,6 +3075,24 @@ const dinoObstacleTypes = [
   { emoji: "📌", label: "งานฝาก", w: 46, h: 50 },
   { emoji: "💸", label: "หักเงินเดือน", w: 52, h: 52 },
   { emoji: "🤡", label: "เพื่อนโยนขี้", w: 56, h: 56 }
+];
+
+const dinoRushObstacleTypes = [
+  { emoji: "\uD83D\uDCC5", label: "\u0e1b\u0e23\u0e30\u0e0a\u0e38\u0e21\u0e14\u0e48\u0e27\u0e19", w: 52, h: 54 },
+  { emoji: "\uD83D\uDEB6", label: "\u0e2b\u0e31\u0e27\u0e2b\u0e19\u0e49\u0e32\u0e40\u0e14\u0e34\u0e19\u0e15\u0e23\u0e27\u0e08", w: 58, h: 58 },
+  { emoji: "\uD83D\uDCE8", label: "Email \u0e15\u0e32\u0e21\u0e07\u0e32\u0e19", w: 50, h: 52 }
+];
+
+const dinoHellObstacleTypes = [
+  { emoji: "\uD83D\uDEA8", label: "Audit \u0e21\u0e32\u0e41\u0e25\u0e49\u0e27", w: 56, h: 58 },
+  { emoji: "\uD83D\uDCA5", label: "Deploy \u0e1e\u0e31\u0e07", w: 54, h: 56 },
+  { emoji: "\uD83D\uDCC9", label: "KPI \u0e15\u0e01", w: 52, h: 54 }
+];
+
+const dinoDifficultyTiers = [
+  { name: "hell", score: 10000, maxSpeedBonus: 4, spawnMin: 24, spawnMax: 36, floatingChance: 0.52, specialChance: 0.14, comboChance: 0.35, message: "\u0e40\u0e02\u0e49\u0e32\u0e2a\u0e39\u0e48\u0e42\u0e2b\u0e21\u0e14\u0e19\u0e23\u0e01\u0e2d\u0e2d\u0e1f\u0e1f\u0e34\u0e28!" },
+  { name: "rush", score: 5000, maxSpeedBonus: 2, spawnMin: 32, spawnMax: 48, floatingChance: 0.38, specialChance: 0.11, comboChance: 0.18, message: "\u0e07\u0e32\u0e19\u0e40\u0e23\u0e34\u0e48\u0e21\u0e16\u0e32\u0e42\u0e16\u0e21!" },
+  { name: "normal", score: 0, maxSpeedBonus: 0, spawnMin: 40, spawnMax: 70, floatingChance: 0.25, specialChance: 0.08, comboChance: 0, message: "" }
 ];
 
 const dinoPowerupTypes = [
@@ -3155,6 +3174,7 @@ function resetDinoGame() {
   dinoInvincible = 0;
   dinoDashTimer = 0;
   floatingTexts = [];
+  dinoLastDifficultyTier = "normal";
 
   dinoPlayer.y = dinoGroundY - 58;
   dinoPlayer.vy = 0;
@@ -3181,6 +3201,48 @@ function getDinoLevel() {
     if (dinoScore >= level.score) current = level;
   }
   return current.text;
+}
+
+function getDinoDifficultyTier() {
+  for (const tier of dinoDifficultyTiers) {
+    if (dinoScore >= tier.score) return tier;
+  }
+  return dinoDifficultyTiers[dinoDifficultyTiers.length - 1];
+}
+
+function getDinoObstaclePool(tier) {
+  if (tier.name === "hell") return dinoObstacleTypes.concat(dinoRushObstacleTypes, dinoHellObstacleTypes);
+  if (tier.name === "rush") return dinoObstacleTypes.concat(dinoRushObstacleTypes);
+  return dinoObstacleTypes;
+}
+
+function createDinoObstacle(type, x, floating, flags) {
+  flags = flags || {};
+  return {
+    x,
+    y: floating ? dinoGroundY - type.h - 44 : dinoGroundY - type.h,
+    w: type.w,
+    h: type.h,
+    emoji: type.emoji,
+    label: type.label,
+    effect: type.effect || null,
+    floating,
+    isPowerup: Boolean(flags.isPowerup),
+    isSpecial: Boolean(flags.isSpecial)
+  };
+}
+
+function showDinoDifficultyMilestone(tier) {
+  if (!tier.message || dinoLastDifficultyTier === tier.name) return;
+  dinoLastDifficultyTier = tier.name;
+  floatingTexts.push({
+    x: dW / 2 - 80,
+    y: 96,
+    text: tier.message,
+    color: tier.name === "hell" ? "#e74c3c" : "#e67e22",
+    life: 90,
+    maxLife: 90
+  });
 }
 
 function dinoJump() {
@@ -3211,6 +3273,8 @@ function setDinoDuck(isDucking) {
 }
 
 function spawnDinoObstacle() {
+  const tier = getDinoDifficultyTier();
+  const obstaclePool = getDinoObstaclePool(tier);
   let powerupChance = 0.35 - (dinoScore / 6000);
   if (powerupChance < 0.02) powerupChance = 0.02;
   const isPowerup = Math.random() < powerupChance && dinoScore > 50;
@@ -3219,32 +3283,27 @@ function spawnDinoObstacle() {
   if (isPowerup) {
     type = normalizeDinoPickupType(dinoPowerupTypes[Math.floor(Math.random() * dinoPowerupTypes.length)], "powerup");
   } else {
-    if (dinoScore > 400 && Math.random() < 0.08) {
+    if (dinoScore > 400 && Math.random() < tier.specialChance) {
       isSpecial = true;
       type = normalizeDinoPickupType(dinoSpecialTypes[Math.floor(Math.random() * dinoSpecialTypes.length)], "special");
     } else {
-      type = dinoObstacleTypes[Math.floor(Math.random() * dinoObstacleTypes.length)];
+      type = obstaclePool[Math.floor(Math.random() * obstaclePool.length)];
     }
   }
-  const floating = !isPowerup && !isSpecial && Math.random() < 0.25 && dinoScore > 300;
+  const floating = !isPowerup && !isSpecial && Math.random() < tier.floatingChance && dinoScore > 300;
 
-  dinoObstacles.push({
-    x: dW + 20,
-    y: floating ? dinoGroundY - type.h - 44 : dinoGroundY - type.h,
-    w: type.w,
-    h: type.h,
-    emoji: type.emoji,
-    label: type.label,
-    effect: type.effect || null,
-    floating,
-    isPowerup,
-    isSpecial
-  });
+  dinoObstacles.push(createDinoObstacle(type, dW + 20, floating, { isPowerup, isSpecial }));
 
-  dinoNextSpawn = 70 + Math.floor(Math.random() * 70);
-  if (dinoScore > 800) dinoNextSpawn -= 15;
-  if (dinoScore > 1600) dinoNextSpawn -= 15;
-  dinoNextSpawn = Math.max(40, dinoNextSpawn);
+  if (!isPowerup && !isSpecial && Math.random() < tier.comboChance) {
+    const comboType = obstaclePool[Math.floor(Math.random() * obstaclePool.length)];
+    const comboFloating = !floating && Math.random() < 0.5;
+    dinoObstacles.push(createDinoObstacle(comboType, dW + 150, comboFloating, { isPowerup: false, isSpecial: false }));
+  }
+
+  dinoNextSpawn = tier.spawnMin + Math.floor(Math.random() * (tier.spawnMax - tier.spawnMin + 1));
+  if (dinoScore > 800 && tier.name === "normal") dinoNextSpawn -= 15;
+  if (dinoScore > 1600 && tier.name === "normal") dinoNextSpawn -= 15;
+  dinoNextSpawn = Math.max(tier.spawnMin, dinoNextSpawn);
 }
 
 let lastDinoHitReason = "";
@@ -3318,7 +3377,9 @@ function updateDino() {
   if (dinoState !== "running") return;
   dinoFrame++;
   dinoScore += 1;
-  dinoSpeed = Math.min(dinoConfig.maxSpeed, dinoConfig.baseSpeed + dinoScore / 350);
+  const tier = getDinoDifficultyTier();
+  showDinoDifficultyMilestone(tier);
+  dinoSpeed = Math.min(dinoConfig.maxSpeed + tier.maxSpeedBonus, dinoConfig.baseSpeed + dinoScore / 350);
   
   if (dinoDashTimer > 0) {
     dinoSpeed += 6; // Boost speed

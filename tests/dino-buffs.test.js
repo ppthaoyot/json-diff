@@ -96,9 +96,11 @@ function loadDinoHarness() {
         resetDinoGame,
         renderDino,
         drawDinoObs,
+        getDinoDifficultyTier,
         getState() {
           return {
             dinoScore,
+            dinoNextSpawn,
             dinoHP,
             dinoInvincible,
             dinoDashTimer,
@@ -108,6 +110,7 @@ function loadDinoHarness() {
         },
         setState(next) {
           if (typeof next.dinoScore === "number") dinoScore = next.dinoScore;
+          if (typeof next.dinoNextSpawn === "number") dinoNextSpawn = next.dinoNextSpawn;
           if (typeof next.dinoHP === "number") dinoHP = next.dinoHP;
           if (typeof next.dinoInvincible === "number") dinoInvincible = next.dinoInvincible;
           if (typeof next.dinoDashTimer === "number") dinoDashTimer = next.dinoDashTimer;
@@ -247,4 +250,33 @@ test("powerups and special boosts render extra pickup cues beyond ordinary obsta
   assert.ok(drawCalls.some((entry) => entry.kind === "arc"));
   assert.ok(drawCalls.some((entry) => String(entry.text).includes("BUFF")));
   assert.ok(drawCalls.some((entry) => String(entry.text).includes("BOOST")));
+});
+
+test("office dino increases difficulty after 5000 and 10000 points", () => {
+  const { api } = loadDinoHarness();
+
+  api.setState({ dinoScore: 4999 });
+  assert.equal(api.getDinoDifficultyTier().name, "normal");
+
+  api.setState({ dinoScore: 5000 });
+  assert.equal(api.getDinoDifficultyTier().name, "rush");
+
+  api.setState({ dinoScore: 10000 });
+  assert.equal(api.getDinoDifficultyTier().name, "hell");
+});
+
+test("late game can spawn controlled obstacle combos", () => {
+  const { api, math } = loadDinoHarness();
+  api.setState({ dinoScore: 10000, dinoObstacles: [] });
+  const rolls = [0.9, 0.9, 0, 0.9, 0, 0.9, 0];
+  math.random = () => rolls.shift() ?? 0.9;
+
+  api.spawnDinoObstacle();
+  const state = api.getState();
+
+  assert.equal(state.dinoObstacles.length, 2);
+  assert.ok(state.dinoObstacles[1].x > state.dinoObstacles[0].x);
+  assert.equal(Boolean(state.dinoObstacles[0].isPowerup), false);
+  assert.equal(Boolean(state.dinoObstacles[1].isPowerup), false);
+  assert.ok(state.dinoNextSpawn < 40);
 });

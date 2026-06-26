@@ -29,9 +29,12 @@ test("json diff pages expose line number and structure toggles", () => {
     assert.match(html, /json-structure-toggle/i);
     assert.match(html, /json-tree-a|json-tree-panel-a/i);
     assert.match(html, /json-tree-b|json-tree-panel-b/i);
-    assert.match(html, /json-tree-expand-all|tree-expand-all/i);
-    assert.match(html, /json-tree-collapse-all|tree-collapse-all/i);
   });
+
+  assert.doesNotMatch(legacyHtml, /json-tree-expand-all|tree-expand-all/i);
+  assert.doesNotMatch(legacyHtml, /json-tree-collapse-all|tree-collapse-all/i);
+  assert.match(standaloneHtml, /json-tree-expand-all|tree-expand-all/i);
+  assert.match(standaloneHtml, /json-tree-collapse-all|tree-collapse-all/i);
 });
 
 test("shared json diff core exposes rendering helpers for side view and collapsible trees", () => {
