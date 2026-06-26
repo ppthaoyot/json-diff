@@ -930,7 +930,7 @@ textarea.invalid { border-color: #E24B4A; }
       <span class="tab-icon">🔓</span> ถอดรหัส Base64
     </button>
     <button class="page-tab" id="ptab-thaiid" onclick="switchPage('thaiid')" role="tab" aria-selected="false" aria-controls="page-thaiid">
-      <span class="tab-icon">🪪</span> สุ่มเลขบัตรประชาชน
+      <span class="tab-icon">🆔</span> สุ่มเลขบัตรประชาชน
     </button>
     <button class="page-tab" id="ptab-lucky" onclick="switchPage('lucky')" role="tab" aria-selected="false" aria-controls="page-lucky">
       <span class="tab-icon">🎰</span> เสี่ยงดวงสุ่มหวย
@@ -1045,14 +1045,14 @@ textarea.invalid { border-color: #E24B4A; }
           </select>
           <select class="id-count-select" id="id-first-digit">
             <option value="0">หลักแรก: สุ่มทั้งหมด (1-8)</option>
-            <option value="1">1 – เกิดก่อน 2524 (อำเภอ)</option>
-            <option value="2">2 – เกิดก่อน 2524 (สนท.)</option>
-            <option value="3">3 – เกิดหลัง 2524 (อำเภอ)</option>
-            <option value="4">4 – เกิดหลัง 2524 (สนท.)</option>
-            <option value="5">5 – มีทะเบียนบ้าน ไร้สัญชาติ</option>
-            <option value="6">6 – เข้าเมืองผิดกฎหมาย</option>
-            <option value="7">7 – ได้รับการผ่อนผัน</option>
-            <option value="8">8 – ได้รับสัญชาติไทย</option>
+            <option value="1">1 – เกิด+สัญชาติไทย แจ้งเกิดทันเวลา (≤15 วัน)</option>
+            <option value="2">2 – เกิด+สัญชาติไทย แจ้งเกิดเกินกำหนด</option>
+            <option value="3">3 – ไทย/ต่างด้าว มีชื่อในทะเบียนก่อน 31 พ.ค. 2527</option>
+            <option value="4">4 – ย้ายเข้าทะเบียน (1 ม.ค. – 31 พ.ค. 2527) ไร้เลข</option>
+            <option value="5">5 – ได้สัญชาติไทยโดยการแปลงสัญชาติ</option>
+            <option value="6">6 – เข้าเมืองถูกกฎหมาย แต่ยังไม่ได้สัญชาติไทย</option>
+            <option value="7">7 – บุตรของประเภท 3 และ 6 เกิดในประเทศไทย</option>
+            <option value="8">8 – ไร้สถานะทางทะเบียน / ต่างด้าวอยู่ชั่วคราว</option>
           </select>
           <button class="id-gen-btn" onclick="generateThaiID()">🎲 สุ่มเลขใหม่</button>
         </div>
@@ -1240,14 +1240,14 @@ function formatThaiID(id) {
 }
 
 var FIRST_DIGIT_DESC = {
-  '1': 'เกิดก่อน 1/1/2524 ที่ว่าการอำเภอ',
-  '2': 'เกิดก่อน 1/1/2524 ที่สำนักทะเบียน',
-  '3': 'เกิดหลัง 1/1/2524 ที่ว่าการอำเภอ',
-  '4': 'เกิดหลัง 1/1/2524 ที่สำนักทะเบียน',
-  '5': 'มีทะเบียนบ้าน แต่ไม่มีสัญชาติไทย',
-  '6': 'เข้าเมืองโดยไม่ชอบด้วยกฎหมาย',
-  '7': 'ได้รับการผ่อนผันให้อยู่ในราชอาณาจักร',
-  '8': 'ได้รับสัญชาติไทยหรือได้รับอนุญาตมีถิ่นที่อยู่'
+  '1': 'เกิดและมีสัญชาติไทย แจ้งเกิดภายในกำหนด (ไม่เกิน 15 วัน)',
+  '2': 'เกิดและมีสัญชาติไทย แจ้งเกิดเกินกำหนดเวลา',
+  '3': 'คนไทย/ต่างด้าว มีชื่อในทะเบียนบ้านก่อน 31 พ.ค. 2527',
+  '4': 'คนไทย/ต่างด้าว ย้ายเข้าทะเบียนบ้าน (1 ม.ค. – 31 พ.ค. 2527) โดยยังไม่มีเลขประจำตัว',
+  '5': 'ได้รับสัญชาติไทยตามกฎหมายสัญชาติ (การแปลงสัญชาติ)',
+  '6': 'เข้าเมืองโดยชอบด้วยกฎหมาย แต่ยังไม่ได้สัญชาติไทย (เช่น ผู้ได้รับอนุญาตให้อยู่ถาวร)',
+  '7': 'บุตรของบุคคลประเภท 3 และ 6 ที่เกิดในประเทศไทย',
+  '8': 'ไม่มีสถานะทางทะเบียน (เช่น ชนกลุ่มน้อย, คนไร้สัญชาติ) หรือต่างด้าวอยู่ชั่วคราว'
 };
 
 function generateThaiID() {
