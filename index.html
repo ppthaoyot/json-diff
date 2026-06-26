@@ -515,6 +515,37 @@ textarea.invalid { border-color: #E24B4A; }
   color: var(--text-secondary);
   cursor: pointer;
 }
+.id-validate-box {
+  background: var(--bg-primary);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+}
+.id-val-input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid var(--border-md);
+  border-radius: var(--radius-md);
+  font-family: var(--font-mono);
+  font-size: 16px;
+  outline: none;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  letter-spacing: 2px;
+}
+.id-val-input:focus {
+  border-color: var(--text-primary);
+}
+.id-val-result {
+  margin-top: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.id-val-ok { color: #2A6B48; }
+.id-val-err { color: #A32D2D; }
 
 /* ---- Lucky Draw ---- */
 .lucky-wrap {
@@ -1060,6 +1091,15 @@ textarea.invalid { border-color: #E24B4A; }
 
       <div class="id-meta-grid" id="id-meta-grid" style="display:none;"></div>
 
+      <div class="id-validate-box">
+        <div class="id-history-title">ตรวจสอบความถูกต้องของเลขบัตร</div>
+        <div style="display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;">
+          <input type="text" id="id-val-input" class="id-val-input" placeholder="กรอกเลขบัตร 13 หลัก..." maxlength="13" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+          <button class="id-gen-btn" onclick="validateThaiIDInput()" style="padding:10px 20px;">ตรวจสอบ</button>
+        </div>
+        <div id="id-val-result" class="id-val-result" style="display:none;"></div>
+      </div>
+
       <div class="id-history">
         <div class="id-history-title">
           <span>ประวัติการสุ่ม</span>
@@ -1315,6 +1355,38 @@ function copyToClipboard(text) {
   navigator.clipboard.writeText(text).then(function() {
     showToast('คัดลอกแล้ว', text, 'ok');
   });
+}
+
+function validateThaiIDInput() {
+  var inputEl = document.getElementById('id-val-input');
+  var resEl = document.getElementById('id-val-result');
+  var val = inputEl.value.trim();
+
+  if (!val) {
+    resEl.style.display = 'none';
+    return;
+  }
+  
+  if (val.length !== 13) {
+    resEl.style.display = 'flex';
+    resEl.className = 'id-val-result id-val-err';
+    resEl.innerHTML = '❌ กรุณากรอกให้ครบ 13 หลัก (ตอนนี้มี ' + val.length + ' หลัก)';
+    return;
+  }
+
+  // Calculate
+  var digits = val.split('').map(Number);
+  var checkDigit = digits.pop(); // remove last
+  var expectedCheck = calcThaiIDChecksum(digits);
+
+  resEl.style.display = 'flex';
+  if (checkDigit === expectedCheck) {
+    resEl.className = 'id-val-result id-val-ok';
+    resEl.innerHTML = '✅ เลขบัตรประจำตัวประชาชนนี้ <b>ถูกต้อง</b> ตามรูปแบบ Checksum';
+  } else {
+    resEl.className = 'id-val-result id-val-err';
+    resEl.innerHTML = '❌ เลขบัตรประจำตัวประชาชนนี้ <b>ไม่ถูกต้อง</b> (รหัสตรวจสอบผิด)';
+  }
 }
 
 // ============================================================
