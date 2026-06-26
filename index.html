@@ -1401,8 +1401,6 @@ canvas#dino-game {
       <button class="mode-btn" onclick="setMode('tree')" id="btn-tree">Tree</button>
       <button class="mode-btn" onclick="setMode('list')" id="btn-list">รายการ</button>
       <button class="mode-btn active" onclick="toggleLineNumbers()" id="line-number-toggle">เลขบรรทัด: เปิด</button>
-      <button class="mode-btn" onclick="expandAllJsonTrees()" id="json-tree-expand-all">ขยายทั้งหมด</button>
-      <button class="mode-btn" onclick="collapseAllJsonTrees()" id="json-tree-collapse-all">ย่อทั้งหมด</button>
     </div>
 
     <div class="editors">
@@ -2335,39 +2333,10 @@ function renderJsonEditorTree(side, parsed) {
   }
   panel.hidden = false;
   if (!parsed || !parsed.ok) {
-    panel.innerHTML = '<div class="empty-hint">กรุณาแก้ JSON ให้ถูกต้องก่อน</div>';
+    panel.innerHTML = '<div class="empty-hint">\u0e01\u0e23\u0e38\u0e13\u0e32\u0e41\u0e01\u0e49 JSON \u0e43\u0e2b\u0e49\u0e16\u0e39\u0e01\u0e15\u0e49\u0e2d\u0e07\u0e01\u0e48\u0e2d\u0e19</div>';
     return;
   }
   panel.innerHTML = getJsonDiffCore().renderJsonTree(parsed.val, { collapsed: false });
-}
-
-function getJsonTreeScopes() {
-  const scopes = [
-    document.getElementById('result'),
-    document.getElementById('json-tree-panel-a'),
-    document.getElementById('json-tree-panel-b')
-  ];
-  return scopes.filter(Boolean);
-}
-
-function setJsonTreeExpansion(collapsed) {
-  getJsonTreeScopes().forEach(function(scope) {
-    scope.querySelectorAll('[data-tree-node]').forEach(function(node) {
-      const toggle = node.querySelector('[data-tree-toggle]');
-      if (!toggle) return;
-      node.classList.toggle('is-collapsed', collapsed);
-      toggle.textContent = collapsed ? '+' : '-';
-      toggle.setAttribute('aria-expanded', String(!collapsed));
-    });
-  });
-}
-
-function expandAllJsonTrees() {
-  setJsonTreeExpansion(false);
-}
-
-function collapseAllJsonTrees() {
-  setJsonTreeExpansion(true);
 }
 
 document.addEventListener('click', function(event) {
@@ -2428,20 +2397,25 @@ function attemptFix(raw) {
 }
 
 function autoFixJSON(side) {
-  var ta = document.getElementById('ta-'+side);
+  var ta = document.getElementById('ta-' + side);
   var val = ta.value.trim();
   if (!val) return;
-  if (tryParse(val).ok) { showToast('JSON ถูกต้องอยู่แล้ว', 'ไม่จำเป็นต้อง fix', 'ok'); return; }
+  if (tryParse(val).ok) {
+    showToast('JSON \u0e16\u0e39\u0e01\u0e15\u0e49\u0e2d\u0e07\u0e2d\u0e22\u0e39\u0e48\u0e41\u0e25\u0e49\u0e27', '\u0e44\u0e21\u0e48\u0e08\u0e33\u0e40\u0e1b\u0e47\u0e19\u0e15\u0e49\u0e2d\u0e07 fix', 'ok');
+    return;
+  }
   var res = attemptFix(val);
   if (res.ok) {
     ta.value = JSON.stringify(JSON.parse(res.fixed), null, 2);
     ta.classList.remove('invalid');
-    var fixList = res.fixes.length ? res.fixes.join(', ') : 'ปรับรูปแบบ';
-    showToast('✓ Auto-fix สำเร็จ', fixList, 'fix');
+    var fixList = res.fixes.length ? res.fixes.join(', ') : '\u0e1b\u0e23\u0e31\u0e1a\u0e23\u0e39\u0e1b\u0e41\u0e1a\u0e1a';
+    showToast('Auto-fix \u0e2a\u0e33\u0e40\u0e23\u0e47\u0e08', fixList, 'fix');
     onInput();
   } else {
-    var hint = res.fixes.length ? 'แก้ได้บางส่วน: ' + res.fixes.join(', ') + '\nแต่ยังมี error: ' + res.err : 'ไม่สามารถ fix ได้: ' + res.err;
-    showToast('✗ Auto-fix ไม่สำเร็จ', hint, 'err');
+    var hint = res.fixes.length
+      ? '\u0e41\u0e01\u0e49\u0e44\u0e14\u0e49\u0e1a\u0e32\u0e07\u0e2a\u0e48\u0e27\u0e19: ' + res.fixes.join(', ') + '\n\u0e41\u0e15\u0e48\u0e22\u0e31\u0e07\u0e21\u0e35 error: ' + res.err
+      : '\u0e44\u0e21\u0e48\u0e2a\u0e32\u0e21\u0e32\u0e23\u0e16 fix \u0e44\u0e14\u0e49: ' + res.err;
+    showToast('Auto-fix \u0e44\u0e21\u0e48\u0e2a\u0e33\u0e40\u0e23\u0e47\u0e08', hint, 'err');
   }
 }
 
@@ -2450,7 +2424,6 @@ function setMode(m) {
   ['side','tree','list'].forEach(x => {
     document.getElementById('btn-'+x).classList.toggle('active', x===m);
   });
-  syncTreeToolbar();
   onInput();
 }
 
@@ -2461,8 +2434,13 @@ function tryParse(s) {
 
 function setStatus(id, ok) {
   const el = document.getElementById(id);
-  if (!ok) { el.textContent = 'JSON ไม่ถูกต้อง'; el.className = 'editor-status status-err'; }
-  else { el.textContent = 'ถูกต้อง'; el.className = 'editor-status status-ok'; }
+  if (!ok) {
+    el.textContent = 'JSON \u0e44\u0e21\u0e48\u0e16\u0e39\u0e01\u0e15\u0e49\u0e2d\u0e07';
+    el.className = 'editor-status status-err';
+  } else {
+    el.textContent = '\u0e16\u0e39\u0e01\u0e15\u0e49\u0e2d\u0e07';
+    el.className = 'editor-status status-ok';
+  }
 }
 
 function flatten(obj, prefix, out) {
@@ -2678,7 +2656,7 @@ function renderSide(a, b, diff) {
 
 function renderTree(diff) {
   if (!diff.added.length && !diff.removed.length && !diff.changed.length && !diff.same.length) {
-    return '<div class="empty-hint">à¹„à¸¡à¹ˆà¸¡à¸µà¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¹ƒà¸«à¹‰à¹à¸ªà¸”à¸‡</div>';
+    return '<div class="empty-hint">\u0e44\u0e21\u0e48\u0e21\u0e35\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e43\u0e2b\u0e49\u0e41\u0e2a\u0e14\u0e07</div>';
   }
   return getJsonDiffCore().renderDiffTree(diff, { collapsed: false });
 }
@@ -2704,18 +2682,26 @@ function onInput() {
   var res = document.getElementById('result');
   var sum = document.getElementById('summary');
 
-  if (!va || !vb) { res.innerHTML='<div class="empty-hint">à¸§à¸²à¸‡ JSON à¹ƒà¸™à¸à¸¥à¹ˆà¸­à¸‡à¸”à¹‰à¸²à¸™à¸šà¸™à¹€à¸žà¸·à¹ˆà¸­à¸”à¸¹à¸„à¸§à¸²à¸¡à¹à¸•à¸à¸•à¹ˆà¸²à¸‡</div>'; sum.innerHTML=''; return; }
-  if (!pa.ok || !pb.ok) { res.innerHTML='<div class="empty-hint">à¸à¸£à¸¸à¸“à¸²à¹à¸à¹‰à¹„à¸‚ JSON à¹ƒà¸«à¹‰à¸–à¸¹à¸à¸•à¹‰à¸­à¸‡à¸à¹ˆà¸­à¸™</div>'; sum.innerHTML=''; return; }
+  if (!va || !vb) {
+    res.innerHTML = '<div class="empty-hint">\u0e27\u0e32\u0e07 JSON \u0e43\u0e19\u0e01\u0e25\u0e48\u0e2d\u0e07\u0e14\u0e49\u0e32\u0e19\u0e1a\u0e19\u0e40\u0e1e\u0e37\u0e48\u0e2d\u0e14\u0e39\u0e04\u0e27\u0e32\u0e21\u0e41\u0e15\u0e01\u0e15\u0e48\u0e32\u0e07</div>';
+    sum.innerHTML = '';
+    return;
+  }
+  if (!pa.ok || !pb.ok) {
+    res.innerHTML = '<div class="empty-hint">\u0e01\u0e23\u0e38\u0e13\u0e32\u0e41\u0e01\u0e49\u0e44\u0e02 JSON \u0e43\u0e2b\u0e49\u0e16\u0e39\u0e01\u0e15\u0e49\u0e2d\u0e07\u0e01\u0e48\u0e2d\u0e19</div>';
+    sum.innerHTML = '';
+    return;
+  }
 
   var diff = getJsonDiffCore().diffFlat(pa.val, pb.val);
   sum.innerHTML =
-    '<span class="stat stat-add">+ à¹€à¸žà¸´à¹ˆà¸¡ '+diff.added.length+'</span>'+
-    '<span class="stat stat-rem">- à¸¥à¸š '+diff.removed.length+'</span>'+
-    '<span class="stat stat-chg">~ à¹à¸à¹‰à¹„à¸‚ '+diff.changed.length+'</span>'+
-    '<span class="stat stat-same">= à¹€à¸«à¸¡à¸·à¸­à¸™ '+diff.same.length+'</span>';
+    '<span class="stat stat-add">+ \u0e40\u0e1e\u0e34\u0e48\u0e21 ' + diff.added.length + '</span>' +
+    '<span class="stat stat-rem">- \u0e25\u0e1a ' + diff.removed.length + '</span>' +
+    '<span class="stat stat-chg">~ \u0e41\u0e01\u0e49\u0e44\u0e02 ' + diff.changed.length + '</span>' +
+    '<span class="stat stat-same">= \u0e40\u0e2b\u0e21\u0e37\u0e2d\u0e19 ' + diff.same.length + '</span>';
 
-  if (mode==='side') res.innerHTML = renderSide(pa.val, pb.val, diff);
-  else if (mode==='tree') res.innerHTML = renderTree(diff);
+  if (mode === 'side') res.innerHTML = renderSide(pa.val, pb.val, diff);
+  else if (mode === 'tree') res.innerHTML = renderTree(diff);
   else res.innerHTML = renderList(diff);
 }
 
@@ -2724,7 +2710,6 @@ updateJsonEditorShell('a');
 updateJsonEditorShell('b');
 updateJsonLineNumbers('a');
 updateJsonLineNumbers('b');
-syncTreeToolbar();
 
 // ============================================================
 //  MINI GAME
@@ -3464,7 +3449,7 @@ function drawDinoObs(obs) {
   if (obs.floating) {
     dinoCtx.font = "bold 13px Tahoma";
     dinoCtx.fillStyle = "#e67e22";
-    dinoCtx.fillText("หมอบ!", obs.x + obs.w / 2, obs.y + obs.h + 16);
+    dinoCtx.fillText("\u0e2b\u0e21\u0e2d\u0e1a!", obs.x + obs.w / 2, obs.y + obs.h + 16);
   }
   dinoCtx.restore();
 }
@@ -3552,7 +3537,7 @@ function drawDinoObs(obs) {
   if (obs.floating) {
     dinoCtx.font = "bold 13px Tahoma";
     dinoCtx.fillStyle = "#e67e22";
-    dinoCtx.fillText("à¸«à¸¡à¸­à¸š!", obs.x + obs.w / 2, obs.y + obs.h + 16);
+    dinoCtx.fillText("\u0e2b\u0e21\u0e2d\u0e1a!", obs.x + obs.w / 2, obs.y + obs.h + 16);
   }
   dinoCtx.restore();
 }
