@@ -1,0 +1,244 @@
+.home-page {
+  min-height: 100vh;
+  padding: 24px 16px 48px;
+  background:
+    radial-gradient(circle at top right, rgba(245, 158, 11, 0.18), transparent 26%),
+    radial-gradient(circle at left center, rgba(14, 165, 233, 0.12), transparent 30%),
+    var(--bg-tertiary);
+}
+
+.home-shell {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.home-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(280px, 1fr);
+  gap: 18px;
+  align-items: stretch;
+  margin-bottom: 20px;
+}
+
+.home-hero-copy,
+.home-hero-panel,
+.home-section {
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.08);
+}
+
+.home-hero-copy {
+  padding: 28px;
+}
+
+.home-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: #fff7ed;
+  color: #9a3412;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.home-hero-copy h1 {
+  margin: 16px 0 14px;
+  font-size: clamp(32px, 6vw, 54px);
+  line-height: 0.96;
+  letter-spacing: -0.04em;
+}
+
+.home-hero-copy p {
+  margin: 0 0 14px;
+  max-width: 780px;
+  color: var(--text-secondary);
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.home-hero-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+
+.home-hero-panel {
+  padding: 22px;
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+
+.home-stat-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.home-stat {
+  padding: 16px;
+  border-radius: 18px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+}
+
+.home-stat strong {
+  display: block;
+  font-size: 22px;
+  margin-bottom: 4px;
+}
+
+.home-stat span {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.home-sections {
+  display: grid;
+  gap: 18px;
+}
+
+.home-section {
+  padding: 24px;
+}
+
+.home-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.home-section-header h2 {
+  margin: 0;
+  font-size: 24px;
+  letter-spacing: -0.03em;
+}
+
+.home-section-header p {
+  margin: 0;
+  color: var(--text-secondary);
+  max-width: 680px;
+  line-height: 1.7;
+}
+
+.home-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.home-card {
+  display: grid;
+  gap: 12px;
+  min-height: 190px;
+  padding: 18px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, #ffffff 0%, #fafaf9 100%);
+  color: inherit;
+  text-decoration: none;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.home-card:hover,
+.home-card:focus-visible {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.1);
+  border-color: rgba(15, 23, 42, 0.2);
+}
+
+.home-card-kicker {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  min-height: 32px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #f5f5f4;
+  color: #44403c;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.home-card h3 {
+  margin: 0;
+  font-size: 21px;
+  letter-spacing: -0.03em;
+}
+
+.home-card p {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+.home-card ul {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+.home-card-footer {
+  align-self: end;
+  color: #b45309;
+  font-weight: 700;
+}
+
+.home-footer {
+  margin-top: 18px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+@media (max-width: 768px) {
+  .home-page {
+    padding: 18px 12px 32px;
+  }
+
+  .home-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .home-card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .home-hero-copy,
+  .home-hero-panel,
+  .home-section {
+    border-radius: 20px;
+  }
+
+  .home-hero-copy,
+  .home-hero-panel,
+  .home-section {
+    padding: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .home-hero-copy h1 {
+    font-size: 30px;
+  }
+
+  .home-section-header h2 {
+    font-size: 21px;
+  }
+
+  .home-card {
+    min-height: unset;
+  }
+}

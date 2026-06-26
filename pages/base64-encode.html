@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Base64 Encode Tool for Text and File Content</title>
+  <meta name="description" content="Encode plain text into Base64 with UTF-8 support, file loading, copy actions, and download output from a standalone page.">
+  <link rel="canonical" href="/pages/base64-encode.html">
+  <meta property="og:title" content="Base64 Encode Tool for Text and File Content">
+  <meta property="og:description" content="Standalone Base64 encode page with text input, file support, copy, download, and quick handoff to the decode page.">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <link rel="stylesheet" href="../assets/css/layout.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+  <link rel="stylesheet" href="../assets/css/pages/tools.css">
+</head>
+<body class="site-page">
+  <div class="site-shell">
+    <header class="site-header">
+      <div class="site-brand">
+        <strong>JSON Diff Workshop</strong>
+        <span>Standalone encode workflow with mobile-friendly controls.</span>
+      </div>
+      <nav class="site-nav" aria-label="Primary">
+        <a class="site-nav-link is-primary" href="index.html">Landing page</a>
+        <a class="site-nav-link" href="base64-decode.html">Decode page</a>
+        <a class="site-nav-link" href="../index.html">Legacy page</a>
+      </nav>
+    </header>
+
+    <main class="tool-layout">
+      <section class="tool-hero">
+        <h1>Base64 Encode</h1>
+        <p>
+          Convert plain text into Base64 from a dedicated page that supports UTF-8 input, local text file loading, quick copy,
+          and download-ready output. Use this page when you want encoding only, without the multi-tool tabbed interface.
+        </p>
+      </section>
+
+      <section class="tool-grid">
+        <article class="tool-panel">
+          <h2>Source text</h2>
+          <div class="button-row" style="margin: 12px 0;">
+            <label class="action-btn" for="enc-file-input">Load file</label>
+            <input id="enc-file-input" type="file" hidden>
+            <button class="action-btn" id="enc-clear-btn" type="button">Clear</button>
+            <button class="action-btn" id="enc-copy-input-btn" type="button">Copy input</button>
+          </div>
+          <textarea class="tool-textarea" id="enc-input" placeholder="Paste or type text to encode."></textarea>
+          <p class="copy-muted" id="enc-in-count">0 characters</p>
+        </article>
+
+        <article class="tool-panel">
+          <h2>Encoded Base64</h2>
+          <div class="button-row" style="margin: 12px 0;">
+            <button class="action-btn" id="enc-copy-result-btn" type="button">Copy output</button>
+            <button class="action-btn" id="enc-download-btn" type="button">Download</button>
+            <button class="action-btn" id="enc-open-decode-btn" type="button">Open decode page</button>
+          </div>
+          <div class="result-surface empty-hint" id="enc-result">Encoded Base64 output will appear here.</div>
+          <p class="copy-muted" id="enc-out-count"></p>
+        </article>
+      </section>
+
+      <section class="tool-note">
+        <p>This page encodes text using UTF-8 first, so Thai and other Unicode content can be converted into Base64 correctly.</p>
+      </section>
+    </main>
+
+    <footer class="tool-footer">
+      <p>Need reverse conversion? Continue to the dedicated <a href="base64-decode.html">Base64 decode page</a>.</p>
+    </footer>
+  </div>
+
+  <div id="toast-container"></div>
+  <script src="../assets/js/shared/ui.js"></script>
+  <script src="../assets/js/shared/storage.js"></script>
+  <script src="../assets/js/pages/base64-encode.js"></script>
+</body>
+</html>

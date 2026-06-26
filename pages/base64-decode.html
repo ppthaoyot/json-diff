@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Base64 Decode Tool with Text and Image Preview</title>
+  <meta name="description" content="Decode Base64 into text, validate input, preview common image payloads, and move plain text back to the encode page.">
+  <link rel="canonical" href="/pages/base64-decode.html">
+  <meta property="og:title" content="Base64 Decode Tool with Text and Image Preview">
+  <meta property="og:description" content="Standalone Base64 decode page for text output, validation feedback, and common image previews.">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <link rel="stylesheet" href="../assets/css/layout.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+  <link rel="stylesheet" href="../assets/css/pages/tools.css">
+</head>
+<body class="site-page">
+  <div class="site-shell">
+    <header class="site-header">
+      <div class="site-brand">
+        <strong>JSON Diff Workshop</strong>
+        <span>Standalone decode workflow with image preview support.</span>
+      </div>
+      <nav class="site-nav" aria-label="Primary">
+        <a class="site-nav-link is-primary" href="index.html">Landing page</a>
+        <a class="site-nav-link" href="base64-encode.html">Encode page</a>
+        <a class="site-nav-link" href="../index.html">Legacy page</a>
+      </nav>
+    </header>
+
+    <main class="tool-layout">
+      <section class="tool-hero">
+        <h1>Base64 Decode</h1>
+        <p>
+          Decode Base64 into readable text from a standalone page that also detects common image payloads such as PNG, JPEG, GIF,
+          WebP, and SVG. The workspace is optimized for mobile screens and focused decode-only use.
+        </p>
+      </section>
+
+      <section class="tool-grid">
+        <article class="tool-panel">
+          <h2>Base64 input</h2>
+          <div class="button-row" style="margin: 12px 0;">
+            <label class="action-btn" for="dec-file-input">Load file</label>
+            <input id="dec-file-input" type="file" hidden>
+            <button class="action-btn" id="dec-clear-btn" type="button">Clear</button>
+            <button class="action-btn" id="dec-copy-input-btn" type="button">Copy input</button>
+          </div>
+          <textarea class="tool-textarea" id="dec-input" placeholder="Paste Base64 content to decode."></textarea>
+          <p class="copy-muted" id="dec-in-count">0 characters</p>
+        </article>
+
+        <article class="tool-panel">
+          <h2>Decoded output</h2>
+          <div class="button-row" style="margin: 12px 0;">
+            <button class="action-btn" id="dec-copy-result-btn" type="button">Copy text output</button>
+            <button class="action-btn" id="dec-download-btn" type="button">Download text</button>
+            <button class="action-btn" id="dec-open-encode-btn" type="button">Open encode page</button>
+          </div>
+          <div class="result-surface" id="dec-result">
+            <div class="empty-hint" id="dec-result-placeholder">Decoded text or image preview will appear here.</div>
+            <pre id="dec-result-text" style="display:none;white-space:pre-wrap;word-break:break-word;margin:0;"></pre>
+            <img id="dec-result-img" alt="Decoded preview" style="display:none;max-width:100%;border-radius:12px;">
+          </div>
+          <p class="copy-muted" id="dec-out-count"></p>
+        </article>
+      </section>
+
+      <section class="tool-note">
+        <p>This page validates Base64 characters before decoding and will preview image payloads when the decoded bytes match common image formats.</p>
+      </section>
+    </main>
+
+    <footer class="tool-footer">
+      <p>Need to create a Base64 string instead? Move to the standalone <a href="base64-encode.html">encode page</a>.</p>
+    </footer>
+  </div>
+
+  <div id="toast-container"></div>
+  <script src="../assets/js/shared/ui.js"></script>
+  <script src="../assets/js/shared/storage.js"></script>
+  <script src="../assets/js/pages/base64-decode.js"></script>
+</body>
+</html>

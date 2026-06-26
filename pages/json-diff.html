@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JSON Diff Tool for Comparing Two Payloads</title>
+  <meta name="description" content="Compare two JSON payloads in side-by-side, tree, or list mode with validation, formatting, minify, and auto-fix helpers.">
+  <link rel="canonical" href="/pages/json-diff.html">
+  <meta property="og:title" content="JSON Diff Tool for Comparing Two Payloads">
+  <meta property="og:description" content="Standalone JSON diff page with validation, formatting tools, and multiple output modes.">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <link rel="stylesheet" href="../assets/css/layout.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+  <link rel="stylesheet" href="../assets/css/pages/tools.css">
+</head>
+<body class="site-page">
+  <div class="site-shell">
+    <header class="site-header">
+      <div class="site-brand">
+        <strong>JSON Diff Workshop</strong>
+        <span>Standalone utility page for focused compare workflows.</span>
+      </div>
+      <nav class="site-nav" aria-label="Primary">
+        <a class="site-nav-link is-primary" href="index.html">Landing page</a>
+        <a class="site-nav-link" href="../index.html">Legacy page</a>
+        <a class="site-nav-link" href="office-dino.html">Office Dino</a>
+      </nav>
+    </header>
+
+    <main class="tool-layout">
+      <section class="tool-hero">
+        <h1>JSON Diff</h1>
+        <p>
+          Compare two JSON payloads with a standalone workspace that supports side-by-side inspection, flattened tree output,
+          and a simple list view for quick review. This page is built for SEO, mobile readability, and focused compare work without tab switching.
+        </p>
+        <div class="tool-hero-actions">
+          <button class="site-button is-primary" id="load-example-btn" type="button">Load example</button>
+          <button class="site-button" id="clear-json-btn" type="button">Clear all</button>
+          <button class="mode-btn active" data-mode="side" type="button">Side by side</button>
+          <button class="mode-btn" data-mode="tree" type="button">Tree</button>
+          <button class="mode-btn" data-mode="list" type="button">List</button>
+        </div>
+      </section>
+
+      <section class="tool-grid" aria-label="JSON editors">
+        <article class="tool-panel">
+          <div class="panel-row">
+            <h2>JSON A</h2>
+            <span class="tool-status" id="sta-a"></span>
+          </div>
+          <div class="button-row" style="margin-bottom: 12px;">
+            <button class="action-btn" id="fix-a-btn" type="button">Auto-fix</button>
+            <button class="action-btn" id="format-a-btn" type="button">Format</button>
+            <button class="action-btn" id="minify-a-btn" type="button">Minify</button>
+            <button class="action-btn" id="copy-a-btn" type="button">Copy</button>
+          </div>
+          <textarea class="tool-textarea" id="ta-a" placeholder='{"key":"value"}'></textarea>
+        </article>
+
+        <article class="tool-panel">
+          <div class="panel-row">
+            <h2>JSON B</h2>
+            <span class="tool-status" id="sta-b"></span>
+          </div>
+          <div class="button-row" style="margin-bottom: 12px;">
+            <button class="action-btn" id="fix-b-btn" type="button">Auto-fix</button>
+            <button class="action-btn" id="format-b-btn" type="button">Format</button>
+            <button class="action-btn" id="minify-b-btn" type="button">Minify</button>
+            <button class="action-btn" id="copy-b-btn" type="button">Copy</button>
+          </div>
+          <textarea class="tool-textarea" id="ta-b" placeholder='{"key":"new value"}'></textarea>
+        </article>
+      </section>
+
+      <section class="tool-summary" id="summary" aria-live="polite"></section>
+
+      <section class="tool-panel" aria-labelledby="json-diff-result-title">
+        <h2 id="json-diff-result-title">Comparison result</h2>
+        <div class="result-surface" id="result">
+          <div class="empty-hint">Paste JSON into both editors to see the diff.</div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="tool-footer">
+      <p>Need the original tabbed workflow? The legacy all-in-one interface still lives at <a href="../index.html">index.html</a>.</p>
+    </footer>
+  </div>
+
+  <div id="toast-container"></div>
+  <script src="../assets/js/shared/ui.js"></script>
+  <script src="../assets/js/shared/storage.js"></script>
+  <script src="../assets/js/pages/json-diff.js"></script>
+</body>
+</html>

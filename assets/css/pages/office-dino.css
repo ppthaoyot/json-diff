@@ -1,0 +1,247 @@
+.office-dino-page {
+  min-height: 100vh;
+  padding: 24px 16px 40px;
+}
+
+.office-dino-shell {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.office-dino-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+.office-dino-topbar h1 {
+  font-size: 28px;
+  line-height: 1.1;
+}
+
+.office-dino-topbar p {
+  color: var(--text-secondary);
+  max-width: 720px;
+  line-height: 1.6;
+}
+
+.office-dino-backlink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border-md);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.office-dino-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+  gap: 16px;
+}
+
+.office-dino-stage,
+.office-dino-sidebar {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+}
+
+.dino-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  text-align: left;
+}
+
+.dino-title {
+  font-size: 22px;
+  font-weight: bold;
+  color: var(--text-primary);
+}
+
+.dino-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.dino-score-panel {
+  text-align: right;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-primary);
+}
+
+#levelText {
+  font-weight: bold;
+  font-size: 18px;
+  color: #c0392b;
+}
+
+.dino-canvas-wrap {
+  border: 3px solid var(--border-md);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: #fff;
+}
+
+canvas#dino-game {
+  width: 100%;
+  height: auto;
+  display: block;
+  background: linear-gradient(#ffffff 0%, #ffffff 72%, #eeeeee 72%, #eeeeee 100%);
+}
+
+.dino-controls {
+  margin-top: 10px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  text-align: left;
+}
+
+.dino-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border: 1px solid var(--border-md);
+  border-radius: 4px;
+  background: var(--bg-secondary);
+  font-weight: bold;
+  font-family: var(--font-mono);
+}
+
+.dino-char-select {
+  padding: 4px 8px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-md);
+  font-size: 16px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.dino-meta-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.dino-player-form {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.dino-player-form label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.dino-player-form input {
+  flex: 1 1 220px;
+  min-height: 38px;
+  padding: 8px 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-md);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.dino-current-player {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.dino-current-player strong {
+  color: var(--text-primary);
+}
+
+.dino-leaderboard h2 {
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+#dino-leaderboard-empty {
+  font-size: 13px;
+  color: var(--text-tertiary);
+}
+
+#dino-leaderboard-list {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  max-height: 420px;
+  overflow: auto;
+}
+
+.dino-leaderboard-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.dino-leaderboard-rank {
+  font-weight: 700;
+  color: #c0392b;
+}
+
+.dino-leaderboard-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dino-leaderboard-score {
+  font-weight: 700;
+}
+
+.office-dino-note {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+@media (max-width: 768px) {
+  .office-dino-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .office-dino-page {
+    padding: 16px 12px 32px;
+  }
+
+  .office-dino-topbar h1 {
+    font-size: 24px;
+  }
+
+  .office-dino-stage,
+  .office-dino-sidebar {
+    padding: 12px;
+  }
+}

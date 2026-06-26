@@ -3,7 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JSON Diff & Base64 Tools | Thai ID & Lucky Draw</title>
+<title>Legacy JSON Diff Workshop Tools</title>
+<meta name="description" content="Legacy all-in-one tools page for JSON diff, Base64 encode and decode, Thai ID testing, lucky draw, and links to the standalone SEO-first pages.">
+<link rel="canonical" href="/index.html">
+<meta property="og:title" content="Legacy JSON Diff Workshop Tools">
+<meta property="og:description" content="Use the original all-in-one page or jump to the new standalone pages for focused workflows and future SEO support.">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/layout.css">
+<link rel="stylesheet" href="assets/css/components.css">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -99,12 +106,13 @@ body {
 .page-tabs {
   display: flex;
   gap: 4px;
+  flex-wrap: wrap;
   background: var(--bg-secondary);
   border: 0.5px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 4px;
   margin-bottom: 16px;
-  width: fit-content;
+  width: 100%;
 }
 
 .page-tab {
@@ -1099,6 +1107,88 @@ canvas#dino-game {
   flex-wrap: wrap;
   text-align: left;
 }
+.dino-meta-panel {
+  margin: 12px 0;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+}
+.dino-player-form {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.dino-player-form label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+.dino-player-form input {
+  flex: 1 1 220px;
+  min-height: 38px;
+  padding: 8px 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-md);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+.dino-current-player {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.dino-current-player strong {
+  color: var(--text-primary);
+}
+.dino-leaderboard {
+  margin-top: 14px;
+}
+.dino-leaderboard h3 {
+  font-size: 15px;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+}
+#dino-leaderboard-empty {
+  font-size: 13px;
+  color: var(--text-tertiary);
+}
+#dino-leaderboard-list {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  max-height: 280px;
+  overflow: auto;
+}
+.dino-leaderboard-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: var(--radius-md);
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  font-size: 13px;
+}
+.dino-leaderboard-rank {
+  font-weight: 700;
+  color: #c0392b;
+}
+.dino-leaderboard-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-primary);
+}
+.dino-leaderboard-score {
+  font-weight: 700;
+  color: var(--text-primary);
+}
 .dino-badge {
   display: inline-block;
   padding: 4px 8px;
@@ -1149,6 +1239,20 @@ canvas#dino-game {
     <span class="app-title">🛠 Developer Tools</span>
   </div>
 
+  <div style="background:var(--bg-primary);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:16px;">
+    <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;">
+      <div>
+        <div style="font-weight:700;margin-bottom:4px;">Legacy all-in-one page</div>
+        <div style="color:var(--text-secondary);font-size:13px;line-height:1.6;">This original tabbed interface is still live. For SEO-first navigation and mobile-focused standalone pages, use the new page structure below.</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <a class="hub-btn" href="pages/index.html">Open landing page</a>
+        <a class="hub-btn" href="pages/json-diff.html">JSON Diff page</a>
+        <a class="hub-btn" href="pages/office-dino.html">Office Dino page</a>
+      </div>
+    </div>
+  </div>
+
   <!-- Page Tabs -->
   <div class="page-tabs" role="tablist">
     <button class="page-tab active" id="ptab-diff" onclick="switchPage('diff')" role="tab" aria-selected="true" aria-controls="page-diff">
@@ -1166,9 +1270,9 @@ canvas#dino-game {
     <button class="page-tab" id="ptab-lucky" onclick="switchPage('lucky')" role="tab" aria-selected="false" aria-controls="page-lucky">
       <span class="tab-icon">🎰</span> เสี่ยงดวงสุ่มหวย
     </button>
-    <button class="page-tab" id="ptab-minigame" onclick="switchPage('minigame')" role="tab" aria-selected="false" aria-controls="page-minigame">
+    <a class="page-tab" id="ptab-minigame" href="pages/office-dino.html" role="tab" aria-selected="false" aria-controls="page-minigame">
       <span class="tab-icon">🎮</span> มินิเกม
-    </button>
+    </a>
   </div>
 
   <!-- ===================== PAGE: JSON DIFF ===================== -->
@@ -1412,6 +1516,21 @@ canvas#dino-game {
           <canvas id="dino-game" width="900" height="300"></canvas>
         </div>
 
+        <div class="dino-meta-panel">
+          <form class="dino-player-form" id="dino-player-form" onsubmit="beginDinoRun(); return false;">
+            <label for="dino-player-name">ชื่อผู้เล่น</label>
+            <input id="dino-player-name" type="text" maxlength="32" placeholder="ใส่ชื่อ หรือปล่อยว่างให้สุ่มชื่อกวนๆ">
+            <button class="hub-btn" type="submit" id="dino-player-start-btn">เริ่มเล่น</button>
+          </form>
+          <div class="dino-current-player">ผู้เล่นปัจจุบัน: <strong id="dino-current-player-name">ยังไม่ได้เริ่ม</strong></div>
+          <section class="dino-leaderboard" aria-labelledby="dino-leaderboard-title">
+            <h3 id="dino-leaderboard-title">Top 100 Office Dino</h3>
+            <div id="dino-leaderboard-empty">ยังไม่มีคะแนน บุกเบิกตำนานคนแรกได้เลย</div>
+            <ol id="dino-leaderboard-list"></ol>
+            <button class="fmt-btn" type="button" onclick="clearDinoLeaderboard()" style="margin-top:10px;">ล้างอันดับเครื่องนี้</button>
+          </section>
+        </div>
+
         <div class="dino-controls">
           <div>
             <span class="dino-badge">Space / ↑</span> กระโดด
@@ -1497,6 +1616,8 @@ canvas#dino-game {
 
 <div id="toast-container"></div>
 
+<script src="assets/js/shared/ui.js"></script>
+<script src="assets/js/shared/storage.js"></script>
 <script>
 // ============================================================
 //  PAGE SWITCHING
@@ -1508,21 +1629,6 @@ function switchPage(name) {
     tab.classList.toggle('active', p===name);
     tab.setAttribute('aria-selected', p===name ? 'true' : 'false');
   });
-}
-
-// ============================================================
-//  TOAST
-// ============================================================
-function showToast(title, body, type) {
-  var tc = document.getElementById('toast-container');
-  var t = document.createElement('div');
-  t.className = 'toast toast-' + (type||'fix');
-  t.innerHTML = '<div class="toast-title">'+esc(title)+'</div>'+(body?'<div class="toast-body">'+esc(body)+'</div>':'');
-  tc.appendChild(t);
-  setTimeout(function(){
-    t.style.animation = 'toastOut 0.2s ease forwards';
-    setTimeout(function(){ if(tc.contains(t)) tc.removeChild(t); }, 200);
-  }, 3500);
 }
 
 // ============================================================
@@ -1626,12 +1732,6 @@ function clearIDHistory() {
   document.getElementById('id-number-display').textContent = '- - - - - - - - - - - - -';
   document.getElementById('id-formatted-display').textContent = 'กด "สุ่มเลขใหม่" เพื่อเริ่มต้น';
   document.getElementById('id-meta-grid').style.display = 'none';
-}
-
-function copyToClipboard(text) {
-  navigator.clipboard.writeText(text).then(function() {
-    showToast('คัดลอกแล้ว', text, 'ok');
-  });
 }
 
 function validateThaiIDInput() {
@@ -2222,10 +2322,6 @@ function renderList(diff) {
   return html;
 }
 
-function esc(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
 function formatJSON(side) {
   var ta = document.getElementById('ta-'+side);
   var val = ta.value.trim();
@@ -2479,6 +2575,7 @@ function switchMgHub(game) {
 
 // Render board initially when switching to tab
 document.getElementById('ptab-minigame').addEventListener('click', function() {
+  renderDinoLeaderboard();
   if (document.getElementById('mg-hub-box').style.display !== 'none' && !document.getElementById('mg-board').children.length) {
     mgInitBoard();
   }
@@ -2501,6 +2598,10 @@ const dW = dinoCanvas.width;
 const dH = dinoCanvas.height;
 const dinoGroundY = 235;
 
+const dinoMaxHP = 3;
+const dinoDashDuration = 240;
+const dinoBuffLabel = "อมตะทะลวงฟัน";
+
 const dinoConfig = {
   playerEmoji: "👨‍💻",
   gravity: 0.75,
@@ -2508,6 +2609,51 @@ const dinoConfig = {
   baseSpeed: 5.5,
   maxSpeed: 14
 };
+
+function resolveDinoPlayerName() {
+  const input = document.getElementById("dino-player-name");
+  const label = document.getElementById("dino-current-player-name");
+  const name = String(input.value || "").trim() || getDefaultPlayerName();
+  input.value = name;
+  dinoCurrentPlayerName = name;
+  label.textContent = name;
+  return name;
+}
+
+function beginDinoRun() {
+  resolveDinoPlayerName();
+  resetDinoGame();
+}
+
+function renderDinoLeaderboard() {
+  const list = document.getElementById("dino-leaderboard-list");
+  const empty = document.getElementById("dino-leaderboard-empty");
+  if (!list || !empty) return;
+  const rows = loadLeaderboard();
+  empty.style.display = rows.length ? "none" : "block";
+  list.innerHTML = rows.map(function(row, index) {
+    return '<li class="dino-leaderboard-item">'
+      + '<span class="dino-leaderboard-rank">#' + (index + 1) + '</span>'
+      + '<span class="dino-leaderboard-name">' + esc(row.name) + '</span>'
+      + '<span class="dino-leaderboard-score">' + row.score + '</span>'
+      + '</li>';
+  }).join("");
+}
+
+function clearDinoLeaderboard() {
+  localStorage.removeItem(dinoLeaderboardStorageKey);
+  renderDinoLeaderboard();
+}
+
+function onDinoGameOver() {
+  saveLeaderboardEntry({
+    name: dinoCurrentPlayerName || getDefaultPlayerName(),
+    score: dinoScore,
+    level: getDinoLevel(),
+    timestamp: Date.now()
+  });
+  renderDinoLeaderboard();
+}
 
 let dinoState = "ready";
 let dinoFrame = 0;
@@ -2519,10 +2665,11 @@ let dinoObstacles = [];
 let dinoParticles = [];
 let dinoLoopStarted = false;
 
-let dinoHP = 3;
+let dinoHP = dinoMaxHP;
 let dinoInvincible = 0;
 let dinoDashTimer = 0;
 let floatingTexts = [];
+let dinoCurrentPlayerName = "";
 
 const dinoPlayer = {
   x: 80,
@@ -2563,6 +2710,32 @@ const dinoSpecialTypes = [
   { emoji: "🏃", label: "หนีเจ้านาย" }
 ];
 
+function normalizeDinoPickupType(type, kind) {
+  const isPowerup = kind === "powerup";
+  const labelDefaults = isPowerup ? {
+    "ชาไข่มุกต่อชีวิต": { w: 46, h: 52, effect: "heal" },
+    "อู้ไปขี้": { w: 48, h: 54, effect: "heal" },
+    "สูดอากาศแป๊บ": { w: 46, h: 50, effect: "heal" },
+    "เติมพลัง": { w: 48, h: 52, effect: "refill" },
+    "พาราเซตามอล": { w: 46, h: 50, effect: "heal" }
+  } : {
+    "ใบลาออก!": { w: 50, h: 54, effect: "immortal-dash" },
+    "แว้นกลับบ้าน": { w: 52, h: 54, effect: "immortal-dash" },
+    "หนีเจ้านาย": { w: 48, h: 54, effect: "immortal-dash" }
+  };
+  const fallback = isPowerup
+    ? { w: 46, h: 52, effect: "heal" }
+    : { w: 50, h: 54, effect: "immortal-dash" };
+  const preset = labelDefaults[type.label] || fallback;
+  return {
+    emoji: type.emoji,
+    label: type.label,
+    w: typeof type.w === "number" ? type.w : preset.w,
+    h: typeof type.h === "number" ? type.h : preset.h,
+    effect: type.effect || preset.effect
+  };
+}
+
 const dinoLevels = [
   { score: 0, text: "ยังพอทำงานอยู่" },
   { score: 50, text: "สลับจอหนีเก่ง" },
@@ -2598,7 +2771,7 @@ function resetDinoGame() {
   dinoNextSpawn = 80;
   dinoObstacles = [];
   dinoParticles = [];
-  dinoHP = 3;
+  dinoHP = dinoMaxHP;
   dinoInvincible = 0;
   dinoDashTimer = 0;
   floatingTexts = [];
@@ -2632,7 +2805,7 @@ function getDinoLevel() {
 
 function dinoJump() {
   if (dinoState === "ready" || dinoState === "gameover") {
-    resetDinoGame();
+    beginDinoRun();
     return;
   }
   if (dinoPlayer.grounded && !dinoPlayer.ducking) {
@@ -2664,12 +2837,12 @@ function spawnDinoObstacle() {
   let isSpecial = false;
   let type;
   if (isPowerup) {
-    type = dinoPowerupTypes[Math.floor(Math.random() * dinoPowerupTypes.length)];
+    type = normalizeDinoPickupType(dinoPowerupTypes[Math.floor(Math.random() * dinoPowerupTypes.length)], "powerup");
   } else {
     // TEST MODE: 30% chance for special dash item
     if (Math.random() < 0.30) {
       isSpecial = true;
-      type = dinoSpecialTypes[Math.floor(Math.random() * dinoSpecialTypes.length)];
+      type = normalizeDinoPickupType(dinoSpecialTypes[Math.floor(Math.random() * dinoSpecialTypes.length)], "special");
     } else {
       type = dinoObstacleTypes[Math.floor(Math.random() * dinoObstacleTypes.length)];
     }
@@ -2683,6 +2856,7 @@ function spawnDinoObstacle() {
     h: type.h,
     emoji: type.emoji,
     label: type.label,
+    effect: type.effect || null,
     floating,
     isPowerup,
     isSpecial
@@ -2705,7 +2879,17 @@ function checkDinoCollision() {
     
     if (hit) {
       if (obs.isPowerup) {
-        if (dinoHP < 3) {
+        const powerupEffect = obs.effect || (obs.label === "เติมพลัง" ? "refill" : "heal");
+        if (powerupEffect === "refill") {
+          const restored = dinoMaxHP - dinoHP;
+          dinoHP = dinoMaxHP;
+          if (restored > 0) {
+            floatingTexts.push({ x: dinoPlayer.x, y: dinoPlayer.y - 20, text: "เติมพลังเต็ม!", color: "#2ecc71", life: 45, maxLife: 45 });
+          } else {
+            dinoScore += 75;
+            floatingTexts.push({ x: dinoPlayer.x, y: dinoPlayer.y - 20, text: "พลังล้น! +75", color: "#f1c40f", life: 45, maxLife: 45 });
+          }
+        } else if (dinoHP < dinoMaxHP) {
           dinoHP++;
           floatingTexts.push({ x: dinoPlayer.x, y: dinoPlayer.y - 20, text: "+1 พลัง!", color: "#2ecc71", life: 40, maxLife: 40 });
         } else {
@@ -2715,9 +2899,10 @@ function checkDinoCollision() {
         dinoObstacles.splice(i, 1);
         i--;
       } else if (obs.isSpecial) {
-        dinoDashTimer = 240; // Dash for 4 seconds
+        dinoDashTimer = dinoDashDuration;
+        dinoInvincible = Math.max(dinoInvincible, dinoDashDuration);
         dinoScore += 100;
-        floatingTexts.push({ x: dinoPlayer.x, y: dinoPlayer.y - 20, text: "ทะลวงฟัน!!", color: "#9b59b6", life: 50, maxLife: 50 });
+        floatingTexts.push({ x: dinoPlayer.x, y: dinoPlayer.y - 20, text: "อมตะทะลวงฟัน!!", color: "#9b59b6", life: 50, maxLife: 50 });
         dinoObstacles.splice(i, 1);
         i--;
       } else {
@@ -2741,6 +2926,7 @@ function checkDinoCollision() {
               localStorage.setItem("officeDinoHighScore", String(dinoHighScore));
             }
             lastDinoHitReason = obs.label;
+            onDinoGameOver();
             break;
           }
         }
@@ -2898,6 +3084,16 @@ function drawDinoParticles() {
   dinoCtx.globalAlpha = 1;
 }
 
+function drawDinoBuffStatus() {
+  if (dinoDashTimer <= 0 && dinoInvincible <= 0) return;
+  dinoCtx.save();
+  dinoCtx.font = "bold 14px Tahoma";
+  dinoCtx.textAlign = "left";
+  dinoCtx.fillStyle = "#8e44ad";
+  dinoCtx.fillText(dinoBuffLabel + " " + (Math.max(dinoDashTimer, dinoInvincible) / 60).toFixed(1) + "s", 24, 52);
+  dinoCtx.restore();
+}
+
 function drawDinoHud() {
   dinoCtx.fillStyle = "#333";
   dinoCtx.font = "16px Tahoma";
@@ -2993,6 +3189,7 @@ function renderDino() {
   for (const obs of dinoObstacles) drawDinoObs(obs);
   drawDinoPlayer();
   drawDinoHud();
+  drawDinoBuffStatus();
   drawDinoScreens();
 }
 
@@ -3015,6 +3212,8 @@ document.addEventListener("keyup", function(e) {
 });
 
 dinoCanvas.addEventListener("click", dinoJump);
+
+renderDinoLeaderboard();
 
 </script>
 </body>

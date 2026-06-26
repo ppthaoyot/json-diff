@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Office Dino Game with Top 100 Leaderboard</title>
+  <meta name="description" content="Play Office Dino on its own page with player naming, funny fallback names, working buffs, recovery items, and a local top 100 leaderboard.">
+  <link rel="canonical" href="/pages/office-dino.html">
+  <meta property="og:title" content="Office Dino Game with Top 100 Leaderboard">
+  <meta property="og:description" content="Standalone Office Dino page with persistent ranking, player naming, and mobile-ready gameplay.">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <link rel="stylesheet" href="../assets/css/layout.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+  <link rel="stylesheet" href="../assets/css/pages/office-dino.css">
+</head>
+<body class="office-dino-page">
+  <div class="office-dino-shell">
+    <header class="office-dino-topbar">
+      <div>
+        <h1>Office Dino</h1>
+        <p>Run, dodge, collect buffs, recover energy, and push your score into the local top 100 leaderboard with your own player name.</p>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <a class="office-dino-backlink" href="index.html">SEO landing page</a>
+        <a class="office-dino-backlink" href="../index.html">Legacy tools page</a>
+      </div>
+    </header>
+
+    <main class="office-dino-layout">
+      <section class="office-dino-stage" aria-labelledby="office-dino-stage-title">
+        <div class="dino-header">
+          <div>
+            <div class="dino-title" id="office-dino-stage-title">Office Dino: escape the workload</div>
+            <div class="dino-subtitle">The longer you survive, the more suspiciously productive you look.</div>
+          </div>
+          <div class="dino-score-panel">
+            <div>
+              Character:
+              <select class="dino-char-select" id="dino-char" onchange="changeDinoChar()">
+                <option value="🤵">🤵 Executive</option>
+                <option value="👨‍💻" selected>👨‍💻 Developer</option>
+                <option value="👩‍💼">👩‍💼 Office worker</option>
+                <option value="🧑‍💻">🧑‍💻 General staff</option>
+              </select>
+            </div>
+            <div style="margin-top:6px;">
+              Speed:
+              <select class="dino-char-select" id="dino-speed" onchange="changeDinoSpeed()">
+                <option value="baby">Baby</option>
+                <option value="easy">Easy</option>
+                <option value="normal" selected>Normal</option>
+                <option value="hard">Hard</option>
+              </select>
+            </div>
+            <div style="margin-top:6px;">Score: <span id="scoreText">0</span></div>
+            <div>Level: <span id="levelText">Just getting started</span></div>
+          </div>
+        </div>
+
+        <div class="dino-canvas-wrap">
+          <canvas id="dino-game" width="900" height="300"></canvas>
+        </div>
+
+        <div class="dino-controls">
+          <div>
+            <span class="dino-badge">Space / ↑</span> Jump
+            <span class="dino-badge">↓</span> Duck
+            <span class="dino-badge">P</span> Pause
+            <span class="dino-badge">R</span> Restart
+            <button class="hub-btn" onclick="toggleDinoPause()" id="dino-pause-btn" style="margin-left: 8px; padding: 2px 10px; font-size: 12px;">Pause</button>
+          </div>
+          <div style="color:var(--text-tertiary);">Collect energy items and the invincible charge buff to break through danger.</div>
+        </div>
+      </section>
+
+      <aside class="office-dino-sidebar">
+        <div class="dino-meta-panel">
+          <form class="dino-player-form" id="dino-player-form" onsubmit="beginDinoRun(); return false;">
+            <label for="dino-player-name">Player name</label>
+            <input id="dino-player-name" type="text" maxlength="32" placeholder="Leave blank for a funny default name">
+            <button class="hub-btn" type="submit" id="dino-player-start-btn">Start run</button>
+          </form>
+
+          <div class="dino-current-player">Current player: <strong id="dino-current-player-name">Not started yet</strong></div>
+
+          <section class="dino-leaderboard" aria-labelledby="dino-leaderboard-title">
+            <h2 id="dino-leaderboard-title">Top 100 Office Dino</h2>
+            <div id="dino-leaderboard-empty">No scores yet. Be the first legend on this machine.</div>
+            <ol id="dino-leaderboard-list"></ol>
+            <button class="hub-btn" type="button" onclick="clearDinoLeaderboard()" style="margin-top:10px;">Clear leaderboard on this device</button>
+          </section>
+
+          <div class="office-dino-note">
+            Collect the <strong>energy refill</strong> item to recover HP and grab the <strong>invincible charge</strong> buff to smash through obstacles safely.
+          </div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script src="../assets/js/shared/ui.js"></script>
+  <script src="../assets/js/shared/storage.js"></script>
+  <script src="../assets/js/pages/office-dino.js"></script>
+</body>
+</html>

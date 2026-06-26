@@ -1,0 +1,29 @@
+.toast {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  padding: 10px 16px;
+  border-radius: var(--radius-lg);
+  background: var(--bg-primary);
+  border: 0.5px solid var(--border-md);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+  color: var(--text-primary);
+  max-width: 320px;
+  line-height: 1.6;
+}
+
+.hub-btn {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  padding: 8px 16px;
+  border-radius: 99px;
+  border: 1px solid var(--border-md);
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.dino-leaderboard ol,
+#dino-leaderboard-list {
+  list-style: none;
+  padding: 0;
+}

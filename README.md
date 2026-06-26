@@ -1,86 +1,80 @@
-# ⚡ JSON Diff Viewer
+# JSON Diff Workshop
 
-> Real-time JSON diff viewer — side-by-side, tree & list views, auto-fix malformed JSON. Zero dependencies, single HTML file.
+Multi-page utility workshop for JSON comparison, Base64 conversion, Thai ID test data, lucky draw, and the Office Dino mini game.
 
-🔗 **Demo:** [https://ppthaoyot.github.io/json-diff](https://username.github.io/json-diff)
+## Page structure
 
----
+- `pages/index.html`
+  SEO-first landing page and the main navigation entry for the new structure.
+- `pages/json-diff.html`
+  Standalone JSON diff workspace with side-by-side, tree, and list views.
+- `pages/base64-encode.html`
+  Standalone Base64 encode page with UTF-8 support and file loading.
+- `pages/base64-decode.html`
+  Standalone Base64 decode page with text output and image preview support.
+- `pages/thai-id.html`
+  Standalone Thai ID generator and checksum validator for QA and test data.
+- `pages/lucky.html`
+  Standalone lucky draw page with 2-digit, 3-digit, and 6-digit modes.
+- `pages/office-dino.html`
+  Standalone Office Dino page with player naming, fallback names, and top 100 leaderboard.
+- `index.html`
+  Legacy all-in-one tabbed page kept for backward compatibility and quick local use.
 
-## ฟีเจอร์
+## Open the project
 
-- **เปรียบเทียบ JSON แบบ real-time** — diff อัปเดตทันทีขณะพิมพ์
-- **3 โหมดแสดงผล**
-  - `Side-by-side` — แสดงคู่กันซ้าย-ขวา highlight บรรทัดที่ต่าง
-  - `Tree` — แสดง path แบบ nested พร้อม old/new value
-  - `รายการ` — สรุปรายการ key ที่เพิ่ม/ลบ/แก้ไข
-- **✦ Auto-fix** — พยายาม repair JSON ที่ผิดรูปแบบอัตโนมัติ พร้อมแจ้งว่าแก้ไขอะไรบ้าง
-- **Format JSON** — จัด indent ให้สวยงาม (pretty print)
-- **Minify JSON** — ย่อเป็นบรรทัดเดียว
-- **Copy** — คัดลอก JSON พร้อม feedback
-- **Validation** — แจ้ง error ทันทีถ้า JSON ไม่ถูกต้อง
-- **Summary bar** — นับจำนวน เพิ่ม / ลบ / แก้ไข / เหมือน
-- **Dark mode** — รองรับอัตโนมัติตาม system
-- **Responsive** — ใช้งานได้บนมือถือ
+1. Open `pages/index.html` when you want the new SEO-friendly multi-page structure.
+2. Open `index.html` when you want the original legacy all-in-one page.
+3. Open any page directly under `pages/` if you need a single tool in standalone mode.
 
----
+## Assets
 
-## วิธีใช้งาน
+- `assets/css/base.css`
+  Base tokens and shared resets.
+- `assets/css/layout.css`
+  Shared layout primitives.
+- `assets/css/components.css`
+  Shared components such as toast and leaderboard list defaults.
+- `assets/css/pages/home.css`
+  Landing page styling.
+- `assets/css/pages/tools.css`
+  Shared styling for standalone tool pages.
+- `assets/css/pages/office-dino.css`
+  Dedicated styling for the Office Dino page.
+- `assets/js/shared/ui.js`
+  Shared escaping, toast, and clipboard helper behavior.
+- `assets/js/shared/storage.js`
+  Shared leaderboard storage and funny default player names for Office Dino.
+- `assets/js/pages/`
+  Page-specific JavaScript files for each standalone tool and mini game.
 
-1. วาง JSON ชุดแรก (ต้นฉบับ) ในกล่อง **JSON A**
-2. วาง JSON ชุดที่สอง (เปรียบเทียบ) ในกล่อง **JSON B**
-3. ผลลัพธ์จะแสดงทันทีด้านล่าง
-4. เลือกโหมดแสดงผลได้จากปุ่ม Side-by-side / Tree / รายการ
+## SEO foundation
 
-### Auto-fix รองรับการแก้ไขดังนี้
+Each standalone page under `pages/` includes:
 
-| ปัญหา | ตัวอย่าง | ผลลัพธ์ |
-|-------|---------|---------|
-| Trailing comma | `{"a":1,}` | `{"a":1}` |
-| Single quotes | `{'key':'val'}` | `{"key":"val"}` |
-| Unquoted keys | `{key: "val"}` | `{"key":"val"}` |
-| Comments | `{"a":1} // note` | `{"a":1}` |
-| Python literals | `True / False / None` | `true / false / null` |
-| Undefined | `{"a": undefined}` | `{"a": null}` |
-| Trailing semicolon | `{"a":1};` | `{"a":1}` |
+- A page-specific `<title>`
+- `meta description`
+- `canonical`
+- `og:title`
+- `og:description`
+- Semantic page sections and internal links
 
----
+Project-wide SEO support files:
 
-## สัญลักษณ์
+- `robots.txt`
+- `sitemap.xml`
 
-| สัญลักษณ์ | ความหมาย |
-|-----------|----------|
-| `+` สีเขียว | key ที่เพิ่มเข้ามาใน JSON B |
-| `−` สีแดง | key ที่ถูกลบออกจาก JSON A |
-| `~` สีส้ม | key ที่มีค่าเปลี่ยนแปลง |
-| (ไม่มี) สีเทา | key ที่เหมือนกันทั้งสองฝั่ง |
+## Tests
 
----
-
-## การ Deploy บน GitHub Pages
+Run the current automated checks with:
 
 ```bash
-# 1. สร้าง repo ใหม่แล้ว rename ไฟล์เป็น index.html
-git init
-git add index.html README.md
-git commit -m "init: JSON Diff Viewer"
-git remote add origin https://github.com/<username>/json-diff.git
-git push -u origin main
+node --test tests/dino-buffs.test.js tests/leaderboard.test.js tests/office-dino-page.test.js tests/multipage-smoke.test.js
 ```
 
-จากนั้นไปที่ **Settings → Pages → Branch: main → Save**
-รอประมาณ 1-2 นาที จะได้ URL: `https://<username>.github.io/json-diff`
+## Notes
 
----
-
-## Tech Stack
-
-- HTML5 / CSS3 / Vanilla JavaScript
-- ไม่มี dependency ภายนอก
-- ไม่ต้องการ backend หรือ server
-- ขนาดไฟล์เดียว < 20KB
-
----
-
-## License
-
-MIT License — ใช้งานและดัดแปลงได้อิสระ
+- No backend is used in this round.
+- Office Dino leaderboard data still uses `localStorage`.
+- The new landing page is `pages/index.html`.
+- The original `index.html` remains the legacy interface by design.
