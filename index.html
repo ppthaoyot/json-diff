@@ -2510,6 +2510,10 @@ let dinoObstacles = [];
 let dinoParticles = [];
 let dinoLoopStarted = false;
 
+let dinoHP = 3;
+let dinoInvincible = 0;
+let floatingTexts = [];
+
 const dinoPlayer = {
   x: 80,
   y: dinoGroundY - 58,
@@ -2535,16 +2539,24 @@ const dinoObstacleTypes = [
   { emoji: "🤡", label: "เพื่อนโยนขี้", w: 56, h: 56 }
 ];
 
+const dinoPowerupTypes = [
+  { emoji: "🍵", label: "ชาไข่มุกต่อชีวิต" },
+  { emoji: "🚽", label: "อู้ไปขี้" },
+  { emoji: "🚬", label: "สูดอากาศแป๊บ" }
+];
+
 const dinoLevels = [
   { score: 0, text: "ยังพอทำงานอยู่" },
-  { score: 100, text: "ชิวๆ" },
-  { score: 250, text: "ว่าง" },
-  { score: 450, text: "ว่างมาก" },
-  { score: 700, text: "มาทำไม" },
-  { score: 1000, text: "น่าจะลาอยู่บ้าน" },
-  { score: 1400, text: "ว่างจน HR สงสัย" },
-  { score: 1900, text: "ระดับตำนานประจำแผนก" },
-  { score: 2500, text: "CEO ยังต้องยอม" }
+  { score: 50, text: "สลับจอหนีเก่ง" },
+  { score: 120, text: "ตีเนียนเข้าห้องน้ำ" },
+  { score: 250, text: "แอบหลับในส้วม" },
+  { score: 450, text: "รับเงินเดือนไปวันๆ" },
+  { score: 700, text: "วิญญาณสิงเก้าอี้" },
+  { score: 1000, text: "ปรมาจารย์การอู้" },
+  { score: 1400, text: "HR ถือซองขาวรอ" },
+  { score: 1900, text: "ตำนานพนักงานไร้ตัวตน" },
+  { score: 2500, text: "บริษัทขาดทุนเพราะคุณ" },
+  { score: 3500, text: "ลูกรัก CEO" }
 ];
 
 function changeDinoChar() {
@@ -2559,6 +2571,9 @@ function resetDinoGame() {
   dinoNextSpawn = 80;
   dinoObstacles = [];
   dinoParticles = [];
+  dinoHP = 3;
+  dinoInvincible = 0;
+  floatingTexts = [];
 
   dinoPlayer.y = dinoGroundY - 58;
   dinoPlayer.vy = 0;
@@ -2615,8 +2630,14 @@ function setDinoDuck(isDucking) {
 }
 
 function spawnDinoObstacle() {
-  const type = dinoObstacleTypes[Math.floor(Math.random() * dinoObstacleTypes.length)];
-  const floating = Math.random() < 0.25 && dinoScore > 300;
+  const isPowerup = Math.random() < 0.08 && dinoScore > 100;
+  let type;
+  if (isPowerup) {
+    type = dinoPowerupTypes[Math.floor(Math.random() * dinoPowerupTypes.length)];
+  } else {
+    type = dinoObstacleTypes[Math.floor(Math.random() * dinoObstacleTypes.length)];
+  }
+  const floating = !isPowerup && Math.random() < 0.25 && dinoScore > 300;
 
   dinoObstacles.push({
     x: dW + 20,
@@ -2625,7 +2646,8 @@ function spawnDinoObstacle() {
     h: type.h,
     emoji: type.emoji,
     label: type.label,
-    floating
+    floating,
+    isPowerup
   });
 
   dinoNextSpawn = 70 + Math.floor(Math.random() * 70);
@@ -2638,17 +2660,38 @@ let lastDinoHitReason = "";
 
 function checkDinoCollision() {
   const pBox = { x: dinoPlayer.x + 8, y: dinoPlayer.y + 8, w: dinoPlayer.w - 16, h: dinoPlayer.h - 10 };
-  for (const obs of dinoObstacles) {
+  for (let i = 0; i < dinoObstacles.length; i++) {
+    const obs = dinoObstacles[i];
     const oBox = { x: obs.x + 6, y: obs.y + 6, w: obs.w - 12, h: obs.h - 8 };
     const hit = pBox.x < oBox.x + oBox.w && pBox.x + pBox.w > oBox.x && pBox.y < oBox.y + oBox.h && pBox.y + pBox.h > oBox.y;
+    
     if (hit) {
-      dinoState = "gameover";
-      if (dinoScore > dinoHighScore) {
-        dinoHighScore = dinoScore;
-        localStorage.setItem("officeDinoHighScore", String(dinoHighScore));
+      if (obs.isPowerup) {
+        if (dinoHP < 3) {
+          dinoHP++;
+          floatingTexts.push({ x: dinoPlayer.x, y: dinoPlayer.y - 20, text: "+1 พลัง!", color: "#2ecc71", life: 40, maxLife: 40 });
+        } else {
+          dinoScore += 50;
+          floatingTexts.push({ x: dinoPlayer.x, y: dinoPlayer.y - 20, text: "+50 แต้ม!", color: "#f1c40f", life: 40, maxLife: 40 });
+        }
+        dinoObstacles.splice(i, 1);
+        i--;
+      } else {
+        if (dinoInvincible <= 0) {
+          dinoHP--;
+          dinoInvincible = 50;
+          floatingTexts.push({ x: dinoPlayer.x, y: dinoPlayer.y - 20, text: "-1 จ๊ากก!", color: "#e74c3c", life: 40, maxLife: 40 });
+          if (dinoHP <= 0) {
+            dinoState = "gameover";
+            if (dinoScore > dinoHighScore) {
+              dinoHighScore = dinoScore;
+              localStorage.setItem("officeDinoHighScore", String(dinoHighScore));
+            }
+            lastDinoHitReason = obs.label;
+            break;
+          }
+        }
       }
-      lastDinoHitReason = obs.label;
-      break;
     }
   }
 }
@@ -2681,6 +2724,14 @@ function updateDino() {
     p.x += p.vx; p.y += p.vy; p.life--;
   }
   dinoParticles = dinoParticles.filter(p => p.life > 0);
+
+  if (dinoInvincible > 0) dinoInvincible--;
+  
+  for (const ft of floatingTexts) {
+    ft.y -= 1;
+    ft.life--;
+  }
+  floatingTexts = floatingTexts.filter(ft => ft.life > 0);
 
   checkDinoCollision();
 }
@@ -2715,6 +2766,10 @@ function drawDinoBg() {
 
 function drawDinoPlayer() {
   dinoCtx.save();
+  if (dinoInvincible > 0 && Math.floor(dinoFrame / 4) % 2 === 0) {
+    dinoCtx.globalAlpha = 0.4;
+  }
+  
   dinoCtx.font = dinoPlayer.ducking ? "44px Tahoma" : "54px Tahoma";
   dinoCtx.textAlign = "center";
   dinoCtx.textBaseline = "middle";
@@ -2747,7 +2802,7 @@ function drawDinoObs(obs) {
   
   dinoCtx.shadowColor = "transparent";
   dinoCtx.font = "bold 14px Tahoma";
-  dinoCtx.fillStyle = "#c0392b";
+  dinoCtx.fillStyle = obs.isPowerup ? "#27ae60" : "#c0392b";
   dinoCtx.fillText(obs.label, obs.x + obs.w / 2, obs.y - 12);
   
   if (obs.floating) {
@@ -2773,6 +2828,24 @@ function drawDinoHud() {
   dinoCtx.textAlign = "right";
   dinoCtx.fillText("HI " + dinoHighScore, dW - 24, 28);
   dinoCtx.fillText("SCORE " + dinoScore, dW - 24, 52);
+  
+  dinoCtx.textAlign = "left";
+  let hearts = "";
+  for(let i=0; i<3; i++) hearts += (i < dinoHP) ? "❤️" : "🖤";
+  dinoCtx.fillText("พลัง: " + hearts, 24, 28);
+  
+  for (const ft of floatingTexts) {
+    dinoCtx.save();
+    dinoCtx.globalAlpha = ft.life / ft.maxLife;
+    dinoCtx.font = "bold 18px Tahoma";
+    dinoCtx.fillStyle = ft.color;
+    dinoCtx.textAlign = "center";
+    dinoCtx.shadowColor = "rgba(0,0,0,0.4)";
+    dinoCtx.shadowBlur = 4;
+    dinoCtx.shadowOffsetY = 2;
+    dinoCtx.fillText(ft.text, ft.x + 20, ft.y);
+    dinoCtx.restore();
+  }
 }
 
 function drawDinoScreens() {
