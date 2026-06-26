@@ -939,6 +939,92 @@ textarea.invalid { border-color: #E24B4A; }
   text-align: right;
   margin-top: 2px;
 }
+
+/* ---- Mini Game ---- */
+.mg-wrap {
+  max-width: 600px;
+  margin: 0 auto;
+  text-align: center;
+  background: var(--bg-primary);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 32px 24px;
+}
+.mg-header {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+.mg-desc {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+}
+.mg-board {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 32px;
+  position: relative;
+  height: 120px;
+}
+.mg-box {
+  width: 100px;
+  height: 100px;
+  background: var(--bg-secondary);
+  border: 2px solid var(--border-md);
+  border-radius: var(--radius-md);
+  font-size: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: absolute;
+  transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), background 0.2s, border-color 0.2s;
+  user-select: none;
+}
+.mg-box:hover:not(.disabled) {
+  transform: translateY(-4px) scale(1.05) !important;
+  border-color: #3498db;
+  background: var(--bg-tertiary);
+}
+.mg-box.disabled {
+  cursor: default;
+}
+.mg-box.winner {
+  border-color: #2ecc71;
+  background: #eafaf1;
+  animation: mgBounce 0.5s;
+}
+.mg-box.loser {
+  opacity: 0.6;
+  filter: grayscale(1);
+}
+@keyframes mgBounce {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-15px) scale(1.1); }
+}
+.mg-btn {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 600;
+  padding: 12px 32px;
+  border-radius: 99px;
+  border: none;
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.mg-btn:hover { opacity: 0.85; transform: scale(1.02); }
+.mg-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.mg-result {
+  margin-top: 16px;
+  font-size: 16px;
+  font-weight: 600;
+  min-height: 24px;
+}
 </style>
 </head>
 <body>
@@ -965,6 +1051,9 @@ textarea.invalid { border-color: #E24B4A; }
     </button>
     <button class="page-tab" id="ptab-lucky" onclick="switchPage('lucky')" role="tab" aria-selected="false" aria-controls="page-lucky">
       <span class="tab-icon">🎰</span> เสี่ยงดวงสุ่มหวย
+    </button>
+    <button class="page-tab" id="ptab-minigame" onclick="switchPage('minigame')" role="tab" aria-selected="false" aria-controls="page-minigame">
+      <span class="tab-icon">🎁</span> มินิเกมเปิดกล่อง
     </button>
   </div>
 
@@ -1165,6 +1254,24 @@ textarea.invalid { border-color: #E24B4A; }
     </div>
   </div>
 
+<!-- ===================== PAGE: MINI GAME ===================== -->
+  <div class="page" id="page-minigame" role="tabpanel" aria-labelledby="ptab-minigame">
+    <div class="mg-wrap">
+      <div class="mg-header">🎁 เกมสลับกล่องเสี่ยงโชค</div>
+      <div class="mg-desc">มีเพชร 💎 ซ่อนอยู่ใน 1 กล่อง จับตาดูให้ดีแล้วเลือกให้ถูก!</div>
+      
+      <div class="mg-board" id="mg-board">
+        <!-- Boxes injected by JS -->
+      </div>
+      
+      <div style="min-height:28px;">
+        <button class="mg-btn" id="mg-start-btn" onclick="mgStartGame()">เริ่มเกม / สลับกล่อง!</button>
+      </div>
+      
+      <div class="mg-result" id="mg-result"></div>
+    </div>
+  </div>
+
 <!-- ===================== PAGE: BASE64 DECODE ===================== -->
   <div class="page" id="page-b64decode" role="tabpanel" aria-labelledby="ptab-b64decode">
     <div class="b64-layout">
@@ -1225,7 +1332,7 @@ textarea.invalid { border-color: #E24B4A; }
 //  PAGE SWITCHING
 // ============================================================
 function switchPage(name) {
-  ['diff','b64encode','b64decode','thaiid','lucky'].forEach(function(p) {
+  ['diff','b64encode','b64decode','thaiid','lucky','minigame'].forEach(function(p) {
     document.getElementById('page-'+p).classList.toggle('active', p===name);
     var tab = document.getElementById('ptab-'+p);
     tab.classList.toggle('active', p===name);
@@ -2037,6 +2144,138 @@ function clearAll() {
   document.getElementById('result').innerHTML = '<div class="empty-hint">วาง JSON ในกล่องด้านบนเพื่อดูความแตกต่าง</div>';
   document.getElementById('summary').innerHTML = '';
 }
+
+// ============================================================
+//  MINI GAME
+// ============================================================
+var mgState = 'idle'; // idle, shuffling, waiting, done
+var mgBoxes = [0, 1, 2]; // tracking positions
+var mgWinnerIndex = -1;
+var mgShuffleCount = 0;
+var mgShuffleTimer = null;
+var boxWidth = 100;
+var boxGap = 20;
+
+function mgInitBoard() {
+  var board = document.getElementById('mg-board');
+  board.innerHTML = '';
+  var centerOffset = (board.offsetWidth - (3 * boxWidth + 2 * boxGap)) / 2;
+  
+  for (var i = 0; i < 3; i++) {
+    var b = document.createElement('div');
+    b.className = 'mg-box';
+    b.id = 'mg-box-' + i;
+    b.textContent = '🎁';
+    b.style.left = centerOffset + (i * (boxWidth + boxGap)) + 'px';
+    b.onclick = (function(idx) { return function() { mgPick(idx); }; })(i);
+    board.appendChild(b);
+  }
+}
+
+function mgStartGame() {
+  if (mgState === 'shuffling') return;
+  
+  document.getElementById('mg-result').textContent = 'จับตาดูให้ดี...';
+  document.getElementById('mg-result').style.color = 'var(--text-secondary)';
+  document.getElementById('mg-start-btn').disabled = true;
+  
+  mgWinnerIndex = Math.floor(Math.random() * 3);
+  mgState = 'shuffling';
+  
+  // Reset visual
+  for (var i = 0; i < 3; i++) {
+    var b = document.getElementById('mg-box-' + i);
+    b.className = 'mg-box';
+    b.textContent = '🎁';
+    mgBoxes[i] = i;
+  }
+  
+  // Initial peek
+  var wBox = document.getElementById('mg-box-' + mgWinnerIndex);
+  wBox.textContent = '💎';
+  wBox.style.transform = 'translateY(-15px)';
+  
+  setTimeout(function() {
+    wBox.textContent = '🎁';
+    wBox.style.transform = '';
+    setTimeout(mgDoShuffle, 400);
+  }, 1000);
+}
+
+function mgDoShuffle() {
+  mgShuffleCount = 0;
+  mgShuffleTimer = setInterval(function() {
+    // Pick two random distinct indices to swap
+    var idx1 = Math.floor(Math.random() * 3);
+    var idx2 = Math.floor(Math.random() * 3);
+    while (idx1 === idx2) idx2 = Math.floor(Math.random() * 3);
+    
+    // Swap logical positions
+    var temp = mgBoxes[idx1];
+    mgBoxes[idx1] = mgBoxes[idx2];
+    mgBoxes[idx2] = temp;
+    
+    // Update visual positions
+    var board = document.getElementById('mg-board');
+    var centerOffset = (board.offsetWidth - (3 * boxWidth + 2 * boxGap)) / 2;
+    for (var i = 0; i < 3; i++) {
+      var b = document.getElementById('mg-box-' + i);
+      var pos = mgBoxes.indexOf(i); // where is box i right now?
+      b.style.left = centerOffset + (pos * (boxWidth + boxGap)) + 'px';
+    }
+    
+    mgShuffleCount++;
+    if (mgShuffleCount > 8 + Math.random() * 4) { // random shuffle length
+      clearInterval(mgShuffleTimer);
+      mgState = 'waiting';
+      document.getElementById('mg-result').textContent = 'เลือกกล่องเลย!';
+      document.getElementById('mg-result').style.color = '#3498db';
+      document.getElementById('mg-start-btn').textContent = 'เริ่มเกมใหม่';
+      document.getElementById('mg-start-btn').disabled = false;
+    }
+  }, 450);
+}
+
+function mgPick(boxIndex) {
+  if (mgState !== 'waiting') return;
+  mgState = 'done';
+  
+  for (var i = 0; i < 3; i++) {
+    var b = document.getElementById('mg-box-' + i);
+    b.className = 'mg-box disabled ' + (i === mgWinnerIndex ? 'winner' : 'loser');
+    b.textContent = (i === mgWinnerIndex) ? '💎' : '💨';
+  }
+  
+  var resEl = document.getElementById('mg-result');
+  if (boxIndex === mgWinnerIndex) {
+    resEl.textContent = '🎉 ยินดีด้วย! คุณเจอเพชร 💎';
+    resEl.style.color = '#2ecc71';
+    spawnConfetti();
+  } else {
+    resEl.textContent = '😢 แป่ววววว ว่างเปล่า!';
+    resEl.style.color = '#e74c3c';
+  }
+}
+
+// Initial init for mini game
+window.addEventListener('resize', function() {
+  if (document.getElementById('page-minigame').classList.contains('active')) {
+    var board = document.getElementById('mg-board');
+    if (!board.children.length) return;
+    var centerOffset = (board.offsetWidth - (3 * boxWidth + 2 * boxGap)) / 2;
+    for (var i = 0; i < 3; i++) {
+      var pos = mgBoxes.indexOf(i);
+      document.getElementById('mg-box-' + i).style.left = centerOffset + (pos * (boxWidth + boxGap)) + 'px';
+    }
+  }
+});
+// Render board initially when switching to tab
+document.getElementById('ptab-minigame').addEventListener('click', function() {
+  if (!document.getElementById('mg-board').children.length) {
+    mgInitBoard();
+  }
+});
+
 </script>
 </body>
 </html>
