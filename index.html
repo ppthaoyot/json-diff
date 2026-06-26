@@ -1167,7 +1167,7 @@ canvas#dino-game {
       <span class="tab-icon">🎰</span> เสี่ยงดวงสุ่มหวย
     </button>
     <button class="page-tab" id="ptab-minigame" onclick="switchPage('minigame')" role="tab" aria-selected="false" aria-controls="page-minigame">
-      <span class="tab-icon">🎮</span> ศูนย์รวมมินิเกม
+      <span class="tab-icon">🎮</span> มินิเกม
     </button>
   </div>
 
@@ -1407,7 +1407,9 @@ canvas#dino-game {
           <div>
             <span class="dino-badge">Space / ↑</span> กระโดด
             <span class="dino-badge">↓</span> หมอบ
+            <span class="dino-badge">P</span> Pause
             <span class="dino-badge">R</span> เริ่มใหม่
+            <button class="hub-btn" onclick="toggleDinoPause()" id="dino-pause-btn" style="margin-left: 8px; padding: 2px 10px; font-size: 12px;">⏸️ พักเบรก (Pause)</button>
           </div>
           <div style="color:var(--text-tertiary);">หลบงานด่วน แฟ้มเอกสาร และหัวหน้าให้รอด!</div>
         </div>
@@ -2563,6 +2565,18 @@ function resetDinoGame() {
   dinoPlayer.grounded = true;
   dinoPlayer.ducking = false;
   dinoPlayer.h = 58;
+  
+  document.getElementById("dino-pause-btn").textContent = "⏸️ พักเบรก (Pause)";
+}
+
+function toggleDinoPause() {
+  if (dinoState === "running") {
+    dinoState = "paused";
+    document.getElementById("dino-pause-btn").textContent = "▶️ ทำงานต่อ (Resume)";
+  } else if (dinoState === "paused") {
+    dinoState = "running";
+    document.getElementById("dino-pause-btn").textContent = "⏸️ พักเบรก (Pause)";
+  }
 }
 
 function getDinoLevel() {
@@ -2701,30 +2715,45 @@ function drawDinoBg() {
 
 function drawDinoPlayer() {
   dinoCtx.save();
-  dinoCtx.font = dinoPlayer.ducking ? "34px Tahoma" : "44px Tahoma";
+  dinoCtx.font = dinoPlayer.ducking ? "44px Tahoma" : "54px Tahoma";
   dinoCtx.textAlign = "center";
   dinoCtx.textBaseline = "middle";
   const bob = dinoPlayer.grounded ? Math.sin(dinoFrame / 5) * 2 : 0;
+  
+  dinoCtx.shadowColor = "rgba(0,0,0,0.3)";
+  dinoCtx.shadowBlur = 4;
+  dinoCtx.shadowOffsetY = 2;
+  
   dinoCtx.fillText(dinoConfig.playerEmoji, dinoPlayer.x + dinoPlayer.w / 2, dinoPlayer.y + dinoPlayer.h / 2 + bob);
-  dinoCtx.font = "10px Tahoma";
-  dinoCtx.fillStyle = "#333";
-  dinoCtx.fillText("หนีงาน", dinoPlayer.x + dinoPlayer.w / 2, dinoPlayer.y - 8);
+  
+  dinoCtx.shadowColor = "transparent";
+  dinoCtx.font = "bold 13px Tahoma";
+  dinoCtx.fillStyle = "#2c3e50";
+  dinoCtx.fillText("หนีงาน", dinoPlayer.x + dinoPlayer.w / 2, dinoPlayer.y - 12);
   dinoCtx.restore();
 }
 
 function drawDinoObs(obs) {
   dinoCtx.save();
-  dinoCtx.font = "34px Tahoma";
+  dinoCtx.font = "40px Tahoma";
   dinoCtx.textAlign = "center";
   dinoCtx.textBaseline = "middle";
+  
+  dinoCtx.shadowColor = "rgba(0,0,0,0.3)";
+  dinoCtx.shadowBlur = 4;
+  dinoCtx.shadowOffsetY = 2;
+  
   dinoCtx.fillText(obs.emoji, obs.x + obs.w / 2, obs.y + obs.h / 2);
-  dinoCtx.font = "11px Tahoma";
-  dinoCtx.fillStyle = "#333";
-  dinoCtx.fillText(obs.label, obs.x + obs.w / 2, obs.y - 8);
+  
+  dinoCtx.shadowColor = "transparent";
+  dinoCtx.font = "bold 14px Tahoma";
+  dinoCtx.fillStyle = "#c0392b";
+  dinoCtx.fillText(obs.label, obs.x + obs.w / 2, obs.y - 12);
+  
   if (obs.floating) {
-    dinoCtx.font = "10px Tahoma";
-    dinoCtx.fillStyle = "#888";
-    dinoCtx.fillText("หมอบ!", obs.x + obs.w / 2, obs.y + obs.h + 14);
+    dinoCtx.font = "bold 13px Tahoma";
+    dinoCtx.fillStyle = "#e67e22";
+    dinoCtx.fillText("หมอบ!", obs.x + obs.w / 2, obs.y + obs.h + 16);
   }
   dinoCtx.restore();
 }
@@ -2750,29 +2779,60 @@ function drawDinoScreens() {
   if (dinoState === "ready") {
     dinoCtx.fillStyle = "rgba(255, 255, 255, 0.85)";
     dinoCtx.fillRect(0, 0, dW, dH);
-    dinoCtx.fillStyle = "#333";
+    dinoCtx.fillStyle = "#2c3e50";
     dinoCtx.textAlign = "center";
-    dinoCtx.font = "bold 28px Tahoma";
+    
+    dinoCtx.shadowColor = "rgba(0,0,0,0.15)";
+    dinoCtx.shadowBlur = 4;
+    dinoCtx.font = "bold 36px Tahoma";
     dinoCtx.fillText("Office Dino", dW / 2, 95);
-    dinoCtx.font = "18px Tahoma";
-    dinoCtx.fillText("มนุษย์เงินเดือนผู้ต้องหลบงานเพื่อรักษาความว่าง", dW / 2, 130);
-    dinoCtx.font = "15px Tahoma";
-    dinoCtx.fillText("กด Space หรือ ↑ เพื่อเริ่มเกม", dW / 2, 170);
-    dinoCtx.fillText("เจอสิ่งกีดขวางลอย ให้กด ↓ เพื่อหมอบ", dW / 2, 198);
+    
+    dinoCtx.shadowColor = "transparent";
+    dinoCtx.font = "bold 20px Tahoma";
+    dinoCtx.fillStyle = "#34495e";
+    dinoCtx.fillText("มนุษย์เงินเดือนผู้ต้องหลบงานเพื่อรักษาความว่าง", dW / 2, 135);
+    
+    dinoCtx.font = "bold 18px Tahoma";
+    dinoCtx.fillStyle = "#e67e22";
+    dinoCtx.fillText("กด Space หรือ ↑ เพื่อเริ่มเกม", dW / 2, 180);
+    dinoCtx.fillText("เจอสิ่งกีดขวางลอย ให้กด ↓ เพื่อหมอบ", dW / 2, 210);
   } else if (dinoState === "gameover") {
-    dinoCtx.fillStyle = "rgba(255, 255, 255, 0.88)";
+    dinoCtx.fillStyle = "rgba(255, 255, 255, 0.9)";
     dinoCtx.fillRect(0, 0, dW, dH);
-    dinoCtx.fillStyle = "#333";
+    dinoCtx.fillStyle = "#c0392b";
     dinoCtx.textAlign = "center";
-    dinoCtx.font = "bold 28px Tahoma";
-    dinoCtx.fillText("หมดเวลาว่าง!", dW / 2, 82);
-    dinoCtx.font = "18px Tahoma";
-    dinoCtx.fillText("คุณพ่ายแพ้ให้กับ: " + lastDinoHitReason, dW / 2, 120);
-    dinoCtx.font = "16px Tahoma";
-    dinoCtx.fillText("คะแนนความว่าง: " + dinoScore, dW / 2, 155);
-    dinoCtx.fillText("ระดับสุดท้าย: " + getDinoLevel(), dW / 2, 184);
-    dinoCtx.font = "15px Tahoma";
-    dinoCtx.fillText("กด R หรือ Space เพื่อเริ่มใหม่", dW / 2, 225);
+    
+    dinoCtx.shadowColor = "rgba(192,57,43,0.3)";
+    dinoCtx.shadowBlur = 8;
+    dinoCtx.font = "bold 40px Tahoma";
+    dinoCtx.fillText("หมดเวลาว่าง!", dW / 2, 85);
+    
+    dinoCtx.shadowColor = "transparent";
+    dinoCtx.fillStyle = "#2c3e50";
+    dinoCtx.font = "bold 22px Tahoma";
+    dinoCtx.fillText("คุณพ่ายแพ้ให้กับ: " + lastDinoHitReason, dW / 2, 130);
+    
+    dinoCtx.font = "bold 18px Tahoma";
+    dinoCtx.fillText("คะแนนความว่าง: " + dinoScore, dW / 2, 165);
+    dinoCtx.fillText("ระดับสุดท้าย: " + getDinoLevel(), dW / 2, 195);
+    
+    dinoCtx.fillStyle = "#27ae60";
+    dinoCtx.font = "bold 20px Tahoma";
+    dinoCtx.fillText("กด R หรือ Space เพื่อเริ่มใหม่", dW / 2, 240);
+  } else if (dinoState === "paused") {
+    dinoCtx.fillStyle = "rgba(0, 0, 0, 0.4)";
+    dinoCtx.fillRect(0, 0, dW, dH);
+    dinoCtx.fillStyle = "#fff";
+    dinoCtx.textAlign = "center";
+    
+    dinoCtx.shadowColor = "rgba(0,0,0,0.5)";
+    dinoCtx.shadowBlur = 10;
+    dinoCtx.font = "bold 48px Tahoma";
+    dinoCtx.fillText("PAUSED", dW / 2, dH / 2);
+    
+    dinoCtx.font = "bold 20px Tahoma";
+    dinoCtx.fillText("กด P เพื่อลุยงานต่อ", dW / 2, dH / 2 + 40);
+    dinoCtx.shadowColor = "transparent";
   }
 }
 
@@ -2798,6 +2858,7 @@ document.addEventListener("keydown", function(e) {
   if (e.code === "Space" || e.code === "ArrowUp") { e.preventDefault(); dinoJump(); }
   if (e.code === "ArrowDown") { e.preventDefault(); setDinoDuck(true); }
   if (e.code === "KeyR") { resetDinoGame(); }
+  if (e.code === "KeyP") { toggleDinoPause(); }
 });
 
 document.addEventListener("keyup", function(e) {
