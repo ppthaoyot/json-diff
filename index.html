@@ -2521,6 +2521,7 @@ let dinoLoopStarted = false;
 
 let dinoHP = 3;
 let dinoInvincible = 0;
+let dinoDashTimer = 0;
 let floatingTexts = [];
 
 const dinoPlayer = {
@@ -2554,6 +2555,12 @@ const dinoPowerupTypes = [
   { emoji: "🚬", label: "สูดอากาศแป๊บ" },
   { emoji: "❤️", label: "เติมพลัง" },
   { emoji: "💊", label: "พาราเซตามอล" }
+];
+
+const dinoSpecialTypes = [
+  { emoji: "🚀", label: "ใบลาออก!" },
+  { emoji: "🛵", label: "แว้นกลับบ้าน" },
+  { emoji: "🏃", label: "หนีเจ้านาย" }
 ];
 
 const dinoLevels = [
@@ -2593,6 +2600,7 @@ function resetDinoGame() {
   dinoParticles = [];
   dinoHP = 3;
   dinoInvincible = 0;
+  dinoDashTimer = 0;
   floatingTexts = [];
 
   dinoPlayer.y = dinoGroundY - 58;
@@ -2654,13 +2662,20 @@ function spawnDinoObstacle() {
   if (powerupChance < 0.02) powerupChance = 0.02; // minimum 2% chance
 
   const isPowerup = Math.random() < powerupChance && dinoScore > 50;
+  let isSpecial = false;
   let type;
   if (isPowerup) {
     type = dinoPowerupTypes[Math.floor(Math.random() * dinoPowerupTypes.length)];
   } else {
-    type = dinoObstacleTypes[Math.floor(Math.random() * dinoObstacleTypes.length)];
+    // 3% chance for special dash item if score > 200
+    if (Math.random() < 0.03 && dinoScore > 200) {
+      isSpecial = true;
+      type = dinoSpecialTypes[Math.floor(Math.random() * dinoSpecialTypes.length)];
+    } else {
+      type = dinoObstacleTypes[Math.floor(Math.random() * dinoObstacleTypes.length)];
+    }
   }
-  const floating = !isPowerup && Math.random() < 0.25 && dinoScore > 300;
+  const floating = !isPowerup && !isSpecial && Math.random() < 0.25 && dinoScore > 300;
 
   dinoObstacles.push({
     x: dW + 20,
@@ -2670,7 +2685,8 @@ function spawnDinoObstacle() {
     emoji: type.emoji,
     label: type.label,
     floating,
-    isPowerup
+    isPowerup,
+    isSpecial
   });
 
   dinoNextSpawn = 70 + Math.floor(Math.random() * 70);
@@ -2699,8 +2715,23 @@ function checkDinoCollision() {
         }
         dinoObstacles.splice(i, 1);
         i--;
+      } else if (obs.isSpecial) {
+        dinoDashTimer = 240; // Dash for 4 seconds
+        dinoScore += 100;
+        floatingTexts.push({ x: dinoPlayer.x, y: dinoPlayer.y - 20, text: "ทะลวงฟัน!!", color: "#9b59b6", life: 50, maxLife: 50 });
+        dinoObstacles.splice(i, 1);
+        i--;
       } else {
-        if (dinoInvincible <= 0) {
+        if (dinoDashTimer > 0) {
+          // Dash mode active: Destroy obstacle
+          dinoScore += 30;
+          floatingTexts.push({ x: obs.x, y: obs.y - 10, text: "กระเด็น!", color: "#e67e22", life: 30, maxLife: 30 });
+          for(let p=0; p<5; p++) {
+             dinoParticles.push({ x: obs.x + 10, y: obs.y + 10, vx: 2 + Math.random()*4, vy: -5 + Math.random()*4, life: 25 });
+          }
+          dinoObstacles.splice(i, 1);
+          i--;
+        } else if (dinoInvincible <= 0) {
           dinoHP--;
           dinoInvincible = 50;
           floatingTexts.push({ x: dinoPlayer.x, y: dinoPlayer.y - 20, text: "-1 จ๊ากก!", color: "#e74c3c", life: 40, maxLife: 40 });
@@ -2724,6 +2755,15 @@ function updateDino() {
   dinoFrame++;
   dinoScore += 1;
   dinoSpeed = Math.min(dinoConfig.maxSpeed, dinoConfig.baseSpeed + dinoScore / 350);
+  
+  if (dinoDashTimer > 0) {
+    dinoSpeed += 6; // Boost speed
+    dinoScore += 2; // Extra score while dashing
+    dinoDashTimer--;
+    if (dinoFrame % 2 === 0) {
+      dinoParticles.push({ x: dinoPlayer.x, y: dinoPlayer.y + dinoPlayer.h/2, vx: -3 - Math.random()*3, vy: (Math.random()-0.5)*2, life: 15 });
+    }
+  }
 
   dinoScoreText.textContent = dinoScore;
   dinoLevelText.textContent = getDinoLevel();
@@ -2798,9 +2838,15 @@ function drawDinoPlayer() {
   dinoCtx.textBaseline = "middle";
   const bob = dinoPlayer.grounded ? Math.sin(dinoFrame / 5) * 2 : 0;
   
-  dinoCtx.shadowColor = "rgba(0,0,0,0.3)";
-  dinoCtx.shadowBlur = 4;
-  dinoCtx.shadowOffsetY = 2;
+  if (dinoDashTimer > 0) {
+    dinoCtx.shadowColor = "#9b59b6";
+    dinoCtx.shadowBlur = 12;
+    dinoCtx.shadowOffsetY = 0;
+  } else {
+    dinoCtx.shadowColor = "rgba(0,0,0,0.3)";
+    dinoCtx.shadowBlur = 4;
+    dinoCtx.shadowOffsetY = 2;
+  }
   
   dinoCtx.fillText(dinoConfig.playerEmoji, dinoPlayer.x + dinoPlayer.w / 2, dinoPlayer.y + dinoPlayer.h / 2 + bob);
   
@@ -2825,7 +2871,15 @@ function drawDinoObs(obs) {
   
   dinoCtx.shadowColor = "transparent";
   dinoCtx.font = "bold 14px Tahoma";
-  dinoCtx.fillStyle = obs.isPowerup ? "#27ae60" : "#c0392b";
+  
+  if (obs.isSpecial) {
+    dinoCtx.fillStyle = "#8e44ad"; // purple for special dash
+  } else if (obs.isPowerup) {
+    dinoCtx.fillStyle = "#27ae60"; // green for powerup
+  } else {
+    dinoCtx.fillStyle = "#c0392b"; // red for danger
+  }
+  
   dinoCtx.fillText(obs.label, obs.x + obs.w / 2, obs.y - 12);
   
   if (obs.floating) {
