@@ -1,10 +1,12 @@
 document.addEventListener("DOMContentLoaded", function() {
+  var i18n = window.I18N;
   var bridgeKey = "jsonDiffWorkshop.base64.decode";
   var reverseBridgeKey = "jsonDiffWorkshop.base64.encode";
   var inputEl = document.getElementById("enc-input");
   var resultEl = document.getElementById("enc-result");
   var inCountEl = document.getElementById("enc-in-count");
   var outCountEl = document.getElementById("enc-out-count");
+  var decodeNavLink = document.querySelector('a[href="base64-decode.html"]');
 
   document.getElementById("enc-clear-btn").addEventListener("click", clearEncode);
   document.getElementById("enc-copy-input-btn").addEventListener("click", function() { copyText(inputEl.value, "enc-copy-input-btn"); });
@@ -15,13 +17,17 @@ document.addEventListener("DOMContentLoaded", function() {
   inputEl.addEventListener("input", onEncodeInput);
 
   function setPlaceholder() {
-    resultEl.textContent = "Encoded Base64 output will appear here.";
+    resultEl.textContent = i18n.t("base64Encode.outputPlaceholder");
     resultEl.classList.add("empty-hint");
+  }
+
+  function setCount(element, value, key) {
+    element.textContent = value.toLocaleString() + " " + i18n.t(key);
   }
 
   function onEncodeInput() {
     var value = inputEl.value;
-    inCountEl.textContent = value.length.toLocaleString() + " characters";
+    setCount(inCountEl, value.length, "base64Encode.chars");
     if (!value) {
       setPlaceholder();
       outCountEl.textContent = "";
@@ -31,17 +37,17 @@ document.addEventListener("DOMContentLoaded", function() {
       var encoded = btoa(unescape(encodeURIComponent(value)));
       resultEl.classList.remove("empty-hint");
       resultEl.textContent = encoded;
-      outCountEl.textContent = encoded.length.toLocaleString() + " Base64 characters";
+      setCount(outCountEl, encoded.length, "base64Encode.b64Chars");
     } catch (error) {
       resultEl.classList.remove("empty-hint");
-      resultEl.textContent = "Encoding failed: " + error.message;
+      resultEl.textContent = i18n.t("base64Encode.encodeFailed") + ": " + error.message;
       outCountEl.textContent = "";
     }
   }
 
   function clearEncode() {
     inputEl.value = "";
-    inCountEl.textContent = "0 characters";
+    setCount(inCountEl, 0, "base64Encode.chars");
     outCountEl.textContent = "";
     setPlaceholder();
   }
@@ -53,22 +59,18 @@ document.addEventListener("DOMContentLoaded", function() {
     reader.onload = function(loadEvent) {
       inputEl.value = loadEvent.target.result;
       onEncodeInput();
-      showToast("Loaded file", file.name, "ok");
+      showToast(i18n.t("base64Encode.loadedFile"), file.name, "ok");
     };
     reader.onerror = function() {
-      showToast("Could not read file", "", "err");
+      showToast(i18n.t("base64Encode.loadError"), "", "err");
     };
     reader.readAsText(file, "UTF-8");
     event.target.value = "";
   }
 
   function sendToDecodePage() {
-    if (!inputEl.value && resultEl.classList.contains("empty-hint")) {
-      showToast("Nothing to send", "Create Base64 output first.", "err");
-      return;
-    }
     if (!resultEl.textContent || resultEl.classList.contains("empty-hint")) {
-      showToast("Nothing to send", "Create Base64 output first.", "err");
+      showToast(i18n.t("base64Encode.nothingToSendTitle"), i18n.t("base64Encode.nothingToSendBody"), "err");
       return;
     }
     sessionStorage.setItem(bridgeKey, resultEl.textContent);
@@ -78,22 +80,16 @@ document.addEventListener("DOMContentLoaded", function() {
   function copyText(text, buttonId) {
     if (!text) return;
     navigator.clipboard.writeText(text).then(function() {
-      flashButton(buttonId);
+      var button = document.getElementById(buttonId);
+      var original = button.textContent;
+      button.textContent = i18n.t("common.copied");
+      setTimeout(function() { button.textContent = original; }, 1200);
     });
-  }
-
-  function flashButton(buttonId) {
-    var button = document.getElementById(buttonId);
-    var original = button.textContent;
-    button.textContent = "Copied";
-    setTimeout(function() {
-      button.textContent = original;
-    }, 1200);
   }
 
   function downloadText(text, filename) {
     if (!text || resultEl.classList.contains("empty-hint")) {
-      showToast("Nothing to download", "Generate output first.", "err");
+      showToast(i18n.t("base64Encode.nothingToDownloadTitle"), i18n.t("base64Encode.nothingToDownloadBody"), "err");
       return;
     }
     var blob = new Blob([text], { type: "text/plain;charset=utf-8" });
@@ -105,12 +101,20 @@ document.addEventListener("DOMContentLoaded", function() {
     URL.revokeObjectURL(url);
   }
 
+  function applyLanguage() {
+    if (decodeNavLink) decodeNavLink.textContent = i18n.t("base64Decode.heroTitle");
+    if (inputEl.value) onEncodeInput();
+    else clearEncode();
+  }
+
+  window.addEventListener("i18n:updated", applyLanguage);
+
   var bridged = sessionStorage.getItem(reverseBridgeKey);
   if (bridged) {
     inputEl.value = bridged;
     sessionStorage.removeItem(reverseBridgeKey);
     onEncodeInput();
   } else {
-    clearEncode();
+    applyLanguage();
   }
 });

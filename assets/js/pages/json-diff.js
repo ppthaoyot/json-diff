@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", function() {
+  var i18n = window.I18N;
   var mode = "side";
   var textareaA = document.getElementById("ta-a");
   var textareaB = document.getElementById("ta-b");
@@ -41,11 +42,11 @@ document.addEventListener("DOMContentLoaded", function() {
   function setStatus(element, ok) {
     if (!element) return;
     if (!ok) {
-      element.textContent = "Invalid JSON";
+      element.textContent = i18n.t("jsonDiff.statusInvalid");
       element.className = "tool-status err";
       return;
     }
-    element.textContent = "Looks good";
+    element.textContent = i18n.t("jsonDiff.statusValid");
     element.className = "tool-status ok";
   }
 
@@ -64,11 +65,8 @@ document.addEventListener("DOMContentLoaded", function() {
     }
     Object.keys(obj).forEach(function(key) {
       var path = prefix ? prefix + "." + key : key;
-      if (obj[key] !== null && typeof obj[key] === "object") {
-        flatten(obj[key], path, out);
-      } else {
-        out[path] = obj[key];
-      }
+      if (obj[key] !== null && typeof obj[key] === "object") flatten(obj[key], path, out);
+      else out[path] = obj[key];
     });
     return out;
   }
@@ -79,19 +77,16 @@ document.addEventListener("DOMContentLoaded", function() {
     var keys = {};
     Object.keys(flatA).forEach(function(key) { keys[key] = true; });
     Object.keys(flatB).forEach(function(key) { keys[key] = true; });
-
     var added = [];
     var removed = [];
     var changed = [];
     var same = [];
-
     Object.keys(keys).sort().forEach(function(key) {
       if (!(key in flatA)) added.push({ k: key, v: flatB[key] });
       else if (!(key in flatB)) removed.push({ k: key, v: flatA[key] });
       else if (JSON.stringify(flatA[key]) !== JSON.stringify(flatB[key])) changed.push({ k: key, old: flatA[key], nw: flatB[key] });
       else same.push({ k: key, v: flatA[key] });
     });
-
     return { added: added, removed: removed, changed: changed, same: same };
   }
 
@@ -149,13 +144,12 @@ document.addEventListener("DOMContentLoaded", function() {
       html += "</tr>";
     }
 
-    html += "</tbody></table>";
-    return html;
+    return html + "</tbody></table>";
   }
 
   function renderTree(diff) {
     if (!diff.added.length && !diff.removed.length && !diff.changed.length && !diff.same.length) {
-      return '<div class="empty-hint">No JSON data to compare yet.</div>';
+      return '<div class="empty-hint">' + esc(i18n.t("jsonDiff.empty")) + "</div>";
     }
     var html = '<div class="tree-view">';
     diff.added.forEach(function(item) {
@@ -170,32 +164,30 @@ document.addEventListener("DOMContentLoaded", function() {
     diff.same.forEach(function(item) {
       html += '<div class="tree-same"><strong class="tree-path">= ' + esc(item.k) + '</strong><div class="tree-val">' + esc(JSON.stringify(item.v)) + "</div></div>";
     });
-    html += "</div>";
-    return html;
+    return html + "</div>";
   }
 
   function renderList(diff) {
     if (!diff.added.length && !diff.removed.length && !diff.changed.length) {
-      return '<div class="empty-hint">The two JSON payloads currently match.</div>';
+      return '<div class="empty-hint">' + esc(i18n.t("jsonDiff.match")) + "</div>";
     }
     var html = '<div class="list-view">';
     diff.added.forEach(function(item) {
-      html += '<div class="list-item"><span class="stat stat-add list-badge">Added</span><div class="list-content"><strong class="tree-path">' + esc(item.k) + '</strong><span class="list-new">' + esc(JSON.stringify(item.v)) + "</span></div></div>";
+      html += '<div class="list-item"><span class="stat stat-add list-badge">' + esc(i18n.t("jsonDiff.added")) + '</span><div class="list-content"><strong class="tree-path">' + esc(item.k) + '</strong><span class="list-new">' + esc(JSON.stringify(item.v)) + "</span></div></div>";
     });
     diff.removed.forEach(function(item) {
-      html += '<div class="list-item"><span class="stat stat-rem list-badge">Removed</span><div class="list-content"><strong class="tree-path">' + esc(item.k) + '</strong><span class="list-old">' + esc(JSON.stringify(item.v)) + "</span></div></div>";
+      html += '<div class="list-item"><span class="stat stat-rem list-badge">' + esc(i18n.t("jsonDiff.removed")) + '</span><div class="list-content"><strong class="tree-path">' + esc(item.k) + '</strong><span class="list-old">' + esc(JSON.stringify(item.v)) + "</span></div></div>";
     });
     diff.changed.forEach(function(item) {
-      html += '<div class="list-item"><span class="stat stat-chg list-badge">Changed</span><div class="list-content"><strong class="tree-path">' + esc(item.k) + '</strong><span class="list-old">' + esc(JSON.stringify(item.old)) + '</span><span class="list-new">' + esc(JSON.stringify(item.nw)) + "</span></div></div>";
+      html += '<div class="list-item"><span class="stat stat-chg list-badge">' + esc(i18n.t("jsonDiff.changed")) + '</span><div class="list-content"><strong class="tree-path">' + esc(item.k) + '</strong><span class="list-old">' + esc(JSON.stringify(item.old)) + '</span><span class="list-new">' + esc(JSON.stringify(item.nw)) + "</span></div></div>";
     });
-    html += "</div>";
-    return html;
+    return html + "</div>";
   }
 
   function formatJSON(side) {
     var textarea = document.getElementById("ta-" + side);
-    var parsed = tryParse(textarea.value.trim());
     if (!textarea.value.trim()) return;
+    var parsed = tryParse(textarea.value.trim());
     if (!parsed.ok) {
       textarea.classList.add("invalid");
       return;
@@ -207,8 +199,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
   function minifyJSON(side) {
     var textarea = document.getElementById("ta-" + side);
-    var parsed = tryParse(textarea.value.trim());
     if (!textarea.value.trim()) return;
+    var parsed = tryParse(textarea.value.trim());
     if (!parsed.ok) {
       textarea.classList.add("invalid");
       return;
@@ -224,7 +216,7 @@ document.addEventListener("DOMContentLoaded", function() {
     navigator.clipboard.writeText(textarea.value).then(function() {
       var button = document.getElementById("copy-" + side + "-btn");
       var original = button.textContent;
-      button.textContent = "Copied";
+      button.textContent = i18n.t("common.copied");
       setTimeout(function() { button.textContent = original; }, 1200);
     });
   }
@@ -233,51 +225,42 @@ document.addEventListener("DOMContentLoaded", function() {
     var value = raw;
     var fixes = [];
     value = value.replace(/^\uFEFF/, "").replace(/[\u200B-\u200D\uFEFF]/g, "");
-
     value = value.replace(/\/\/[^\n\r]*/g, function() {
-      fixes.push("Removed line comments");
+      fixes.push(i18n.t("jsonDiff.fixLineComments"));
       return "";
     });
-
     if (/\/\*[\s\S]*?\*\//.test(value)) {
       value = value.replace(/\/\*[\s\S]*?\*\//g, "");
-      fixes.push("Removed block comments");
+      fixes.push(i18n.t("jsonDiff.fixBlockComments"));
     }
-
     if (/'/.test(value)) {
       value = value.replace(/'([^'\\]*(\\.[^'\\]*)*)'/g, function(_, inner) {
         return '"' + inner.replace(/"/g, '\\"') + '"';
       });
-      fixes.push("Converted single quotes");
+      fixes.push(i18n.t("jsonDiff.fixSingleQuotes"));
     }
-
     if (/[{,]\s*([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/.test(value)) {
       value = value.replace(/([{,])\s*([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/g, function(_, prefix, key) {
         return prefix + '"' + key + '":';
       });
-      fixes.push("Quoted object keys");
+      fixes.push(i18n.t("jsonDiff.fixObjectKeys"));
     }
-
     if (/,\s*[}\]]/.test(value)) {
       value = value.replace(/,(\s*[}\]])/g, "$1");
-      fixes.push("Removed trailing commas");
+      fixes.push(i18n.t("jsonDiff.fixTrailingCommas"));
     }
-
     if (/\bundefined\b/.test(value)) {
       value = value.replace(/\bundefined\b/g, "null");
-      fixes.push("Replaced undefined values");
+      fixes.push(i18n.t("jsonDiff.fixUndefined"));
     }
-
     if (/\b(True|False|None)\b/.test(value)) {
       value = value.replace(/\bTrue\b/g, "true").replace(/\bFalse\b/g, "false").replace(/\bNone\b/g, "null");
-      fixes.push("Converted Python literals");
+      fixes.push(i18n.t("jsonDiff.fixPython"));
     }
-
     if (/;\s*$/.test(value.trim())) {
       value = value.trim().replace(/;+$/, "");
-      fixes.push("Removed trailing semicolons");
+      fixes.push(i18n.t("jsonDiff.fixSemicolons"));
     }
-
     var parsed = tryParse(value);
     if (parsed.ok) return { ok: true, fixed: value, fixes: fixes };
     return { ok: false, fixes: fixes, err: parsed.err };
@@ -288,16 +271,16 @@ document.addEventListener("DOMContentLoaded", function() {
     var value = textarea.value.trim();
     if (!value) return;
     if (tryParse(value).ok) {
-      showToast("JSON already valid", "No auto-fix needed.", "ok");
+      showToast(i18n.t("jsonDiff.toastAlreadyValidTitle"), i18n.t("jsonDiff.toastAlreadyValidBody"), "ok");
       return;
     }
     var fixed = attemptFix(value);
     if (!fixed.ok) {
-      showToast("Auto-fix could not finish", fixed.err || "Unknown parser error", "err");
+      showToast(i18n.t("jsonDiff.toastFixFailTitle"), fixed.err || "Unknown parser error", "err");
       return;
     }
     textarea.value = JSON.stringify(JSON.parse(fixed.fixed), null, 2);
-    showToast("Auto-fix complete", fixed.fixes.join(", ") || "Applied parser-friendly cleanup", "fix");
+    showToast(i18n.t("jsonDiff.toastFixSuccessTitle"), fixed.fixes.join(", ") || i18n.t("jsonDiff.toastFixSuccessBody"), "fix");
     onInput();
   }
 
@@ -314,7 +297,6 @@ document.addEventListener("DOMContentLoaded", function() {
       textareaA.classList.remove("invalid");
       statusA.textContent = "";
     }
-
     if (valueB) {
       textareaB.classList.toggle("invalid", !parsedB.ok);
       setStatus(statusB, parsedB.ok);
@@ -325,22 +307,21 @@ document.addEventListener("DOMContentLoaded", function() {
 
     if (!valueA || !valueB) {
       summaryEl.innerHTML = "";
-      resultEl.innerHTML = '<div class="empty-hint">Paste JSON into both editors to see the diff.</div>';
+      resultEl.innerHTML = '<div class="empty-hint">' + esc(i18n.t("jsonDiff.empty")) + "</div>";
       return;
     }
-
     if (!parsedA.ok || !parsedB.ok) {
       summaryEl.innerHTML = "";
-      resultEl.innerHTML = '<div class="empty-hint">Fix the invalid JSON input before comparing the payloads.</div>';
+      resultEl.innerHTML = '<div class="empty-hint">' + esc(i18n.t("jsonDiff.invalid")) + "</div>";
       return;
     }
 
     var diff = diffFlat(parsedA.val, parsedB.val);
     summaryEl.innerHTML =
-      '<span class="stat stat-add">+ Added ' + diff.added.length + "</span>" +
-      '<span class="stat stat-rem">- Removed ' + diff.removed.length + "</span>" +
-      '<span class="stat stat-chg">~ Changed ' + diff.changed.length + "</span>" +
-      '<span class="stat stat-same">= Same ' + diff.same.length + "</span>";
+      '<span class="stat stat-add">+ ' + esc(i18n.t("jsonDiff.added")) + " " + diff.added.length + "</span>" +
+      '<span class="stat stat-rem">- ' + esc(i18n.t("jsonDiff.removed")) + " " + diff.removed.length + "</span>" +
+      '<span class="stat stat-chg">~ ' + esc(i18n.t("jsonDiff.changed")) + " " + diff.changed.length + "</span>" +
+      '<span class="stat stat-same">= ' + esc(i18n.t("jsonDiff.same")) + " " + diff.same.length + "</span>";
 
     if (mode === "side") resultEl.innerHTML = renderSide(parsedA.val, parsedB.val, diff);
     else if (mode === "tree") resultEl.innerHTML = renderTree(diff);
@@ -374,8 +355,9 @@ document.addEventListener("DOMContentLoaded", function() {
     textareaA.classList.remove("invalid");
     textareaB.classList.remove("invalid");
     summaryEl.innerHTML = "";
-    resultEl.innerHTML = '<div class="empty-hint">Paste JSON into both editors to see the diff.</div>';
+    resultEl.innerHTML = '<div class="empty-hint">' + esc(i18n.t("jsonDiff.empty")) + "</div>";
   }
 
+  window.addEventListener("i18n:updated", onInput);
   onInput();
 });

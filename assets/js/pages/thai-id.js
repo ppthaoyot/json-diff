@@ -1,19 +1,24 @@
 document.addEventListener("DOMContentLoaded", function() {
+  var i18n = window.I18N;
   var idHistory = [];
-  var prefixDescriptions = {
-    "1": "Born Thai citizen and registered on time",
-    "2": "Born Thai citizen with late registration",
-    "3": "Listed in household records before 1984",
-    "4": "Moved into household records during transition period",
-    "5": "Naturalized Thai citizen",
-    "6": "Lawful entrant without Thai citizenship yet",
-    "7": "Child of category 3 or 6 person born in Thailand",
-    "8": "Stateless or temporary foreign resident"
-  };
+  var jsonNavLink = document.querySelector('a[href="json-diff.html"]');
 
   document.getElementById("thai-id-generate-btn").addEventListener("click", generateThaiID);
   document.getElementById("thai-id-validate-btn").addEventListener("click", validateThaiIDInput);
   document.getElementById("thai-id-clear-history-btn").addEventListener("click", clearIDHistory);
+
+  function prefixDescriptions() {
+    return {
+      "1": i18n.t("thaiId.prefix1"),
+      "2": i18n.t("thaiId.prefix2"),
+      "3": i18n.t("thaiId.prefix3"),
+      "4": i18n.t("thaiId.prefix4"),
+      "5": i18n.t("thaiId.prefix5"),
+      "6": i18n.t("thaiId.prefix6"),
+      "7": i18n.t("thaiId.prefix7"),
+      "8": i18n.t("thaiId.prefix8")
+    };
+  }
 
   function calcThaiIDChecksum(digits12) {
     var sum = 0;
@@ -45,12 +50,12 @@ document.addEventListener("DOMContentLoaded", function() {
   function renderIDHistory() {
     var list = document.getElementById("id-history-list");
     if (!idHistory.length) {
-      list.innerHTML = '<div class="empty-hint">No generated IDs yet.</div>';
+      list.innerHTML = '<div class="empty-hint">' + esc(i18n.t("thaiId.noHistory")) + "</div>";
       return;
     }
 
     list.innerHTML = idHistory.slice(0, 20).map(function(item) {
-      return '<button class="history-item" type="button" data-copy-id="' + item.id + '"><span>' + esc(item.fmt) + '</span><span class="copy-muted">Copy</span></button>';
+      return '<button class="history-item" type="button" data-copy-id="' + item.id + '"><span>' + esc(item.fmt) + '</span><span class="copy-muted">' + esc(i18n.t("thaiId.copyHint")) + "</span></button>";
     }).join("");
 
     list.querySelectorAll("[data-copy-id]").forEach(function(button) {
@@ -63,8 +68,8 @@ document.addEventListener("DOMContentLoaded", function() {
   function clearIDHistory() {
     idHistory = [];
     renderIDHistory();
-    document.getElementById("id-number-display").textContent = "- - - - - - - - - - - - -";
-    document.getElementById("id-formatted-display").textContent = "Generate a valid test ID to begin.";
+    document.getElementById("id-number-display").textContent = i18n.t("thaiId.initialNumber");
+    document.getElementById("id-formatted-display").textContent = i18n.t("thaiId.initialFormatted");
     document.getElementById("id-meta-grid").innerHTML = "";
   }
 
@@ -75,15 +80,16 @@ document.addEventListener("DOMContentLoaded", function() {
     for (var i = 0; i < count; i++) ids.push(genOneThaiID(firstDigit));
 
     var latest = ids[ids.length - 1];
+    var prefixMap = prefixDescriptions();
     document.getElementById("id-number-display").textContent = latest;
     document.getElementById("id-formatted-display").textContent = formatThaiID(latest);
     document.getElementById("id-meta-grid").innerHTML =
-      metaCard("First digit group", latest[0] + " - " + (prefixDescriptions[latest[0]] || "Unknown")) +
-      metaCard("Province code", latest.slice(1, 3)) +
-      metaCard("District code", latest.slice(3, 5)) +
-      metaCard("Registry sequence", latest.slice(5, 10)) +
-      metaCard("Extension digits", latest.slice(10, 12)) +
-      metaCard("Checksum digit", latest[12]);
+      metaCard(i18n.t("thaiId.firstDigitGroup"), latest[0] + " - " + (prefixMap[latest[0]] || i18n.t("thaiId.unknown"))) +
+      metaCard(i18n.t("thaiId.provinceCode"), latest.slice(1, 3)) +
+      metaCard(i18n.t("thaiId.districtCode"), latest.slice(3, 5)) +
+      metaCard(i18n.t("thaiId.sequenceCode"), latest.slice(5, 10)) +
+      metaCard(i18n.t("thaiId.extensionDigits"), latest.slice(10, 12)) +
+      metaCard(i18n.t("thaiId.checksumDigit"), latest[12]);
 
     ids.forEach(function(id) {
       idHistory.unshift({ id: id, fmt: formatThaiID(id) });
@@ -98,12 +104,11 @@ document.addEventListener("DOMContentLoaded", function() {
     var value = inputEl.value.trim();
 
     if (!value) {
-      resultEl.innerHTML = "";
+      resultEl.innerHTML = '<div class="empty-hint">' + esc(i18n.t("thaiId.validateEmpty")) + "</div>";
       return;
     }
-
     if (value.length !== 13) {
-      resultEl.innerHTML = '<span class="stat stat-rem">Invalid length</span><p>Enter exactly 13 digits to validate a Thai ID checksum.</p>';
+      resultEl.innerHTML = '<span class="stat stat-rem">' + esc(i18n.t("thaiId.invalidLengthTitle")) + "</span><p>" + esc(i18n.t("thaiId.invalidLengthBody")) + "</p>";
       return;
     }
 
@@ -112,9 +117,9 @@ document.addEventListener("DOMContentLoaded", function() {
     var expected = calcThaiIDChecksum(digits);
 
     if (checkDigit === expected) {
-      resultEl.innerHTML = '<span class="stat stat-add">Checksum valid</span><p>This value follows the Thai ID checksum format and is suitable for testing scenarios.</p>';
+      resultEl.innerHTML = '<span class="stat stat-add">' + esc(i18n.t("thaiId.checksumValidTitle")) + "</span><p>" + esc(i18n.t("thaiId.checksumValidBody")) + "</p>";
     } else {
-      resultEl.innerHTML = '<span class="stat stat-rem">Checksum invalid</span><p>The final digit does not match the expected checksum.</p>';
+      resultEl.innerHTML = '<span class="stat stat-rem">' + esc(i18n.t("thaiId.checksumInvalidTitle")) + "</span><p>" + esc(i18n.t("thaiId.checksumInvalidBody")) + "</p>";
     }
   }
 
@@ -122,6 +127,12 @@ document.addEventListener("DOMContentLoaded", function() {
     this.value = this.value.replace(/[^0-9]/g, "");
   });
 
-  renderIDHistory();
-  clearIDHistory();
+  function applyLanguage() {
+    if (jsonNavLink) jsonNavLink.textContent = i18n.t("landing.jsonDiffTitle");
+    renderIDHistory();
+    if (!idHistory.length) clearIDHistory();
+  }
+
+  window.addEventListener("i18n:updated", applyLanguage);
+  applyLanguage();
 });

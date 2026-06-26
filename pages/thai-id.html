@@ -17,20 +17,21 @@
   <div class="site-shell">
     <header class="site-header">
       <div class="site-brand">
-        <strong>JSON Diff Workshop</strong>
-        <span>Standalone test-data helper with checksum validation.</span>
+        <strong data-i18n="common.pageTitle">JSON Diff Workshop</strong>
+        <span data-i18n="thaiId.brandSub">Standalone test-data helper with checksum validation.</span>
       </div>
       <nav class="site-nav" aria-label="Primary">
-        <a class="site-nav-link is-primary" href="index.html">Landing page</a>
-        <a class="site-nav-link" href="../index.html">Legacy page</a>
+        <a class="site-nav-link is-primary" href="index.html" data-i18n="common.landingPage">Landing page</a>
+        <a class="site-nav-link" href="../index.html" data-i18n="common.legacyPage">Legacy page</a>
         <a class="site-nav-link" href="json-diff.html">JSON Diff</a>
+        <div class="site-nav" data-language-switcher></div>
       </nav>
     </header>
 
     <main class="tool-layout">
       <section class="tool-hero">
-        <h1>Thai ID Generator</h1>
-        <p>
+        <h1 data-i18n="thaiId.heroTitle">Thai ID Generator</h1>
+        <p data-i18n="thaiId.heroBody">
           Generate checksum-valid Thai ID test numbers from a dedicated page built for development and QA workflows.
           You can create one or many IDs, inspect the structure, and validate 13-digit values without relying on the legacy tabbed interface.
         </p>
@@ -38,70 +39,71 @@
 
       <section class="tool-grid">
         <article class="tool-panel">
-          <h2>Generate test IDs</h2>
+          <h2 data-i18n="thaiId.generateTitle">Generate test IDs</h2>
           <div class="field-row" style="margin: 12px 0;">
             <select class="tool-select" id="id-gen-count">
-              <option value="1">Generate 1 ID</option>
-              <option value="5">Generate 5 IDs</option>
-              <option value="10">Generate 10 IDs</option>
+              <option value="1" data-i18n="thaiId.count1">Generate 1 ID</option>
+              <option value="5" data-i18n="thaiId.count5">Generate 5 IDs</option>
+              <option value="10" data-i18n="thaiId.count10">Generate 10 IDs</option>
             </select>
             <select class="tool-select" id="id-first-digit">
-              <option value="0">Any first digit (1-8)</option>
-              <option value="1">Prefix 1</option>
-              <option value="2">Prefix 2</option>
-              <option value="3">Prefix 3</option>
-              <option value="4">Prefix 4</option>
-              <option value="5">Prefix 5</option>
-              <option value="6">Prefix 6</option>
-              <option value="7">Prefix 7</option>
-              <option value="8">Prefix 8</option>
+              <option value="0" data-i18n="thaiId.firstDigitAny">Any first digit (1-8)</option>
+              <option value="1">ประเภท 1</option>
+              <option value="2">ประเภท 2</option>
+              <option value="3">ประเภท 3</option>
+              <option value="4">ประเภท 4</option>
+              <option value="5">ประเภท 5</option>
+              <option value="6">ประเภท 6</option>
+              <option value="7">ประเภท 7</option>
+              <option value="8">ประเภท 8</option>
             </select>
-            <button class="site-button is-primary" id="thai-id-generate-btn" type="button">Generate IDs</button>
+            <button class="site-button is-primary" id="thai-id-generate-btn" type="button" data-i18n="thaiId.generateButton">Generate IDs</button>
           </div>
           <div class="result-surface">
-            <div class="lucky-number" id="id-number-display" style="font-size: clamp(28px, 8vw, 48px);">- - - - - - - - - - - - -</div>
-            <p id="id-formatted-display" class="copy-muted">Generate a valid test ID to begin.</p>
+            <div class="lucky-number" id="id-number-display" style="font-size: clamp(28px, 8vw, 48px);" data-i18n="thaiId.initialNumber">- - - - - - - - - - - - -</div>
+            <p id="id-formatted-display" class="copy-muted" data-i18n="thaiId.initialFormatted">Generate a valid test ID to begin.</p>
           </div>
         </article>
 
         <article class="tool-panel">
-          <h2>Validate checksum</h2>
+          <h2 data-i18n="thaiId.validateTitle">Validate checksum</h2>
           <div class="field-row" style="margin: 12px 0;">
-            <input class="tool-input" id="id-val-input" type="text" maxlength="13" placeholder="Enter 13 digits">
-            <button class="site-button" id="thai-id-validate-btn" type="button">Validate</button>
+            <input class="tool-input" id="id-val-input" type="text" maxlength="13" data-i18n-placeholder="thaiId.validatePlaceholder" placeholder="Enter 13 digits">
+            <button class="site-button" id="thai-id-validate-btn" type="button" data-i18n="thaiId.validateButton">Validate</button>
           </div>
           <div class="result-surface" id="id-val-result">
-            <div class="empty-hint">Validation feedback will appear here.</div>
+            <div class="empty-hint" data-i18n="thaiId.validateEmpty">Validation feedback will appear here.</div>
           </div>
         </article>
       </section>
 
       <section class="tool-panel">
-        <h2>ID structure</h2>
+        <h2 data-i18n="thaiId.structureTitle">ID structure</h2>
         <div class="meta-grid" id="id-meta-grid"></div>
       </section>
 
       <section class="tool-panel">
         <div class="panel-row" style="justify-content: space-between;">
-          <h2>Recent generated IDs</h2>
-          <button class="action-btn" id="thai-id-clear-history-btn" type="button">Clear history</button>
+          <h2 data-i18n="thaiId.historyTitle">Recent generated IDs</h2>
+          <button class="action-btn" id="thai-id-clear-history-btn" type="button" data-i18n="thaiId.clearHistory">Clear history</button>
         </div>
         <div class="history-list" id="id-history-list">
-          <div class="empty-hint">No generated IDs yet.</div>
+          <div class="empty-hint" data-i18n="thaiId.noHistory">No generated IDs yet.</div>
         </div>
       </section>
 
       <section class="tool-note">
-        <p>This page is for generating test data only. It creates values that match the checksum format and should not be used to represent real people.</p>
+        <p data-i18n="thaiId.note">This page is for generating test data only. It creates values that match the checksum format and should not be used to represent real people.</p>
       </section>
     </main>
 
     <footer class="tool-footer">
-      <p>For the original all-in-one version of this helper, visit the legacy <a href="../index.html">index page</a>.</p>
+      <p data-i18n="thaiId.footer">For the original all-in-one version of this helper, visit the legacy index page.</p>
     </footer>
   </div>
 
   <div id="toast-container"></div>
+  <script src="../assets/js/shared/i18n.js"></script>
   <script src="../assets/js/shared/ui.js"></script>
   <script src="../assets/js/shared/storage.js"></script>
   <script src="../assets/js/pages/thai-id.js"></script>

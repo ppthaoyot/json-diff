@@ -17,35 +17,36 @@
   <div class="home-shell">
     <header class="home-hero">
       <section class="home-hero-copy">
-        <span class="home-eyebrow">JSON Diff Workshop</span>
-        <h1>Developer utilities, testing helpers, and one office dinosaur.</h1>
-        <p>
+        <span class="home-eyebrow" data-i18n="landing.eyebrow">JSON Diff Workshop</span>
+        <h1 data-i18n="landing.heroTitle">Developer utilities, testing helpers, and one office dinosaur.</h1>
+        <p data-i18n="landing.heroLead1">
           This landing page is the SEO-first entry for the JSON Diff Workshop project. It gives each utility its own standalone page,
           keeps navigation simple on mobile, and prepares the site for future search-friendly growth without replacing the original legacy tool page.
         </p>
-        <p>
+        <p data-i18n="landing.heroLead2">
           Use the dedicated pages below when you want a focused workflow for comparing JSON, converting Base64, generating Thai ID test data,
           spinning lucky numbers, or playing Office Dino with a persistent top 100 leaderboard.
         </p>
         <div class="home-hero-actions">
-          <a class="home-card-kicker" href="../index.html">Open legacy all-in-one page</a>
-          <a class="home-card-kicker" href="office-dino.html">Jump to Office Dino</a>
+          <a class="home-card-kicker" href="../index.html" data-i18n="landing.openLegacy">Open legacy all-in-one page</a>
+          <a class="home-card-kicker" href="office-dino.html" data-i18n="landing.jumpDino">Jump to Office Dino</a>
+          <div class="site-nav" data-language-switcher></div>
         </div>
       </section>
 
       <aside class="home-hero-panel" aria-label="Quick facts">
         <div class="home-stat-grid">
           <div class="home-stat">
-            <strong>7 pages</strong>
-            <span>Dedicated URLs for every tool and mini game, ready for internal links and future SEO expansion.</span>
+            <strong data-i18n="landing.statPagesTitle">7 pages</strong>
+            <span data-i18n="landing.statPagesBody">Dedicated URLs for every tool and mini game, ready for internal links and future SEO expansion.</span>
           </div>
           <div class="home-stat">
-            <strong>Mobile first</strong>
-            <span>Touch-friendly navigation, stacked layouts below 480px, and reduced overflow risk around textareas and panels.</span>
+            <strong data-i18n="landing.statMobileTitle">Mobile first</strong>
+            <span data-i18n="landing.statMobileBody">Touch-friendly navigation, stacked layouts below 480px, and reduced overflow risk around textareas and panels.</span>
           </div>
           <div class="home-stat">
-            <strong>Legacy preserved</strong>
-            <span>The original <code>index.html</code> remains available as the all-in-one interface for users who prefer tabs.</span>
+            <strong data-i18n="landing.statLegacyTitle">Legacy preserved</strong>
+            <span data-i18n="landing.statLegacyBody">The original index.html remains available as the all-in-one interface for users who prefer tabs.</span>
           </div>
         </div>
       </aside>
@@ -55,82 +56,82 @@
       <section class="home-section" aria-labelledby="tool-pages-title">
         <div class="home-section-header">
           <div>
-            <h2 id="tool-pages-title">Tool pages</h2>
-            <p>Standalone pages for focused workflows, clean metadata, and future search indexing.</p>
+            <h2 id="tool-pages-title" data-i18n="landing.toolsTitle">Tool pages</h2>
+            <p data-i18n="landing.toolsIntro">Standalone pages for focused workflows, clean metadata, and future search indexing.</p>
           </div>
         </div>
 
         <div class="home-card-grid">
           <a class="home-card" href="json-diff.html">
-            <span class="home-card-kicker">Core tool</span>
-            <h3>JSON Diff</h3>
-            <p>Compare two JSON payloads with side-by-side, tree, and list output. Includes format, minify, and auto-fix helpers.</p>
+            <span class="home-card-kicker" data-i18n="landing.coreTool">Core tool</span>
+            <h3 data-i18n="landing.jsonDiffTitle">JSON Diff</h3>
+            <p data-i18n="landing.jsonDiffBody">Compare two JSON payloads with side-by-side, tree, and list output. Includes format, minify, and auto-fix helpers.</p>
             <ul>
-              <li>Real-time diff summary</li>
-              <li>Structured output modes</li>
-              <li>Malformed JSON repair hints</li>
+              <li data-i18n="landing.jsonDiffBullet1">Real-time diff summary</li>
+              <li data-i18n="landing.jsonDiffBullet2">Structured output modes</li>
+              <li data-i18n="landing.jsonDiffBullet3">Malformed JSON repair hints</li>
             </ul>
-            <span class="home-card-footer">Open page</span>
+            <span class="home-card-footer" data-i18n="common.openPage">Open page</span>
           </a>
 
           <a class="home-card" href="base64-encode.html">
-            <span class="home-card-kicker">Conversion</span>
-            <h3>Base64 Encode</h3>
-            <p>Convert plain text or uploaded text content into Base64 with UTF-8 support and download-ready output.</p>
+            <span class="home-card-kicker" data-i18n="landing.conversion">Conversion</span>
+            <h3 data-i18n="landing.b64EncodeTitle">Base64 Encode</h3>
+            <p data-i18n="landing.b64EncodeBody">Convert plain text or uploaded text content into Base64 with UTF-8 support and download-ready output.</p>
             <ul>
-              <li>UTF-8 safe encoding</li>
-              <li>File input support</li>
-              <li>Quick copy and download</li>
+              <li data-i18n="landing.b64EncodeBullet1">UTF-8 safe encoding</li>
+              <li data-i18n="landing.b64EncodeBullet2">File input support</li>
+              <li data-i18n="landing.b64EncodeBullet3">Quick copy and download</li>
             </ul>
-            <span class="home-card-footer">Open page</span>
+            <span class="home-card-footer" data-i18n="common.openPage">Open page</span>
           </a>
 
           <a class="home-card" href="base64-decode.html">
-            <span class="home-card-kicker">Conversion</span>
-            <h3>Base64 Decode</h3>
-            <p>Decode Base64 back to text and preview common image payloads directly inside the page workspace.</p>
+            <span class="home-card-kicker" data-i18n="landing.conversion">Conversion</span>
+            <h3 data-i18n="landing.b64DecodeTitle">Base64 Decode</h3>
+            <p data-i18n="landing.b64DecodeBody">Decode Base64 back to text and preview common image payloads directly inside the page workspace.</p>
             <ul>
-              <li>Text and image preview</li>
-              <li>Validation feedback</li>
-              <li>Reverse workflow support</li>
+              <li data-i18n="landing.b64DecodeBullet1">Text and image preview</li>
+              <li data-i18n="landing.b64DecodeBullet2">Validation feedback</li>
+              <li data-i18n="landing.b64DecodeBullet3">Reverse workflow support</li>
             </ul>
-            <span class="home-card-footer">Open page</span>
+            <span class="home-card-footer" data-i18n="common.openPage">Open page</span>
           </a>
 
           <a class="home-card" href="thai-id.html">
-            <span class="home-card-kicker">Testing data</span>
-            <h3>Thai ID Helper</h3>
-            <p>Generate checksum-valid Thai ID test numbers and validate existing values for development or QA work.</p>
+            <span class="home-card-kicker" data-i18n="landing.testingData">Testing data</span>
+            <h3 data-i18n="landing.thaiIdTitle">Thai ID Helper</h3>
+            <p data-i18n="landing.thaiIdBody">Generate checksum-valid Thai ID test numbers and validate existing values for development or QA work.</p>
             <ul>
-              <li>Valid checksum generation</li>
-              <li>Prefix category control</li>
-              <li>History and validation panel</li>
+              <li data-i18n="landing.thaiIdBullet1">Valid checksum generation</li>
+              <li data-i18n="landing.thaiIdBullet2">Prefix category control</li>
+              <li data-i18n="landing.thaiIdBullet3">History and validation panel</li>
             </ul>
-            <span class="home-card-footer">Open page</span>
+            <span class="home-card-footer" data-i18n="common.openPage">Open page</span>
           </a>
 
           <a class="home-card" href="lucky.html">
-            <span class="home-card-kicker">Mini utility</span>
-            <h3>Lucky Draw</h3>
-            <p>Spin 2-digit, 3-digit, or 6-digit lucky numbers with short history and playful fortune feedback.</p>
+            <span class="home-card-kicker" data-i18n="landing.miniUtility">Mini utility</span>
+            <h3 data-i18n="landing.luckyTitle">Lucky Draw</h3>
+            <p data-i18n="landing.luckyBody">Spin 2-digit, 3-digit, or 6-digit lucky numbers with short history and playful fortune feedback.</p>
             <ul>
-              <li>Three lucky modes</li>
-              <li>Rolling number animation</li>
-              <li>Session history chips</li>
+              <li data-i18n="landing.luckyBullet1">Three lucky modes</li>
+              <li data-i18n="landing.luckyBullet2">Rolling number animation</li>
+              <li data-i18n="landing.luckyBullet3">Session history chips</li>
             </ul>
-            <span class="home-card-footer">Open page</span>
+            <span class="home-card-footer" data-i18n="common.openPage">Open page</span>
           </a>
 
           <a class="home-card" href="../index.html">
-            <span class="home-card-kicker">Legacy</span>
-            <h3>All-in-one legacy page</h3>
-            <p>The original tabbed interface remains live for people who want every utility in a single HTML page.</p>
+            <span class="home-card-kicker" data-i18n="landing.legacyKicker">Legacy</span>
+            <h3 data-i18n="landing.legacyTitle">All-in-one legacy page</h3>
+            <p data-i18n="landing.legacyBody">The original tabbed interface remains live for people who want every utility in a single HTML page.</p>
             <ul>
-              <li>Original workflow preserved</li>
-              <li>Fast local access</li>
-              <li>Links out to new structure</li>
+              <li data-i18n="landing.legacyBullet1">Original workflow preserved</li>
+              <li data-i18n="landing.legacyBullet2">Fast local access</li>
+              <li data-i18n="landing.legacyBullet3">Links out to new structure</li>
             </ul>
-            <span class="home-card-footer">Open page</span>
+            <span class="home-card-footer" data-i18n="common.openPage">Open page</span>
           </a>
         </div>
       </section>
@@ -138,30 +139,31 @@
       <section class="home-section" aria-labelledby="game-pages-title">
         <div class="home-section-header">
           <div>
-            <h2 id="game-pages-title">Mini game</h2>
-            <p>A dedicated game page keeps heavier interaction separate from the utility pages while still staying inside the same project.</p>
+            <h2 id="game-pages-title" data-i18n="landing.gameTitle">Mini game</h2>
+            <p data-i18n="landing.gameIntro">A dedicated game page keeps heavier interaction separate from the utility pages while still staying inside the same project.</p>
           </div>
         </div>
 
         <div class="home-card-grid">
           <a class="home-card" href="office-dino.html">
-            <span class="home-card-kicker">Mini game</span>
-            <h3>Office Dino</h3>
-            <p>Run, jump, collect buffs, recover energy, and try to land inside the local top 100 leaderboard with a funny player name.</p>
+            <span class="home-card-kicker" data-i18n="landing.gameKicker">Mini game</span>
+            <h3 data-i18n="landing.dinoTitle">Office Dino</h3>
+            <p data-i18n="landing.dinoBody">Run, jump, collect buffs, recover energy, and try to land inside the local top 100 leaderboard with a funny player name.</p>
             <ul>
-              <li>Standalone game page</li>
-              <li>Persistent top 100 ranking</li>
-              <li>Fallback player names included</li>
+              <li data-i18n="landing.dinoBullet1">Standalone game page</li>
+              <li data-i18n="landing.dinoBullet2">Persistent top 100 ranking</li>
+              <li data-i18n="landing.dinoBullet3">Fallback player names included</li>
             </ul>
-            <span class="home-card-footer">Play now</span>
+            <span class="home-card-footer" data-i18n="common.playNow">Play now</span>
           </a>
         </div>
       </section>
     </main>
 
     <footer class="home-footer">
-      <p>This landing page is the practical SEO entry point. The original <code>index.html</code> remains available as the legacy multi-tool interface.</p>
+      <p data-i18n="landing.footer">This landing page is the practical SEO entry point. The original index.html remains available as the legacy multi-tool interface.</p>
     </footer>
   </div>
+  <script src="../assets/js/shared/i18n.js"></script>
 </body>
 </html>

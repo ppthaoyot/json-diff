@@ -17,20 +17,21 @@
   <div class="site-shell">
     <header class="site-header">
       <div class="site-brand">
-        <strong>JSON Diff Workshop</strong>
-        <span>Standalone encode workflow with mobile-friendly controls.</span>
+        <strong data-i18n="common.pageTitle">JSON Diff Workshop</strong>
+        <span data-i18n="base64Encode.brandSub">Standalone encode workflow with mobile-friendly controls.</span>
       </div>
       <nav class="site-nav" aria-label="Primary">
-        <a class="site-nav-link is-primary" href="index.html">Landing page</a>
-        <a class="site-nav-link" href="base64-decode.html">Decode page</a>
-        <a class="site-nav-link" href="../index.html">Legacy page</a>
+        <a class="site-nav-link is-primary" href="index.html" data-i18n="common.landingPage">Landing page</a>
+        <a class="site-nav-link" href="base64-decode.html">Decode</a>
+        <a class="site-nav-link" href="../index.html" data-i18n="common.legacyPage">Legacy page</a>
+        <div class="site-nav" data-language-switcher></div>
       </nav>
     </header>
 
     <main class="tool-layout">
       <section class="tool-hero">
-        <h1>Base64 Encode</h1>
-        <p>
+        <h1 data-i18n="base64Encode.heroTitle">Base64 Encode</h1>
+        <p data-i18n="base64Encode.heroBody">
           Convert plain text into Base64 from a dedicated page that supports UTF-8 input, local text file loading, quick copy,
           and download-ready output. Use this page when you want encoding only, without the multi-tool tabbed interface.
         </p>
@@ -38,40 +39,41 @@
 
       <section class="tool-grid">
         <article class="tool-panel">
-          <h2>Source text</h2>
+          <h2 data-i18n="base64Encode.sourceTitle">Source text</h2>
           <div class="button-row" style="margin: 12px 0;">
-            <label class="action-btn" for="enc-file-input">Load file</label>
+            <label class="action-btn" for="enc-file-input" data-i18n="common.loadFile">Load file</label>
             <input id="enc-file-input" type="file" hidden>
-            <button class="action-btn" id="enc-clear-btn" type="button">Clear</button>
-            <button class="action-btn" id="enc-copy-input-btn" type="button">Copy input</button>
+            <button class="action-btn" id="enc-clear-btn" type="button" data-i18n="common.clear">Clear</button>
+            <button class="action-btn" id="enc-copy-input-btn" type="button" data-i18n="common.copyInput">Copy input</button>
           </div>
-          <textarea class="tool-textarea" id="enc-input" placeholder="Paste or type text to encode."></textarea>
-          <p class="copy-muted" id="enc-in-count">0 characters</p>
+          <textarea class="tool-textarea" id="enc-input" data-i18n-placeholder="base64Encode.sourcePlaceholder" placeholder="Paste or type text to encode."></textarea>
+          <p class="copy-muted" id="enc-in-count">0</p>
         </article>
 
         <article class="tool-panel">
-          <h2>Encoded Base64</h2>
+          <h2 data-i18n="base64Encode.outputTitle">Encoded Base64</h2>
           <div class="button-row" style="margin: 12px 0;">
-            <button class="action-btn" id="enc-copy-result-btn" type="button">Copy output</button>
-            <button class="action-btn" id="enc-download-btn" type="button">Download</button>
-            <button class="action-btn" id="enc-open-decode-btn" type="button">Open decode page</button>
+            <button class="action-btn" id="enc-copy-result-btn" type="button" data-i18n="common.copyOutput">Copy output</button>
+            <button class="action-btn" id="enc-download-btn" type="button" data-i18n="common.download">Download</button>
+            <button class="action-btn" id="enc-open-decode-btn" type="button" data-i18n="base64Encode.openDecode">Open decode page</button>
           </div>
-          <div class="result-surface empty-hint" id="enc-result">Encoded Base64 output will appear here.</div>
+          <div class="result-surface empty-hint" id="enc-result" data-i18n="base64Encode.outputPlaceholder">Encoded Base64 output will appear here.</div>
           <p class="copy-muted" id="enc-out-count"></p>
         </article>
       </section>
 
       <section class="tool-note">
-        <p>This page encodes text using UTF-8 first, so Thai and other Unicode content can be converted into Base64 correctly.</p>
+        <p data-i18n="base64Encode.note">This page encodes text using UTF-8 first, so Thai and other Unicode content can be converted into Base64 correctly.</p>
       </section>
     </main>
 
     <footer class="tool-footer">
-      <p>Need reverse conversion? Continue to the dedicated <a href="base64-decode.html">Base64 decode page</a>.</p>
+      <p data-i18n="base64Encode.footer">Need reverse conversion? Continue to the dedicated Base64 decode page.</p>
     </footer>
   </div>
 
   <div id="toast-container"></div>
+  <script src="../assets/js/shared/i18n.js"></script>
   <script src="../assets/js/shared/ui.js"></script>
   <script src="../assets/js/shared/storage.js"></script>
   <script src="../assets/js/pages/base64-encode.js"></script>

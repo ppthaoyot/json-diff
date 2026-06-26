@@ -11,7 +11,8 @@ const pageChecks = [
   { file: "base64-encode.html", script: "base64-encode.js", title: /Base64 Encode/i },
   { file: "base64-decode.html", script: "base64-decode.js", title: /Base64 Decode/i },
   { file: "thai-id.html", script: "thai-id.js", title: /Thai ID/i },
-  { file: "lucky.html", script: "lucky.js", title: /Lucky Draw/i }
+  { file: "lucky.html", script: "lucky.js", title: /Lucky Draw/i },
+  { file: "office-dino.html", script: "office-dino.js", title: /Office Dino/i }
 ];
 
 test("landing page exists and links to all standalone pages", () => {
@@ -46,6 +47,16 @@ test("each standalone tool page loads shared assets and its page script", () => 
     assert.match(html, /assets\/js\/shared\/ui\.js/i);
     assert.match(html, /assets\/js\/shared\/storage\.js/i);
     assert.match(html, new RegExp("assets\\/js\\/pages\\/" + script.replace(".", "\\."), "i"));
+  });
+});
+
+test("each standalone page loads shared i18n and exposes a language switcher", () => {
+  pageChecks.forEach(({ file }) => {
+    const pagePath = path.join(pagesDir, file);
+    const html = fs.readFileSync(pagePath, "utf8");
+
+    assert.match(html, /assets\/js\/shared\/i18n\.js/i, `${file} should load shared i18n`);
+    assert.match(html, /data-language-switcher/i, `${file} should expose a language switcher`);
   });
 });
 
