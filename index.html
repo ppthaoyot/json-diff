@@ -1024,6 +1024,48 @@ textarea.invalid { border-color: #E24B4A; }
   font-size: 16px;
   font-weight: 600;
   min-height: 24px;
+  transition: all 0.3s;
+}
+.mg-epic-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.mg-epic-flash {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 70%);
+  opacity: 0;
+  animation: mgFlash 1s ease-out;
+}
+@keyframes mgFlash {
+  0% { opacity: 0.8; }
+  100% { opacity: 0; }
+}
+.mg-jackpot-text {
+  font-family: var(--font-sans);
+  font-size: 80px;
+  font-weight: 900;
+  color: #f1c40f;
+  text-shadow: 0 4px 20px rgba(241,196,15,0.6), 0 0 40px rgba(231,76,60,0.8);
+  transform: scale(0.1) rotate(-10deg);
+  opacity: 0;
+  animation: mgJackpot 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  z-index: 10000;
+  text-align: center;
+  line-height: 1.1;
+}
+@keyframes mgJackpot {
+  0% { transform: scale(0.1) rotate(-20deg); opacity: 0; }
+  30% { transform: scale(1.2) rotate(5deg); opacity: 1; }
+  50% { transform: scale(1) rotate(0deg); opacity: 1; }
+  80% { transform: scale(1) rotate(0deg); opacity: 1; }
+  100% { transform: scale(1.5) rotate(10deg); opacity: 0; }
 }
 </style>
 </head>
@@ -1271,6 +1313,8 @@ textarea.invalid { border-color: #E24B4A; }
       <div class="mg-result" id="mg-result"></div>
     </div>
   </div>
+  
+  <div class="mg-epic-overlay" id="mg-epic-overlay"></div>
 
 <!-- ===================== PAGE: BASE64 DECODE ===================== -->
   <div class="page" id="page-b64decode" role="tabpanel" aria-labelledby="ptab-b64decode">
@@ -2248,13 +2292,34 @@ function mgPick(boxIndex) {
   
   var resEl = document.getElementById('mg-result');
   if (boxIndex === mgWinnerIndex) {
-    resEl.textContent = '🎉 ยินดีด้วย! คุณเจอเพชร 💎';
-    resEl.style.color = '#2ecc71';
-    spawnConfetti();
+    mgEpicWin();
   } else {
     resEl.textContent = '😢 แป่ววววว ว่างเปล่า!';
     resEl.style.color = '#e74c3c';
+    resEl.style.transform = 'scale(1)';
   }
+}
+
+function mgEpicWin() {
+  var resEl = document.getElementById('mg-result');
+  resEl.textContent = '🎉 ยินดีด้วย! คุณเจอเพชร 💎';
+  resEl.style.color = '#2ecc71';
+  resEl.style.transform = 'scale(1.2)';
+  
+  // Epic Confetti x3
+  spawnConfetti();
+  setTimeout(spawnConfetti, 200);
+  setTimeout(spawnConfetti, 400);
+  
+  // Screen Flash & Jackpot Text
+  var overlay = document.getElementById('mg-epic-overlay');
+  overlay.innerHTML = '<div class="mg-epic-flash"></div><div class="mg-jackpot-text">💎 ยินดีด้วย!!<br><span style="font-size:40px;color:#fff;">ตาดีสุดๆ</span></div>';
+  
+  // Clean up overlay after animation
+  setTimeout(function() {
+    overlay.innerHTML = '';
+    resEl.style.transform = 'scale(1)';
+  }, 2000);
 }
 
 // Initial init for mini game
