@@ -1400,9 +1400,9 @@ canvas#dino-game {
       <button class="mode-btn active" onclick="setMode('side')" id="btn-side">Side-by-side</button>
       <button class="mode-btn" onclick="setMode('tree')" id="btn-tree">Tree</button>
       <button class="mode-btn" onclick="setMode('list')" id="btn-list">รายการ</button>
-      <button class="mode-btn active" onclick="toggleLineNumbers()" id="line-number-toggle">Line numbers: on</button>
-      <button class="mode-btn" onclick="expandAllJsonTrees()" id="json-tree-expand-all">Expand all</button>
-      <button class="mode-btn" onclick="collapseAllJsonTrees()" id="json-tree-collapse-all">Collapse all</button>
+      <button class="mode-btn active" onclick="toggleLineNumbers()" id="line-number-toggle">เลขบรรทัด: เปิด</button>
+      <button class="mode-btn" onclick="expandAllJsonTrees()" id="json-tree-expand-all">ขยายทั้งหมด</button>
+      <button class="mode-btn" onclick="collapseAllJsonTrees()" id="json-tree-collapse-all">ย่อทั้งหมด</button>
     </div>
 
     <div class="editors">
@@ -1414,7 +1414,7 @@ canvas#dino-game {
             <button class="fmt-btn" onclick="formatJSON('a')" title="จัดรูปแบบ JSON">Format</button>
             <button class="fmt-btn" onclick="minifyJSON('a')" title="ย่อ JSON">Minify</button>
             <button class="fmt-btn" onclick="copyJSON('a')" id="copy-a" title="คัดลอก">Copy</button>
-            <button class="fmt-btn json-structure-toggle" onclick="toggleJsonStructure('a')" id="json-structure-toggle-a" title="Structure">Structure</button>
+            <button class="fmt-btn json-structure-toggle" onclick="toggleJsonStructure('a')" id="json-structure-toggle-a" title="ดูโครงสร้าง">ดูโครงสร้าง</button>
             <span class="editor-status" id="sta-a"></span>
           </div>
         </div>
@@ -1432,7 +1432,7 @@ canvas#dino-game {
             <button class="fmt-btn" onclick="formatJSON('b')" title="จัดรูปแบบ JSON">Format</button>
             <button class="fmt-btn" onclick="minifyJSON('b')" title="ย่อ JSON">Minify</button>
             <button class="fmt-btn" onclick="copyJSON('b')" id="copy-b" title="คัดลอก">Copy</button>
-            <button class="fmt-btn json-structure-toggle" onclick="toggleJsonStructure('b')" id="json-structure-toggle-b" title="Structure">Structure</button>
+            <button class="fmt-btn json-structure-toggle" onclick="toggleJsonStructure('b')" id="json-structure-toggle-b" title="ดูโครงสร้าง">ดูโครงสร้าง</button>
             <span class="editor-status" id="sta-b"></span>
           </div>
         </div>
@@ -2294,14 +2294,14 @@ function syncEditorScroll(side) {
 function updateLineNumberToggleLabel() {
   const btn = document.getElementById('line-number-toggle');
   if (!btn) return;
-  btn.textContent = showJsonLineNumbers ? 'Line numbers: on' : 'Line numbers: off';
+  btn.textContent = showJsonLineNumbers ? 'เลขบรรทัด: เปิด' : 'เลขบรรทัด: ปิด';
   btn.classList.toggle('active', showJsonLineNumbers);
 }
 
 function updateJsonStructureButton(side) {
   const button = document.getElementById('json-structure-toggle-' + side);
   if (!button) return;
-  button.textContent = jsonStructureViewBySide[side] ? 'Back to JSON' : 'Structure';
+  button.textContent = jsonStructureViewBySide[side] ? 'กลับไปแก้ JSON' : 'ดูโครงสร้าง';
 }
 
 function updateJsonEditorShell(side) {
@@ -2335,19 +2335,30 @@ function renderJsonEditorTree(side, parsed) {
   }
   panel.hidden = false;
   if (!parsed || !parsed.ok) {
-    panel.innerHTML = '<div class="empty-hint">à¸à¸£à¸¸à¸“à¸²à¹à¸à¹‰ JSON à¹ƒà¸«à¹‰à¸–à¸¹à¸à¸•à¹‰à¸­à¸‡à¸à¹ˆà¸­à¸™</div>';
+    panel.innerHTML = '<div class="empty-hint">กรุณาแก้ JSON ให้ถูกต้องก่อน</div>';
     return;
   }
   panel.innerHTML = getJsonDiffCore().renderJsonTree(parsed.val, { collapsed: false });
 }
 
+function getJsonTreeScopes() {
+  const scopes = [
+    document.getElementById('result'),
+    document.getElementById('json-tree-panel-a'),
+    document.getElementById('json-tree-panel-b')
+  ];
+  return scopes.filter(Boolean);
+}
+
 function setJsonTreeExpansion(collapsed) {
-  document.querySelectorAll('[data-tree-node]').forEach(function(node) {
-    const toggle = node.querySelector('[data-tree-toggle]');
-    if (!toggle) return;
-    node.classList.toggle('is-collapsed', collapsed);
-    toggle.textContent = collapsed ? '+' : '−';
-    toggle.setAttribute('aria-expanded', String(!collapsed));
+  getJsonTreeScopes().forEach(function(scope) {
+    scope.querySelectorAll('[data-tree-node]').forEach(function(node) {
+      const toggle = node.querySelector('[data-tree-toggle]');
+      if (!toggle) return;
+      node.classList.toggle('is-collapsed', collapsed);
+      toggle.textContent = collapsed ? '+' : '-';
+      toggle.setAttribute('aria-expanded', String(!collapsed));
+    });
   });
 }
 
@@ -2366,7 +2377,7 @@ document.addEventListener('click', function(event) {
   if (!node) return;
   node.classList.toggle('is-collapsed');
   const collapsed = node.classList.contains('is-collapsed');
-  toggle.textContent = collapsed ? '+' : '−';
+  toggle.textContent = collapsed ? '+' : '-';
   toggle.setAttribute('aria-expanded', String(!collapsed));
 });
 
@@ -2439,6 +2450,7 @@ function setMode(m) {
   ['side','tree','list'].forEach(x => {
     document.getElementById('btn-'+x).classList.toggle('active', x===m);
   });
+  syncTreeToolbar();
   onInput();
 }
 
@@ -2698,7 +2710,7 @@ function onInput() {
   var diff = getJsonDiffCore().diffFlat(pa.val, pb.val);
   sum.innerHTML =
     '<span class="stat stat-add">+ à¹€à¸žà¸´à¹ˆà¸¡ '+diff.added.length+'</span>'+
-    '<span class="stat stat-rem">âˆ’ à¸¥à¸š '+diff.removed.length+'</span>'+
+    '<span class="stat stat-rem">- à¸¥à¸š '+diff.removed.length+'</span>'+
     '<span class="stat stat-chg">~ à¹à¸à¹‰à¹„à¸‚ '+diff.changed.length+'</span>'+
     '<span class="stat stat-same">= à¹€à¸«à¸¡à¸·à¸­à¸™ '+diff.same.length+'</span>';
 
@@ -2712,6 +2724,7 @@ updateJsonEditorShell('a');
 updateJsonEditorShell('b');
 updateJsonLineNumbers('a');
 updateJsonLineNumbers('b');
+syncTreeToolbar();
 
 // ============================================================
 //  MINI GAME
