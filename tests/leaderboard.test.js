@@ -88,6 +88,8 @@ function loadLeaderboardHarness() {
         getDefaultPlayerName,
         saveLeaderboardEntry,
         loadLeaderboard,
+        exportLeaderboard,
+        importLeaderboard,
         beginDinoRun: typeof beginDinoRun === "function" ? beginDinoRun : undefined,
         getCurrentPlayerName() {
           return typeof dinoCurrentPlayerName === "string" ? dinoCurrentPlayerName : "";
@@ -110,9 +112,9 @@ test("getDefaultPlayerName returns a non-empty funny fallback name", () => {
   assert.ok(name.trim().length > 0);
 });
 
-test("saveLeaderboardEntry keeps only the top 100 scores in descending order", () => {
+test("saveLeaderboardEntry keeps only the top 20 scores in descending order", () => {
   const { api } = loadLeaderboardHarness();
-  for (let i = 0; i < 105; i++) {
+  for (let i = 0; i < 25; i++) {
     api.saveLeaderboardEntry({
       name: "Player " + i,
       score: i,
@@ -122,9 +124,9 @@ test("saveLeaderboardEntry keeps only the top 100 scores in descending order", (
   }
 
   const rows = api.loadLeaderboard();
-  assert.equal(rows.length, 100);
-  assert.equal(rows[0].score, 104);
-  assert.equal(rows[99].score, 5);
+  assert.equal(rows.length, 20);
+  assert.equal(rows[0].score, 24);
+  assert.equal(rows[19].score, 5);
 });
 
 test("players with the same score keep earlier timestamps first", () => {
@@ -147,4 +149,24 @@ test("beginDinoRun uses a funny default name when the player leaves the field em
   assert.ok(api.getCurrentPlayerName().trim().length > 0);
   assert.equal(elements["dino-player-name"].value, api.getCurrentPlayerName());
   assert.equal(elements["dino-current-player-name"].textContent, api.getCurrentPlayerName());
+});
+
+test("leaderboard export and import round-trip the saved top scores", () => {
+  const { api } = loadLeaderboardHarness();
+
+  api.saveLeaderboardEntry({ name: "Alpha", score: 900, level: "L1", timestamp: 100 });
+  api.saveLeaderboardEntry({ name: "Beta", score: 800, level: "L1", timestamp: 200 });
+
+  const exported = api.exportLeaderboard();
+  assert.match(exported, /Alpha/);
+  assert.match(exported, /Beta/);
+
+  const importedRows = api.importLeaderboard(exported);
+  assert.equal(importedRows.length, 4);
+
+  const rows = api.loadLeaderboard();
+  assert.equal(rows[0].name, "Alpha");
+  assert.equal(rows[1].name, "Alpha");
+  assert.equal(rows[2].name, "Beta");
+  assert.equal(rows[3].name, "Beta");
 });

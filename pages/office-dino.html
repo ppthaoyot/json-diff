@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Office Dino Game with Top 100 Leaderboard</title>
-  <meta name="description" content="Play Office Dino on its own page with player naming, funny fallback names, working buffs, recovery items, and a local top 100 leaderboard.">
+  <title>Office Dino Game with Top 20 Leaderboards</title>
+  <meta name="description" content="Play Office Dino on its own page with clearer buffs, recovery items, invincible boosts, a local top 20 board, and a global MVP leaderboard backed by Google Apps Script.">
   <link rel="canonical" href="/pages/office-dino.html">
-  <meta property="og:title" content="Office Dino Game with Top 100 Leaderboard">
-  <meta property="og:description" content="Standalone Office Dino page with persistent ranking, player naming, and mobile-ready gameplay.">
+  <meta property="og:title" content="Office Dino Game with Top 20 Leaderboards">
+  <meta property="og:description" content="Standalone Office Dino page with clearer pickups, player naming, local ranking, and global competition support.">
+  <meta name="office-dino-global-endpoint" content="https://script.google.com/macros/s/AKfycbwV3jKhcFK6J1PJC61OmHIve7_xNyFxFAyWXBUOIgPCuESb0PZUf_pwWjrxVwYtmsXc9Q/exec">
   <link rel="stylesheet" href="../assets/css/base.css">
   <link rel="stylesheet" href="../assets/css/layout.css">
   <link rel="stylesheet" href="../assets/css/components.css">
@@ -19,7 +20,7 @@
     <header class="office-dino-topbar">
       <div>
         <h1>Office Dino</h1>
-        <p data-i18n="officeDino.topbarLead">Run, dodge, collect buffs, recover energy, and push your score into the local top 100 leaderboard with your own player name.</p>
+        <p data-i18n="officeDino.topbarLead">Run, dodge, collect buffs, recover energy, and push your score into the local top 20 leaderboard with your own player name.</p>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
         <a class="office-dino-backlink" href="index.html" data-i18n="officeDino.seoLanding">SEO landing page</a>
@@ -86,10 +87,20 @@
           <div class="dino-current-player"><span data-i18n="officeDino.currentPlayerPrefix">Current player:</span> <strong id="dino-current-player-name" data-i18n="officeDino.notStartedYet">Not started yet</strong></div>
 
           <section class="dino-leaderboard" aria-labelledby="dino-leaderboard-title">
-            <h2 id="dino-leaderboard-title" data-i18n="officeDino.leaderboardTitle">Top 100 Office Dino</h2>
+            <h2 id="dino-leaderboard-title" data-i18n="officeDino.leaderboardTitle">Top 20 Office Dino</h2>
             <div id="dino-leaderboard-empty" data-i18n="officeDino.leaderboardEmpty">No scores yet. Be the first legend on this machine.</div>
             <ol id="dino-leaderboard-list"></ol>
             <button class="hub-btn" type="button" onclick="clearDinoLeaderboard()" style="margin-top:10px;" data-i18n="officeDino.clearLeaderboard">Clear leaderboard on this device</button>
+          </section>
+
+          <section class="dino-leaderboard" aria-labelledby="dino-global-leaderboard-title" style="margin-top:16px;">
+            <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;">
+              <h2 id="dino-global-leaderboard-title">Global Top 20</h2>
+              <button class="hub-btn" type="button" onclick="syncDinoGlobalLeaderboard(true)">Sync global board</button>
+            </div>
+            <div id="dino-global-leaderboard-status" style="margin-top:8px;color:var(--text-secondary);font-size:13px;line-height:1.6;">Configure the Google Apps Script URL to start the shared leaderboard.</div>
+            <div id="dino-global-leaderboard-empty" style="margin-top:8px;color:var(--text-tertiary);font-size:13px;">No global scores yet.</div>
+            <ol id="dino-global-leaderboard-list"></ol>
           </section>
 
           <div class="office-dino-note" data-i18n="officeDino.note">
@@ -105,6 +116,7 @@
   <script src="../assets/js/shared/i18n.js"></script>
   <script src="../assets/js/shared/ui.js"></script>
   <script src="../assets/js/shared/storage.js"></script>
+  <script src="../assets/js/shared/global-leaderboard.js"></script>
   <script src="../assets/js/pages/office-dino.js"></script>
 </body>
 </html>

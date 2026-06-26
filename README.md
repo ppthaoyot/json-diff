@@ -17,9 +17,11 @@ Multi-page utility workshop for JSON comparison, Base64 conversion, Thai ID test
 - `pages/lucky.html`
   Standalone lucky draw page with 2-digit, 3-digit, and 6-digit modes.
 - `pages/office-dino.html`
-  Standalone Office Dino page with player naming, fallback names, and top 100 leaderboard.
+  Standalone Office Dino page with player naming, clearer buff visuals, local top 20, and optional global MVP leaderboard support.
 - `index.html`
   Legacy all-in-one tabbed page kept for backward compatibility and quick local use.
+- `apps-script/office-dino-leaderboard.gs`
+  Google Apps Script MVP backend for the shared Office Dino leaderboard.
 
 ## Open the project
 
@@ -45,6 +47,8 @@ Multi-page utility workshop for JSON comparison, Base64 conversion, Thai ID test
   Shared escaping, toast, and clipboard helper behavior.
 - `assets/js/shared/storage.js`
   Shared leaderboard storage and funny default player names for Office Dino.
+- `assets/js/shared/global-leaderboard.js`
+  Shared Google Apps Script transport for loading and submitting the global leaderboard.
 - `assets/js/pages/`
   Page-specific JavaScript files for each standalone tool and mini game.
 
@@ -69,12 +73,13 @@ Project-wide SEO support files:
 Run the current automated checks with:
 
 ```bash
-node --test tests/dino-buffs.test.js tests/leaderboard.test.js tests/office-dino-page.test.js tests/multipage-smoke.test.js
+node --test tests/dino-buffs.test.js tests/leaderboard.test.js tests/global-leaderboard.test.js tests/index-legacy-page.test.js tests/office-dino-page.test.js tests/multipage-smoke.test.js
 ```
 
 ## Notes
 
-- No backend is used in this round.
-- Office Dino leaderboard data still uses `localStorage`.
+- `index.html` is the active single-page legacy workflow again.
+- Office Dino still keeps a local leaderboard in `localStorage`.
+- A shared leaderboard can be enabled by deploying `apps-script/office-dino-leaderboard.gs` and filling the `office-dino-global-endpoint` meta tag.
 - The new landing page is `pages/index.html`.
 - The original `index.html` remains the legacy interface by design.

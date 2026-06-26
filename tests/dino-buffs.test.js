@@ -28,6 +28,10 @@ function loadDinoHarness() {
     save() {},
     restore() {},
     beginPath() {},
+    arc(x, y, radius) {
+      drawCalls.push({ kind: "arc", x, y, radius });
+    },
+    fill() {},
     moveTo() {},
     lineTo() {},
     stroke() {},
@@ -52,7 +56,7 @@ function loadDinoHarness() {
     "mg-hub-box": { style: { display: "none" } },
     "ptab-minigame": { addEventListener() {} },
     "dino-pause-btn": { textContent: "" },
-    "dino-char": { value: "👨‍💻" },
+    "dino-char": { value: "ðŸ‘¨â€ðŸ’»" },
     "dino-speed": { value: "normal" }
   };
 
@@ -91,8 +95,10 @@ function loadDinoHarness() {
         checkDinoCollision,
         resetDinoGame,
         renderDino,
+        drawDinoObs,
         getState() {
           return {
+            dinoScore,
             dinoHP,
             dinoInvincible,
             dinoDashTimer,
@@ -101,6 +107,7 @@ function loadDinoHarness() {
           };
         },
         setState(next) {
+          if (typeof next.dinoScore === "number") dinoScore = next.dinoScore;
           if (typeof next.dinoHP === "number") dinoHP = next.dinoHP;
           if (typeof next.dinoInvincible === "number") dinoInvincible = next.dinoInvincible;
           if (typeof next.dinoDashTimer === "number") dinoDashTimer = next.dinoDashTimer;
@@ -127,6 +134,7 @@ function loadDinoHarness() {
 
 test("spawned powerup pickup has a drawable hitbox", () => {
   const { api, math } = loadDinoHarness();
+  api.setState({ dinoScore: 400 });
   const rolls = [0.1, 0.7];
   math.random = () => rolls.shift() ?? 0.5;
 
@@ -141,6 +149,39 @@ test("spawned powerup pickup has a drawable hitbox", () => {
   assert.ok(state.dinoObstacles[0].h > 0);
 });
 
+test("early game keeps normal drop rate by spawning a regular obstacle instead of a powerup", () => {
+  const { api, math } = loadDinoHarness();
+  api.setState({ dinoScore: 0 });
+  const rolls = [0.1, 0];
+  math.random = () => rolls.shift() ?? 0;
+
+  api.spawnDinoObstacle();
+  const state = api.getState();
+
+  assert.equal(state.dinoObstacles.length, 1);
+  assert.equal(Boolean(state.dinoObstacles[0].isPowerup), false);
+  assert.equal(Boolean(state.dinoObstacles[0].isSpecial), false);
+});
+
+test("special boost appears only after the run is deep enough", () => {
+  const { api, math } = loadDinoHarness();
+  api.setState({ dinoScore: 150 });
+  const earlyRolls = [0.9, 0.01, 0];
+  math.random = () => earlyRolls.shift() ?? 0;
+
+  api.spawnDinoObstacle();
+  let state = api.getState();
+  assert.equal(Boolean(state.dinoObstacles[0].isSpecial), false);
+
+  api.setState({ dinoScore: 900, dinoObstacles: [] });
+  const lateRolls = [0.9, 0.01, 0];
+  math.random = () => lateRolls.shift() ?? 0;
+
+  api.spawnDinoObstacle();
+  state = api.getState();
+  assert.equal(Boolean(state.dinoObstacles[0].isSpecial), true);
+});
+
 test("energy refill pickup restores HP to full and shows feedback", () => {
   const { api } = loadDinoHarness();
   api.resetDinoGame();
@@ -152,7 +193,7 @@ test("energy refill pickup restores HP to full and shows feedback", () => {
         y: 177,
         w: 46,
         h: 58,
-        emoji: "❤️",
+        emoji: "â¤ï¸",
         label: "เติมพลัง",
         isPowerup: true,
         isSpecial: false
@@ -179,7 +220,7 @@ test("special pickup activates the immortal piercing buff and HUD text", () => {
         y: 177,
         w: 46,
         h: 58,
-        emoji: "🚀",
+        emoji: "ðŸš€",
         label: "ใบลาออก!",
         isPowerup: false,
         isSpecial: true
@@ -195,4 +236,15 @@ test("special pickup activates the immortal piercing buff and HUD text", () => {
 
   api.renderDino();
   assert.ok(drawCalls.some((entry) => String(entry.text).includes("อมตะทะลวงฟัน")));
+});
+
+test("powerups and special boosts render extra pickup cues beyond ordinary obstacles", () => {
+  const { api, drawCalls } = loadDinoHarness();
+
+  api.drawDinoObs({ x: 100, y: 100, w: 48, h: 48, emoji: "❤️", label: "เติมพลัง", isPowerup: true, isSpecial: false, floating: false });
+  api.drawDinoObs({ x: 200, y: 100, w: 48, h: 48, emoji: "🚀", label: "ใบลาออก!", isPowerup: false, isSpecial: true, floating: false });
+
+  assert.ok(drawCalls.some((entry) => entry.kind === "arc"));
+  assert.ok(drawCalls.some((entry) => String(entry.text).includes("BUFF")));
+  assert.ok(drawCalls.some((entry) => String(entry.text).includes("BOOST")));
 });

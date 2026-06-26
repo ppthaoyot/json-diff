@@ -145,19 +145,66 @@ function renderDinoLeaderboard() {
   }).join("");
 }
 
+function renderDinoGlobalLeaderboard(rows, message) {
+  const list = document.getElementById("dino-global-leaderboard-list");
+  const empty = document.getElementById("dino-global-leaderboard-empty");
+  const status = document.getElementById("dino-global-leaderboard-status");
+  if (!list || !empty || !status) return;
+
+  const normalizedRows = normalizeDinoGlobalLeaderboardRows(rows || []);
+  status.textContent = message || (getDinoGlobalLeaderboardEndpoint() ? "Global leaderboard ready." : "Configure the Google Apps Script URL to start the shared leaderboard.");
+  empty.style.display = normalizedRows.length ? "none" : "block";
+  list.innerHTML = normalizedRows.map(function(row, index) {
+    return '<li class="dino-leaderboard-item">'
+      + '<span class="dino-leaderboard-rank">#' + (index + 1) + '</span>'
+      + '<span class="dino-leaderboard-name">' + esc(row.name) + '</span>'
+      + '<span class="dino-leaderboard-score">' + row.score + "</span>"
+      + "</li>";
+  }).join("");
+}
+
 function clearDinoLeaderboard() {
   localStorage.removeItem(dinoLeaderboardStorageKey);
   renderDinoLeaderboard();
 }
 
+function syncDinoGlobalLeaderboard(showToastOnError) {
+  renderDinoGlobalLeaderboard([], "Loading global leaderboard...");
+  return loadDinoGlobalLeaderboard().then(function(payload) {
+    renderDinoGlobalLeaderboard(payload.rows, payload.message || "Global leaderboard updated.");
+    return payload;
+  }).catch(function(err) {
+    renderDinoGlobalLeaderboard([], "Unable to load the global leaderboard.");
+    if (showToastOnError) {
+      showToast("Global leaderboard failed", String((err && err.message) || err || "unknown error"), "err");
+    }
+    throw err;
+  });
+}
+
+function submitDinoGlobalScore(entry) {
+  if (!getDinoGlobalLeaderboardEndpoint()) return Promise.resolve();
+  renderDinoGlobalLeaderboard([], "Submitting score to the global leaderboard...");
+  return submitDinoGlobalLeaderboardEntry(entry).then(function() {
+    return syncDinoGlobalLeaderboard(false);
+  }).then(function() {
+    showToast("Global leaderboard updated", "Your score was submitted.", "ok");
+  }).catch(function(err) {
+    renderDinoGlobalLeaderboard([], "Unable to submit the score right now.");
+    showToast("Global submit failed", String((err && err.message) || err || "unknown error"), "err");
+  });
+}
+
 function onDinoGameOver() {
-  saveLeaderboardEntry({
+  const entry = {
     name: dinoCurrentPlayerName || getDefaultPlayerName(),
     score: dinoScore,
     level: getDinoLevel(),
     timestamp: Date.now()
-  });
+  };
+  saveLeaderboardEntry(entry);
   renderDinoLeaderboard();
+  submitDinoGlobalScore(entry);
 }
 
 function changeDinoChar() {
@@ -239,12 +286,14 @@ function setDinoDuck(isDucking) {
 }
 
 function spawnDinoObstacle() {
-  const isPowerup = Math.random() < 0.40;
+  let powerupChance = 0.35 - dinoScore / 6000;
+  if (powerupChance < 0.02) powerupChance = 0.02;
+  const isPowerup = Math.random() < powerupChance && dinoScore > 50;
   let isSpecial = false;
   let type;
   if (isPowerup) {
     type = normalizeDinoPickupType(dinoPowerupTypes[Math.floor(Math.random() * dinoPowerupTypes.length)], "powerup");
-  } else if (Math.random() < 0.30) {
+  } else if (dinoScore > 400 && Math.random() < 0.08) {
     isSpecial = true;
     type = normalizeDinoPickupType(dinoSpecialTypes[Math.floor(Math.random() * dinoSpecialTypes.length)], "special");
   } else {
@@ -447,6 +496,94 @@ function drawDinoObs(obs) {
   dinoCtx.restore();
 }
 
+function drawDinoPickupAura(obs, palette) {
+  const cx = obs.x + obs.w / 2;
+  const cy = obs.y + obs.h / 2;
+  const pulse = 1 + Math.sin(dinoFrame / 6 + cx / 40) * 0.08;
+  const radius = Math.max(obs.w, obs.h) * 0.52 * pulse;
+  dinoCtx.save();
+  dinoCtx.beginPath();
+  dinoCtx.globalAlpha = 0.22;
+  dinoCtx.fillStyle = palette.glow;
+  dinoCtx.arc(cx, cy, radius + 10, 0, Math.PI * 2);
+  dinoCtx.fill();
+  dinoCtx.globalAlpha = 0.95;
+  dinoCtx.lineWidth = 3;
+  dinoCtx.strokeStyle = palette.ring;
+  dinoCtx.beginPath();
+  dinoCtx.arc(cx, cy, radius, 0, Math.PI * 2);
+  dinoCtx.stroke();
+  if (obs.isSpecial) {
+    dinoCtx.lineWidth = 2;
+    dinoCtx.strokeStyle = palette.accent;
+    dinoCtx.beginPath();
+    dinoCtx.arc(cx, cy, radius + 8, 0, Math.PI * 2);
+    dinoCtx.stroke();
+    for (let i = 0; i < 3; i++) {
+      const angle = dinoFrame / 10 + i * (Math.PI * 2 / 3);
+      const sparkX = cx + Math.cos(angle) * (radius + 12);
+      const sparkY = cy + Math.sin(angle) * (radius + 12);
+      dinoCtx.fillStyle = palette.accent;
+      dinoCtx.fillRect(sparkX - 2, sparkY - 2, 4, 4);
+    }
+  }
+  dinoCtx.restore();
+}
+
+function drawDinoPickupBadge(obs, text, background, color) {
+  const width = text === "BOOST" ? 54 : 46;
+  const x = obs.x + obs.w / 2 - width / 2;
+  const y = obs.y - 42;
+  dinoCtx.save();
+  dinoCtx.fillStyle = background;
+  dinoCtx.globalAlpha = 0.95;
+  dinoCtx.fillRect(x, y, width, 18);
+  dinoCtx.globalAlpha = 1;
+  dinoCtx.fillStyle = color;
+  dinoCtx.font = "bold 11px Tahoma";
+  dinoCtx.textAlign = "center";
+  dinoCtx.textBaseline = "middle";
+  dinoCtx.fillText(text, x + width / 2, y + 9);
+  dinoCtx.restore();
+}
+
+function drawDinoObs(obs) {
+  const palette = obs.isSpecial
+    ? { glow: "rgba(155, 89, 182, 0.55)", ring: "#f7d774", accent: "#ffffff", label: "#8e44ad", badgeBg: "#2c0f3a", badgeText: "#fdf1a4" }
+    : obs.isPowerup
+      ? { glow: "rgba(46, 204, 113, 0.45)", ring: "#6ff7c8", accent: "#d9fff1", label: "#138d75", badgeBg: "#0f4734", badgeText: "#cbffe8" }
+      : null;
+  dinoCtx.save();
+  dinoCtx.font = "40px Tahoma";
+  dinoCtx.textAlign = "center";
+  dinoCtx.textBaseline = "middle";
+  if (palette) {
+    drawDinoPickupAura(obs, palette);
+  }
+  dinoCtx.shadowColor = palette ? palette.glow : "rgba(0,0,0,0.3)";
+  dinoCtx.shadowBlur = palette ? 18 : 4;
+  dinoCtx.shadowOffsetY = 2;
+  dinoCtx.fillText(obs.emoji, obs.x + obs.w / 2, obs.y + obs.h / 2);
+  dinoCtx.shadowColor = "transparent";
+  dinoCtx.font = "bold 14px Tahoma";
+  if (obs.isSpecial) {
+    drawDinoPickupBadge(obs, "BOOST", palette.badgeBg, palette.badgeText);
+    dinoCtx.fillStyle = palette.label;
+  } else if (obs.isPowerup) {
+    drawDinoPickupBadge(obs, "BUFF", palette.badgeBg, palette.badgeText);
+    dinoCtx.fillStyle = palette.label;
+  } else {
+    dinoCtx.fillStyle = "#c0392b";
+  }
+  dinoCtx.fillText(obs.label, obs.x + obs.w / 2, obs.y - 12);
+  if (obs.floating) {
+    dinoCtx.font = "bold 13px Tahoma";
+    dinoCtx.fillStyle = "#e67e22";
+    dinoCtx.fillText("à¸«à¸¡à¸­à¸š!", obs.x + obs.w / 2, obs.y + obs.h + 16);
+  }
+  dinoCtx.restore();
+}
+
 function drawDinoParticles() {
   dinoCtx.fillStyle = "#555";
   for (const p of dinoParticles) {
@@ -580,5 +717,9 @@ document.addEventListener("keyup", function(e) {
 dinoCanvas.addEventListener("click", dinoJump);
 
 renderDinoLeaderboard();
+renderDinoGlobalLeaderboard([], getDinoGlobalLeaderboardEndpoint() ? "Press sync to load the latest global board." : "Configure the Google Apps Script URL to start the shared leaderboard.");
+if (getDinoGlobalLeaderboardEndpoint()) {
+  syncDinoGlobalLeaderboard(false);
+}
 renderDino();
 dinoLoop();

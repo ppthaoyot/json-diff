@@ -8,6 +8,7 @@
 <link rel="canonical" href="/index.html">
 <meta property="og:title" content="Legacy JSON Diff Workshop Tools">
 <meta property="og:description" content="Use the original all-in-one page or jump to the new standalone pages for focused workflows and future SEO support.">
+<meta name="office-dino-global-endpoint" content="https://script.google.com/macros/s/AKfycbwV3jKhcFK6J1PJC61OmHIve7_xNyFxFAyWXBUOIgPCuESb0PZUf_pwWjrxVwYtmsXc9Q/exec">
 <link rel="stylesheet" href="assets/css/base.css">
 <link rel="stylesheet" href="assets/css/layout.css">
 <link rel="stylesheet" href="assets/css/components.css">
@@ -1240,17 +1241,8 @@ canvas#dino-game {
   </div>
 
   <div style="background:var(--bg-primary);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:16px;">
-    <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;">
-      <div>
-        <div style="font-weight:700;margin-bottom:4px;">Legacy all-in-one page</div>
-        <div style="color:var(--text-secondary);font-size:13px;line-height:1.6;">This original tabbed interface is still live. For SEO-first navigation and mobile-focused standalone pages, use the new page structure below.</div>
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <a class="hub-btn" href="pages/index.html">Open landing page</a>
-        <a class="hub-btn" href="pages/json-diff.html">JSON Diff page</a>
-        <a class="hub-btn" href="pages/office-dino.html">Office Dino page</a>
-      </div>
-    </div>
+    <div style="font-weight:700;margin-bottom:4px;">หน้าใช้งานหลักแบบเดิม</div>
+    <div style="color:var(--text-secondary);font-size:13px;line-height:1.6;">หน้านี้กลับมาเป็นศูนย์กลางสำหรับทุกเครื่องมือและมินิเกมอีกครั้ง ส่วนไฟล์หน้าแยกที่เคยทำไว้ยังเก็บอยู่ในโปรเจ็กต์ก่อน แต่ยังไม่ใช้งานใน flow หลักตอนนี้</div>
   </div>
 
   <!-- Page Tabs -->
@@ -1270,9 +1262,9 @@ canvas#dino-game {
     <button class="page-tab" id="ptab-lucky" onclick="switchPage('lucky')" role="tab" aria-selected="false" aria-controls="page-lucky">
       <span class="tab-icon">🎰</span> เสี่ยงดวงสุ่มหวย
     </button>
-    <a class="page-tab" id="ptab-minigame" href="pages/office-dino.html" role="tab" aria-selected="false" aria-controls="page-minigame">
+    <button class="page-tab" id="ptab-minigame" onclick="switchPage('minigame')" role="tab" aria-selected="false" aria-controls="page-minigame">
       <span class="tab-icon">🎮</span> มินิเกม
-    </a>
+    </button>
   </div>
 
   <!-- ===================== PAGE: JSON DIFF ===================== -->
@@ -1524,10 +1516,24 @@ canvas#dino-game {
           </form>
           <div class="dino-current-player">ผู้เล่นปัจจุบัน: <strong id="dino-current-player-name">ยังไม่ได้เริ่ม</strong></div>
           <section class="dino-leaderboard" aria-labelledby="dino-leaderboard-title">
-            <h3 id="dino-leaderboard-title">Top 100 Office Dino</h3>
+            <h3 id="dino-leaderboard-title">Top 20 Office Dino</h3>
             <div id="dino-leaderboard-empty">ยังไม่มีคะแนน บุกเบิกตำนานคนแรกได้เลย</div>
             <ol id="dino-leaderboard-list"></ol>
-            <button class="fmt-btn" type="button" onclick="clearDinoLeaderboard()" style="margin-top:10px;">ล้างอันดับเครื่องนี้</button>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+              <button class="fmt-btn" type="button" onclick="copyDinoLeaderboard()">คัดลอกรหัสแชร์อันดับ</button>
+              <button class="fmt-btn" type="button" onclick="importDinoLeaderboardFromPrompt()">นำเข้ารหัสแชร์</button>
+              <button class="fmt-btn" type="button" onclick="clearDinoLeaderboard()">ล้างอันดับเครื่องนี้</button>
+            </div>
+            <div style="margin-top:10px;color:var(--text-tertiary);font-size:12px;line-height:1.6;">แชร์อันดับได้ด้วยการคัดลอกรหัส แล้วให้อีกฝ่ายนำเข้าผ่านปุ่มด้านบน ระบบจะรวมและเก็บไว้เฉพาะ Top 20 สูงสุด</div>
+          </section>
+          <section class="dino-leaderboard" aria-labelledby="dino-global-leaderboard-title" style="margin-top:16px;">
+            <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;">
+              <h3 id="dino-global-leaderboard-title">Global Top 20</h3>
+              <button class="fmt-btn" type="button" onclick="syncDinoGlobalLeaderboard(true)">ซิงก์อันดับรวม</button>
+            </div>
+            <div id="dino-global-leaderboard-status" style="margin-top:8px;color:var(--text-secondary);font-size:13px;line-height:1.6;">ตั้งค่า Google Apps Script URL ก่อน แล้วอันดับรวมจะแสดงตรงนี้</div>
+            <div id="dino-global-leaderboard-empty" style="margin-top:8px;color:var(--text-tertiary);font-size:12px;line-height:1.6;">ยังไม่มีคะแนนรวมจากหลายเครื่อง</div>
+            <ol id="dino-global-leaderboard-list"></ol>
           </section>
         </div>
 
@@ -1618,6 +1624,7 @@ canvas#dino-game {
 
 <script src="assets/js/shared/ui.js"></script>
 <script src="assets/js/shared/storage.js"></script>
+<script src="assets/js/shared/global-leaderboard.js"></script>
 <script>
 // ============================================================
 //  PAGE SWITCHING
@@ -2640,19 +2647,99 @@ function renderDinoLeaderboard() {
   }).join("");
 }
 
+function renderDinoGlobalLeaderboard(rows, message) {
+  const list = document.getElementById("dino-global-leaderboard-list");
+  const empty = document.getElementById("dino-global-leaderboard-empty");
+  const status = document.getElementById("dino-global-leaderboard-status");
+  if (!list || !empty || !status) return;
+
+  const normalizedRows = normalizeDinoGlobalLeaderboardRows(rows || []);
+  status.textContent = message || (getDinoGlobalLeaderboardEndpoint() ? "พร้อมแข่งบนอันดับรวมแล้ว" : "ตั้งค่า Google Apps Script URL ก่อน แล้วอันดับรวมจะแสดงตรงนี้");
+  empty.style.display = normalizedRows.length ? "none" : "block";
+  list.innerHTML = normalizedRows.map(function(row, index) {
+    return '<li class="dino-leaderboard-item">'
+      + '<span class="dino-leaderboard-rank">#' + (index + 1) + '</span>'
+      + '<span class="dino-leaderboard-name">' + esc(row.name) + '</span>'
+      + '<span class="dino-leaderboard-score">' + row.score + '</span>'
+      + '</li>';
+  }).join("");
+}
+
 function clearDinoLeaderboard() {
   localStorage.removeItem(dinoLeaderboardStorageKey);
   renderDinoLeaderboard();
 }
 
+function copyDinoLeaderboard() {
+  const raw = exportLeaderboard();
+  if (!raw || raw === "[]") {
+    showToast("ยังไม่มีอันดับ", "เล่นให้มีคะแนนก่อนแล้วค่อยแชร์", "err");
+    return;
+  }
+  if (typeof navigator !== "undefined" && navigator.clipboard && navigator.clipboard.writeText) {
+    copyToClipboard(raw);
+    return;
+  }
+  if (typeof window !== "undefined" && typeof window.prompt === "function") {
+    window.prompt("คัดลอกรหัสแชร์อันดับนี้", raw);
+    return;
+  }
+  showToast("คัดลอกไม่สำเร็จ", "เบราว์เซอร์นี้ไม่รองรับ clipboard", "err");
+}
+
+function importDinoLeaderboardFromPrompt() {
+  if (typeof window === "undefined" || typeof window.prompt !== "function") {
+    showToast("นำเข้าไม่สำเร็จ", "เบราว์เซอร์นี้ไม่รองรับการวางรหัสแชร์", "err");
+    return;
+  }
+  const raw = window.prompt("วางรหัสแชร์อันดับ Office Dino");
+  if (!raw) return;
+  try {
+    importLeaderboard(raw);
+    renderDinoLeaderboard();
+    showToast("นำเข้าอันดับแล้ว", "รวมคะแนนและจัดเก็บ Top 20 ให้เรียบร้อย", "ok");
+  } catch (err) {
+    showToast("รหัสแชร์ไม่ถูกต้อง", "โปรดตรวจสอบข้อมูลแล้วลองใหม่", "err");
+  }
+}
+
+function syncDinoGlobalLeaderboard(showToastOnError) {
+  renderDinoGlobalLeaderboard([], "กำลังโหลดอันดับรวม...");
+  return loadDinoGlobalLeaderboard().then(function(payload) {
+    renderDinoGlobalLeaderboard(payload.rows, payload.message || "อัปเดตอันดับรวมล่าสุดแล้ว");
+    return payload;
+  }).catch(function(err) {
+    renderDinoGlobalLeaderboard([], "โหลดอันดับรวมไม่สำเร็จ");
+    if (showToastOnError) {
+      showToast("โหลดอันดับรวมไม่สำเร็จ", String((err && err.message) || err || "unknown error"), "err");
+    }
+    throw err;
+  });
+}
+
+function submitDinoGlobalScore(entry) {
+  if (!getDinoGlobalLeaderboardEndpoint()) return Promise.resolve();
+  renderDinoGlobalLeaderboard([], "กำลังส่งคะแนนขึ้นอันดับรวม...");
+  return submitDinoGlobalLeaderboardEntry(entry).then(function() {
+    return syncDinoGlobalLeaderboard(false);
+  }).then(function() {
+    showToast("ส่งคะแนนขึ้นอันดับรวมแล้ว", "รีเฟรชกระดานรวมให้เรียบร้อย", "ok");
+  }).catch(function(err) {
+    renderDinoGlobalLeaderboard([], "ส่งคะแนนขึ้นอันดับรวมไม่สำเร็จ");
+    showToast("ส่งคะแนนรวมไม่สำเร็จ", String((err && err.message) || err || "unknown error"), "err");
+  });
+}
+
 function onDinoGameOver() {
-  saveLeaderboardEntry({
+  const entry = {
     name: dinoCurrentPlayerName || getDefaultPlayerName(),
     score: dinoScore,
     level: getDinoLevel(),
     timestamp: Date.now()
-  });
+  };
+  saveLeaderboardEntry(entry);
   renderDinoLeaderboard();
+  submitDinoGlobalScore(entry);
 }
 
 let dinoState = "ready";
@@ -2831,16 +2918,15 @@ function setDinoDuck(isDucking) {
 }
 
 function spawnDinoObstacle() {
-  // TEST MODE: Very high drop rate
-  let powerupChance = 0.40; 
-  const isPowerup = Math.random() < powerupChance;
+  let powerupChance = 0.35 - (dinoScore / 6000);
+  if (powerupChance < 0.02) powerupChance = 0.02;
+  const isPowerup = Math.random() < powerupChance && dinoScore > 50;
   let isSpecial = false;
   let type;
   if (isPowerup) {
     type = normalizeDinoPickupType(dinoPowerupTypes[Math.floor(Math.random() * dinoPowerupTypes.length)], "powerup");
   } else {
-    // TEST MODE: 30% chance for special dash item
-    if (Math.random() < 0.30) {
+    if (dinoScore > 400 && Math.random() < 0.08) {
       isSpecial = true;
       type = normalizeDinoPickupType(dinoSpecialTypes[Math.floor(Math.random() * dinoSpecialTypes.length)], "special");
     } else {
@@ -3075,6 +3161,94 @@ function drawDinoObs(obs) {
   dinoCtx.restore();
 }
 
+function drawDinoPickupAura(obs, palette) {
+  const cx = obs.x + obs.w / 2;
+  const cy = obs.y + obs.h / 2;
+  const pulse = 1 + Math.sin(dinoFrame / 6 + cx / 40) * 0.08;
+  const radius = Math.max(obs.w, obs.h) * 0.52 * pulse;
+  dinoCtx.save();
+  dinoCtx.beginPath();
+  dinoCtx.globalAlpha = 0.22;
+  dinoCtx.fillStyle = palette.glow;
+  dinoCtx.arc(cx, cy, radius + 10, 0, Math.PI * 2);
+  dinoCtx.fill();
+  dinoCtx.globalAlpha = 0.95;
+  dinoCtx.lineWidth = 3;
+  dinoCtx.strokeStyle = palette.ring;
+  dinoCtx.beginPath();
+  dinoCtx.arc(cx, cy, radius, 0, Math.PI * 2);
+  dinoCtx.stroke();
+  if (obs.isSpecial) {
+    dinoCtx.lineWidth = 2;
+    dinoCtx.strokeStyle = palette.accent;
+    dinoCtx.beginPath();
+    dinoCtx.arc(cx, cy, radius + 8, 0, Math.PI * 2);
+    dinoCtx.stroke();
+    for (let i = 0; i < 3; i++) {
+      const angle = dinoFrame / 10 + i * (Math.PI * 2 / 3);
+      const sparkX = cx + Math.cos(angle) * (radius + 12);
+      const sparkY = cy + Math.sin(angle) * (radius + 12);
+      dinoCtx.fillStyle = palette.accent;
+      dinoCtx.fillRect(sparkX - 2, sparkY - 2, 4, 4);
+    }
+  }
+  dinoCtx.restore();
+}
+
+function drawDinoPickupBadge(obs, text, background, color) {
+  const width = text === "BOOST" ? 54 : 46;
+  const x = obs.x + obs.w / 2 - width / 2;
+  const y = obs.y - 42;
+  dinoCtx.save();
+  dinoCtx.fillStyle = background;
+  dinoCtx.globalAlpha = 0.95;
+  dinoCtx.fillRect(x, y, width, 18);
+  dinoCtx.globalAlpha = 1;
+  dinoCtx.fillStyle = color;
+  dinoCtx.font = "bold 11px Tahoma";
+  dinoCtx.textAlign = "center";
+  dinoCtx.textBaseline = "middle";
+  dinoCtx.fillText(text, x + width / 2, y + 9);
+  dinoCtx.restore();
+}
+
+function drawDinoObs(obs) {
+  const palette = obs.isSpecial
+    ? { glow: "rgba(155, 89, 182, 0.55)", ring: "#f7d774", accent: "#ffffff", label: "#8e44ad", badgeBg: "#2c0f3a", badgeText: "#fdf1a4" }
+    : obs.isPowerup
+      ? { glow: "rgba(46, 204, 113, 0.45)", ring: "#6ff7c8", accent: "#d9fff1", label: "#138d75", badgeBg: "#0f4734", badgeText: "#cbffe8" }
+      : null;
+  dinoCtx.save();
+  dinoCtx.font = "40px Tahoma";
+  dinoCtx.textAlign = "center";
+  dinoCtx.textBaseline = "middle";
+  if (palette) {
+    drawDinoPickupAura(obs, palette);
+  }
+  dinoCtx.shadowColor = palette ? palette.glow : "rgba(0,0,0,0.3)";
+  dinoCtx.shadowBlur = palette ? 18 : 4;
+  dinoCtx.shadowOffsetY = 2;
+  dinoCtx.fillText(obs.emoji, obs.x + obs.w / 2, obs.y + obs.h / 2);
+  dinoCtx.shadowColor = "transparent";
+  dinoCtx.font = "bold 14px Tahoma";
+  if (obs.isSpecial) {
+    drawDinoPickupBadge(obs, "BOOST", palette.badgeBg, palette.badgeText);
+    dinoCtx.fillStyle = palette.label;
+  } else if (obs.isPowerup) {
+    drawDinoPickupBadge(obs, "BUFF", palette.badgeBg, palette.badgeText);
+    dinoCtx.fillStyle = palette.label;
+  } else {
+    dinoCtx.fillStyle = "#c0392b";
+  }
+  dinoCtx.fillText(obs.label, obs.x + obs.w / 2, obs.y - 12);
+  if (obs.floating) {
+    dinoCtx.font = "bold 13px Tahoma";
+    dinoCtx.fillStyle = "#e67e22";
+    dinoCtx.fillText("à¸«à¸¡à¸­à¸š!", obs.x + obs.w / 2, obs.y + obs.h + 16);
+  }
+  dinoCtx.restore();
+}
+
 function drawDinoParticles() {
   dinoCtx.fillStyle = "#555";
   for (const p of dinoParticles) {
@@ -3214,6 +3388,10 @@ document.addEventListener("keyup", function(e) {
 dinoCanvas.addEventListener("click", dinoJump);
 
 renderDinoLeaderboard();
+renderDinoGlobalLeaderboard([], getDinoGlobalLeaderboardEndpoint() ? "กดซิงก์เพื่อโหลดอันดับรวมล่าสุด" : "ตั้งค่า Google Apps Script URL ก่อน แล้วอันดับรวมจะแสดงตรงนี้");
+if (getDinoGlobalLeaderboardEndpoint()) {
+  syncDinoGlobalLeaderboard(false);
+}
 
 </script>
 </body>
