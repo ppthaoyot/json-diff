@@ -24,4 +24,12 @@ test("legacy index styles Office Dino like a stage plus side panel", () => {
 
   assert.match(html, /#mg-hub-dino\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*2fr\)\s*minmax\(300px,\s*1fr\)/i);
   assert.match(html, /\.dino-meta-panel\s*\{[\s\S]*grid-column:\s*2/i);
+  assert.match(html, /\.dino-meta-panel\s*\{[\s\S]*grid-row:\s*2;/i);
+  assert.doesNotMatch(html, /\.dino-meta-panel\s*\{[\s\S]*grid-row:\s*2\s*\/\s*span\s*2/i);
+});
+
+test("legacy minigame hub restores Office Dino as a grid after switching back from box game", () => {
+  const html = fs.readFileSync(indexPath, "utf8");
+
+  assert.match(html, /document\.getElementById\('mg-hub-dino'\)\.style\.display\s*=\s*\(game === 'dino'\)\s*\?\s*'grid'\s*:\s*'none'/i);
 });
