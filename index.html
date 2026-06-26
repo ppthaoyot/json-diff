@@ -2658,17 +2658,16 @@ function setDinoDuck(isDucking) {
 }
 
 function spawnDinoObstacle() {
-  let powerupChance = 0.35 - (dinoScore / 6000); // starts at 35%, decreases as score goes up
-  if (powerupChance < 0.02) powerupChance = 0.02; // minimum 2% chance
-
-  const isPowerup = Math.random() < powerupChance && dinoScore > 50;
+  // TEST MODE: Very high drop rate
+  let powerupChance = 0.40; 
+  const isPowerup = Math.random() < powerupChance;
   let isSpecial = false;
   let type;
   if (isPowerup) {
     type = dinoPowerupTypes[Math.floor(Math.random() * dinoPowerupTypes.length)];
   } else {
-    // 3% chance for special dash item if score > 200
-    if (Math.random() < 0.03 && dinoScore > 200) {
+    // TEST MODE: 30% chance for special dash item
+    if (Math.random() < 0.30) {
       isSpecial = true;
       type = dinoSpecialTypes[Math.floor(Math.random() * dinoSpecialTypes.length)];
     } else {
