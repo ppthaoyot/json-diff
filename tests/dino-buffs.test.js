@@ -419,7 +419,7 @@ test("ordinary obstacle hitboxes are forgiving near the visual edge", () => {
   assert.equal(state.dinoState, "running");
 });
 
-test("WFH mode pickup slows obstacle movement for five seconds", () => {
+test("WFH mode pickup protects the player without changing obstacle timing", () => {
   const { api } = loadDinoHarness();
   api.resetDinoGame();
   api.setState({
@@ -454,17 +454,41 @@ test("WFH mode pickup slows obstacle movement for five seconds", () => {
   api.updateDino();
   state = api.getState();
 
-  assert.ok(state.dinoObstacles[0].x > 496, "slow mode should move obstacles less than the normal 4.3px base speed");
+  assert.ok(state.dinoObstacles[0].x < 496, "WFH should keep obstacle timing close to normal speed");
+  assert.ok(state.dinoObstacles[0].x > 495, "WFH should not over-speed obstacles");
   assert.equal(state.dinoSlowTimer, 299);
+
+  api.setState({
+    dinoState: "running",
+    dinoScore: 100,
+    dinoHP: 2,
+    dinoInvincible: 0,
+    dinoSlowTimer: 120,
+    playerBox: { x: 80, y: 177, w: 46, h: 58, grounded: true, ducking: false },
+    dinoObstacles: [
+      { x: 80, y: 177, w: 48, h: 52, emoji: "\uD83D\uDCC4", label: "\u0e07\u0e32\u0e19", isPowerup: false, isSpecial: false }
+    ]
+  });
+
+  api.checkDinoCollision();
+  state = api.getState();
+
+  assert.equal(state.dinoHP, 2);
+  assert.equal(state.dinoObstacles.length, 0);
+  assert.equal(state.dinoScore, 120);
+  assert.ok(state.floatingTexts.some((entry) => String(entry.text).includes("WFH")));
 });
 
-test("WFH mode renders a center overlay and adds a short clear lane after ending", () => {
+test("WFH mode renders a top overlay and adds a short clear lane after ending", () => {
   const { api, drawCalls } = loadDinoHarness();
   api.resetDinoGame();
   api.setState({ dinoState: "running", dinoSlowTimer: 60, dinoNextSpawn: 999 });
 
   api.renderDino();
-  assert.ok(drawCalls.some((entry) => String(entry.text).includes("WFH MODE")));
+  const wfhModeText = drawCalls.find((entry) => String(entry.text).includes("WFH MODE"));
+  assert.ok(wfhModeText);
+  assert.ok(wfhModeText.y < 120);
+  assert.ok(drawCalls.some((entry) => String(entry.text).includes("\u0e01\u0e31\u0e19\u0e07\u0e32\u0e19\u0e44\u0e14\u0e49\u0e2d\u0e35\u0e01")));
 
   api.setState({ dinoState: "running", dinoSlowTimer: 1, dinoWfhCooldownTimer: 0, dinoNextSpawn: 0, dinoObstacles: [] });
   api.updateDino();

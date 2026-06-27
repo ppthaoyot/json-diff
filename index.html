@@ -4016,6 +4016,11 @@ function checkDinoCollision() {
           }
           dinoObstacles.splice(i, 1);
           i--;
+        } else if (dinoSlowTimer > 0) {
+          dinoScore += 20;
+          floatingTexts.push({ x: dinoPlayer.x, y: dinoPlayer.y - 20, text: "WFH บังงานไว้! +20", color: "#16a085", life: 40, maxLife: 40 });
+          dinoObstacles.splice(i, 1);
+          i--;
         } else if (dinoShieldCharges > 0) {
           dinoShieldCharges--;
           dinoInvincible = 30;
@@ -4076,7 +4081,7 @@ function updateDino() {
       dinoParticles.push({ x: dinoPlayer.x, y: dinoPlayer.y + dinoPlayer.h/2, vx: -3 - Math.random()*3, vy: (Math.random()-0.5)*2, life: 15 });
     }
   }
-  const obstacleSpeed = dinoSlowTimer > 0 ? dinoSpeed * 0.55 : dinoSpeed;
+  const obstacleSpeed = dinoSpeed;
   if (dinoSlowTimer > 0) {
     dinoSlowTimer--;
     if (dinoSlowTimer <= 0) {
@@ -4463,9 +4468,9 @@ function drawDinoWfhOverlay() {
   if (dinoState !== "running" || dinoSlowTimer <= 0) return;
   const seconds = (dinoSlowTimer / 60).toFixed(1);
   const boxW = 300;
-  const boxH = 74;
+  const boxH = 52;
   const x = dW / 2 - boxW / 2;
-  const y = dH / 2 - boxH / 2 + 4;
+  const y = 72;
 
   dinoCtx.save();
   dinoCtx.globalAlpha = 0.92;
@@ -4478,11 +4483,11 @@ function drawDinoWfhOverlay() {
   dinoCtx.textAlign = "center";
   dinoCtx.textBaseline = "middle";
   dinoCtx.fillStyle = "#ffffff";
-  dinoCtx.font = "bold 28px Tahoma";
-  dinoCtx.fillText("WFH MODE", dW / 2, y + 30);
+  dinoCtx.font = "bold 22px Tahoma";
+  dinoCtx.fillText("WFH MODE", dW / 2, y + 20);
   dinoCtx.font = "bold 14px Tahoma";
   dinoCtx.fillStyle = "rgba(255,255,255,0.86)";
-  dinoCtx.fillText("งานช้าลงอีก " + seconds + "s", dW / 2, y + 54);
+  dinoCtx.fillText("กันงานได้อีก " + seconds + "s", dW / 2, y + 39);
   dinoCtx.restore();
 }
 
