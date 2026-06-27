@@ -67,3 +67,14 @@ test("legacy Office Dino exposes a share score card action after game over", () 
   assert.match(html, /onclick="copyDinoScoreCard\(\)"/i);
   assert.match(html, /function buildDinoScoreCardText\([^)]*\)/i);
 });
+
+test("legacy Office Dino uses a center start button instead of keyboard auto-start", () => {
+  const html = fs.readFileSync(indexPath, "utf8");
+
+  assert.match(html, /id="dino-player-start-overlay"/i);
+  assert.match(html, /id="dino-center-start-btn"/i);
+  assert.match(html, /onclick="beginDinoRun\(\)"/i);
+  assert.doesNotMatch(html, /if\s*\(\s*dinoState\s*===\s*"ready"\s*\|\|\s*dinoState\s*===\s*"gameover"\s*\)\s*\{[\s\S]*?beginDinoRun\(\)/i);
+  assert.doesNotMatch(html, /dinoCanvas\.addEventListener\("click",\s*dinoJump\)/i);
+  assert.doesNotMatch(html, /กด Space[\s\S]{0,40}เริ่มเกม/i);
+});

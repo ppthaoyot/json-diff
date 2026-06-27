@@ -9,7 +9,7 @@ function loadLeaderboardHarness() {
   const uiScript = fs.readFileSync(path.join(__dirname, "..", "assets", "js", "shared", "ui.js"), "utf8");
   const storageScript = fs.readFileSync(path.join(__dirname, "..", "assets", "js", "shared", "storage.js"), "utf8");
   const globalLeaderboardScript = fs.readFileSync(path.join(__dirname, "..", "assets", "js", "shared", "global-leaderboard.js"), "utf8");
-  const scriptMatch = html.match(/const dinoCanvas[\s\S]*?dinoCanvas\.addEventListener\("click", dinoJump\);/);
+  const scriptMatch = html.match(/const dinoCanvas[\s\S]*?dinoCanvas\.addEventListener\("click", function\(\) \{[\s\S]*?\}\);/);
   if (!scriptMatch) {
     throw new Error("Office Dino script not found");
   }
@@ -44,6 +44,7 @@ function loadLeaderboardHarness() {
     "dino-char": { value: "👨‍💻" },
     "dino-speed": { value: "normal" },
     "dino-player-name": { value: "" },
+    "dino-player-start-overlay": { style: { display: "flex" } },
     "dino-current-player-name": { textContent: "" },
     "dino-leaderboard-list": { innerHTML: "" },
     "dino-leaderboard-empty": { style: { display: "block" } },

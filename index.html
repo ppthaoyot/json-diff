@@ -1198,6 +1198,36 @@ textarea.invalid { border-color: #E24B4A; }
   grid-column: 1 / -1;
   min-width: 0;
 }
+.dino-canvas-wrap {
+  position: relative;
+}
+.dino-start-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.dino-start-card {
+  pointer-events: auto;
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  padding: 18px 22px;
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--border-md);
+  box-shadow: 0 8px 26px rgba(0,0,0,0.16);
+  text-align: center;
+}
+.dino-start-card strong {
+  font-size: 18px;
+}
+.dino-start-card span {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
 .dino-side-panel {
   min-width: 0;
 }
@@ -1647,10 +1677,10 @@ canvas#dino-game {
             <div>
               ตัวละคร: 
               <select class="dino-char-select" id="dino-char" onchange="changeDinoChar()">
-                <option value="🤵">🤵 ผู้บริหาร</option>
-                <option value="👨‍💻" selected>👨‍💻 โปรแกรมเมอร์หนุ่ม</option>
-                <option value="👩‍💼">👩‍💼 สาวออฟฟิศ</option>
-                <option value="🧑‍💻">🧑‍💻 พนักงานทั่วไป</option>
+                <option value="executive">🤵 ผู้บริหาร</option>
+                <option value="programmer" selected>👨‍💻 โปรแกรมเมอร์หนุ่ม</option>
+                <option value="office">👩‍💼 สาวออฟฟิศ</option>
+                <option value="general">🧑‍💻 พนักงานทั่วไป</option>
               </select>
             </div>
             <div style="margin-top:6px;">
@@ -1677,6 +1707,13 @@ canvas#dino-game {
 
         <div class="dino-canvas-wrap">
           <canvas id="dino-game" width="900" height="300"></canvas>
+          <div class="dino-start-overlay" id="dino-player-start-overlay">
+            <div class="dino-start-card">
+              <strong>พร้อมอู้แบบมีสไตล์หรือยัง?</strong>
+              <span>กดปุ่มเริ่มเกมเพื่อเข้าออฟฟิศ</span>
+              <button class="hub-btn" type="button" id="dino-center-start-btn" onclick="beginDinoRun()">เริ่มเกม</button>
+            </div>
+          </div>
         </div>
 
         <div class="dino-controls">
@@ -2939,12 +2976,31 @@ const dinoDashDuration = 240;
 const dinoBuffLabel = "อมตะทะลวงฟัน";
 
 const dinoConfig = {
-  playerEmoji: "👨‍💻",
+  playerSkin: "programmer",
   gravity: 0.75,
   jumpPower: -14,
   baseSpeed: 4.3,
   maxSpeed: 10.5
 };
+
+const dinoSkinPalettes = {
+  executive: { skin: "#f4c27a", hair: "#111827", shirt: "#111827", shirtDark: "#020617", pants: "#111827", shoe: "#020617", tie: "#dc2626", highlight: "#ffffff", label: "ผู้บริหาร" },
+  programmer: { skin: "#f4c27a", hair: "#263238", shirt: "#38bdf8", shirtDark: "#0ea5e9", pants: "#050505", shoe: "#111827", tie: "#e74c3c", highlight: "#f8fafc", label: "โปรแกรมเมอร์" },
+  office: { skin: "#f4c27a", hair: "#3f2a1d", shirt: "#f8fafc", shirtDark: "#38bdf8", pants: "#050505", shoe: "#111827", tie: "#0ea5e9", highlight: "#bae6fd", label: "สาวออฟฟิศ", skirt: true },
+  general: { skin: "#f4c27a", hair: "#263238", shirt: "#22c55e", shirtDark: "#15803d", pants: "#050505", shoe: "#111827", tie: "#f59e0b", highlight: "#dcfce7", label: "พนักงาน" }
+};
+
+function normalizeDinoSkin(value) {
+  if (dinoSkinPalettes[value]) return value;
+  if (value === "🤵") return "executive";
+  if (value === "👩‍💼") return "office";
+  if (value === "🧑‍💻") return "general";
+  return "programmer";
+}
+
+function getDinoSkinPalette() {
+  return dinoSkinPalettes[normalizeDinoSkin(dinoConfig.playerSkin)] || dinoSkinPalettes.programmer;
+}
 
 function resolveDinoPlayerName() {
   const input = document.getElementById("dino-player-name");
@@ -2959,6 +3015,12 @@ function resolveDinoPlayerName() {
 function beginDinoRun() {
   resolveDinoPlayerName();
   resetDinoGame();
+}
+
+function setDinoStartButtonVisible(isVisible) {
+  const overlay = document.getElementById("dino-player-start-overlay");
+  if (!overlay) return;
+  overlay.style.display = isVisible ? "flex" : "none";
 }
 
 function getDinoCurrentSpeedMode() {
@@ -3157,6 +3219,7 @@ function onDinoGameOver() {
   saveLeaderboardEntry(entry);
   renderDinoLeaderboard();
   renderDinoScoreCard(entry);
+  setDinoStartButtonVisible(true);
   submitDinoGlobalScore(entry);
 }
 
@@ -3181,6 +3244,7 @@ let dinoCurrentPlayerName = "";
 let dinoLastDifficultyTier = "normal";
 let dinoShieldCharges = 0;
 let dinoSlowTimer = 0;
+let dinoWfhCooldownTimer = 0;
 let dinoBossEvent = null;
 let dinoTriggeredBossScores = new Set();
 
@@ -3359,16 +3423,25 @@ const dinoExcuseSigns = [
 ];
 
 function changeDinoChar() {
-  dinoConfig.playerEmoji = document.getElementById("dino-char").value;
+  dinoConfig.playerSkin = normalizeDinoSkin(document.getElementById("dino-char").value);
 }
 
 function changeDinoSpeed() {
+  const wasPlaying = dinoState === "running" || dinoState === "paused";
   const mode = document.getElementById("dino-speed").value;
   if (mode === "baby") { dinoConfig.baseSpeed = 2.4; dinoConfig.maxSpeed = 5.2; }
   else if (mode === "easy") { dinoConfig.baseSpeed = 3.6; dinoConfig.maxSpeed = 8.2; }
   else if (mode === "normal") { dinoConfig.baseSpeed = 4.3; dinoConfig.maxSpeed = 10.5; }
   else if (mode === "hard") { dinoConfig.baseSpeed = 5.8; dinoConfig.maxSpeed = 14.5; }
-  resetDinoGame();
+  if (wasPlaying) {
+    resetDinoGame();
+  } else {
+    dinoState = "ready";
+    dinoSpeed = dinoConfig.baseSpeed;
+    dinoNextSpawn = 80;
+    dinoObstacles = [];
+    setDinoStartButtonVisible(true);
+  }
   if (isDinoGlobalLeaderboardReady() && getDinoGlobalLeaderboardEndpoint()) {
     syncDinoGlobalLeaderboard(false);
   } else {
@@ -3392,6 +3465,7 @@ function resetDinoGame() {
   dinoSlowTimer = 0;
   dinoBossEvent = null;
   dinoTriggeredBossScores = new Set();
+  dinoWfhCooldownTimer = 0;
   floatingTexts = [];
   dinoMilestoneBanner = null;
   dinoLastDifficultyTier = "normal";
@@ -3404,6 +3478,7 @@ function resetDinoGame() {
   
   document.getElementById("dino-pause-btn").textContent = "⏸️ พักเบรก (Pause)";
   renderDinoScoreCard(null);
+  setDinoStartButtonVisible(false);
 }
 
 function toggleDinoPause() {
@@ -3517,7 +3592,6 @@ function performDinoJump() {
 
 function dinoJump() {
   if (dinoState === "ready" || dinoState === "gameover") {
-    beginDinoRun();
     return;
   }
   if (dinoState !== "running") return;
@@ -3685,6 +3759,15 @@ function updateDino() {
     }
   }
   const obstacleSpeed = dinoSlowTimer > 0 ? dinoSpeed * 0.55 : dinoSpeed;
+  if (dinoSlowTimer > 0) {
+    dinoSlowTimer--;
+    if (dinoSlowTimer <= 0) {
+      dinoSlowTimer = 0;
+      dinoWfhCooldownTimer = 90;
+      dinoNextSpawn = Math.max(dinoNextSpawn, 45);
+      floatingTexts.push({ x: dinoPlayer.x, y: dinoPlayer.y - 20, text: "กลับจาก WFH แบบนุ่มๆ", color: "#16a085", life: 45, maxLife: 45 });
+    }
+  }
 
   dinoScoreText.textContent = dinoScore;
   dinoLevelText.textContent = getDinoLevel();
@@ -3703,8 +3786,13 @@ function updateDino() {
     dinoJumpBufferTimer--;
   }
 
-  dinoNextSpawn--;
-  if (dinoNextSpawn <= 0) spawnDinoObstacle();
+  if (dinoWfhCooldownTimer > 0) {
+    dinoWfhCooldownTimer--;
+    dinoNextSpawn = Math.max(dinoNextSpawn, 45);
+  } else {
+    dinoNextSpawn--;
+    if (dinoNextSpawn <= 0) spawnDinoObstacle();
+  }
 
   for (const obs of dinoObstacles) obs.x -= obstacleSpeed;
   dinoObstacles = dinoObstacles.filter(obs => obs.x + obs.w > -40);
@@ -3715,7 +3803,6 @@ function updateDino() {
   dinoParticles = dinoParticles.filter(p => p.life > 0);
 
   if (dinoInvincible > 0) dinoInvincible--;
-  if (dinoSlowTimer > 0) dinoSlowTimer--;
   
   for (const ft of floatingTexts) {
     ft.y -= 1;
@@ -3765,15 +3852,16 @@ function drawDinoPixelRect(x, y, w, h, color) {
   dinoCtx.fillRect(Math.round(x), Math.round(y), w, h);
 }
 
-function drawDinoPixelActor(x, y, pose) {
-  const skin = "#f4c27a";
-  const hair = "#263238";
-  const shirt = "#38bdf8";
-  const shirtDark = "#0ea5e9";
-  const pants = "#050505";
-  const shoe = "#111827";
-  const tie = "#e74c3c";
-  const highlight = "#f8fafc";
+function drawDinoPixelActor(x, y, pose, palette) {
+  const skin = palette.skin;
+  const hair = palette.hair;
+  const shirt = palette.shirt;
+  const shirtDark = palette.shirtDark;
+  const pants = palette.pants;
+  const shoe = palette.shoe;
+  const tie = palette.tie;
+  const highlight = palette.highlight;
+  const skirt = Boolean(palette.skirt);
 
   if (pose === "duck") {
     drawDinoPixelRect(x + 8, y + 18, 38, 16, shirt);
@@ -3784,8 +3872,12 @@ function drawDinoPixelActor(x, y, pose) {
     drawDinoPixelRect(x + 40, y + 2, 22, 7, hair);
     drawDinoPixelRect(x + 55, y + 11, 4, 4, hair);
     drawDinoPixelRect(x + 22, y + 21, 5, 13, tie);
-    drawDinoPixelRect(x + 4, y + 28, 28, 8, pants);
-    drawDinoPixelRect(x + 29, y + 30, 26, 8, pants);
+    if (skirt) {
+      drawDinoPixelRect(x + 4, y + 28, 50, 10, pants);
+    } else {
+      drawDinoPixelRect(x + 4, y + 28, 28, 8, pants);
+      drawDinoPixelRect(x + 29, y + 30, 26, 8, pants);
+    }
     drawDinoPixelRect(x, y + 34, 16, 5, shoe);
     drawDinoPixelRect(x + 48, y + 34, 16, 5, shoe);
     drawDinoPixelRect(x + 7, y + 14, 10, 6, skin);
@@ -3806,10 +3898,25 @@ function drawDinoPixelActor(x, y, pose) {
   if (jumping) {
     drawDinoPixelRect(x + 5, y + 22, 9, 21, skin);
     drawDinoPixelRect(x + 35, y + 19, 9, 22, skin);
-    drawDinoPixelRect(x + 14, y + 42, 10, 13, pants);
-    drawDinoPixelRect(x + 30, y + 38, 10, 15, pants);
+    if (skirt) {
+      drawDinoPixelRect(x + 11, y + 41, 31, 10, pants);
+      drawDinoPixelRect(x + 14, y + 50, 8, 7, pants);
+      drawDinoPixelRect(x + 31, y + 48, 8, 7, pants);
+    } else {
+      drawDinoPixelRect(x + 14, y + 42, 10, 13, pants);
+      drawDinoPixelRect(x + 30, y + 38, 10, 15, pants);
+    }
     drawDinoPixelRect(x + 8, y + 51, 15, 5, shoe);
     drawDinoPixelRect(x + 34, y + 50, 15, 5, shoe);
+    return;
+  }
+
+  if (skirt) {
+    drawDinoPixelRect(x + 10, y + 42, 32, 12, pants);
+    drawDinoPixelRect(x + 13, y + 53, 8, 6, pants);
+    drawDinoPixelRect(x + 31, y + 53, 8, 6, pants);
+    drawDinoPixelRect(x + 8, y + 58, 15, 5, shoe);
+    drawDinoPixelRect(x + 30, y + 58, 15, 5, shoe);
     return;
   }
 
@@ -3852,7 +3959,8 @@ function drawDinoPlayer() {
     dinoCtx.shadowBlur = 0;
   }
   
-  drawDinoPixelActor(actorX, actorY, pose);
+  const palette = getDinoSkinPalette();
+  drawDinoPixelActor(actorX, actorY, pose, palette);
   
   dinoCtx.shadowColor = "transparent";
   dinoCtx.shadowBlur = 0;
@@ -3860,7 +3968,7 @@ function drawDinoPlayer() {
   dinoCtx.textAlign = "center";
   dinoCtx.textBaseline = "middle";
   dinoCtx.fillStyle = "#2c3e50";
-  dinoCtx.fillText("หนีงาน", dinoPlayer.x + dinoPlayer.w / 2, dinoPlayer.y - 12);
+  dinoCtx.fillText(palette.label, dinoPlayer.x + dinoPlayer.w / 2, dinoPlayer.y - 12);
   dinoCtx.restore();
 }
 
@@ -4033,6 +4141,33 @@ function drawDinoBuffStatus() {
   dinoCtx.restore();
 }
 
+function drawDinoWfhOverlay() {
+  if (dinoState !== "running" || dinoSlowTimer <= 0) return;
+  const seconds = (dinoSlowTimer / 60).toFixed(1);
+  const boxW = 300;
+  const boxH = 74;
+  const x = dW / 2 - boxW / 2;
+  const y = dH / 2 - boxH / 2 + 4;
+
+  dinoCtx.save();
+  dinoCtx.globalAlpha = 0.92;
+  dinoCtx.fillStyle = "rgba(10, 90, 82, 0.86)";
+  dinoCtx.fillRect(x, y, boxW, boxH);
+  dinoCtx.globalAlpha = 1;
+  dinoCtx.strokeStyle = "#6ff7c8";
+  dinoCtx.lineWidth = 3;
+  dinoCtx.strokeRect(x + 4, y + 4, boxW - 8, boxH - 8);
+  dinoCtx.textAlign = "center";
+  dinoCtx.textBaseline = "middle";
+  dinoCtx.fillStyle = "#ffffff";
+  dinoCtx.font = "bold 28px Tahoma";
+  dinoCtx.fillText("WFH MODE", dW / 2, y + 30);
+  dinoCtx.font = "bold 14px Tahoma";
+  dinoCtx.fillStyle = "rgba(255,255,255,0.86)";
+  dinoCtx.fillText("งานช้าลงอีก " + seconds + "s", dW / 2, y + 54);
+  dinoCtx.restore();
+}
+
 function drawDinoMilestoneBanner() {
   if (!dinoMilestoneBanner) return;
   const progress = dinoMilestoneBanner.life / dinoMilestoneBanner.maxLife;
@@ -4119,8 +4254,8 @@ function drawDinoScreens() {
     
     dinoCtx.font = "bold 18px Tahoma";
     dinoCtx.fillStyle = "#e67e22";
-    dinoCtx.fillText("กด Space หรือ ↑ เพื่อเริ่มเกม", dW / 2, 180);
-    dinoCtx.fillText("เจอสิ่งกีดขวางลอย ให้กด ↓ เพื่อหมอบ", dW / 2, 210);
+    dinoCtx.fillText("กดปุ่มเริ่มเกมกลางจอเพื่อเข้าออฟฟิศ", dW / 2, 180);
+    dinoCtx.fillText("ระหว่างเล่น: Space/↑ กระโดด, ↓ หมอบ", dW / 2, 210);
   } else if (dinoState === "gameover") {
     dinoCtx.fillStyle = "rgba(255, 255, 255, 0.9)";
     dinoCtx.fillRect(0, 0, dW, dH);
@@ -4143,7 +4278,7 @@ function drawDinoScreens() {
     
     dinoCtx.fillStyle = "#27ae60";
     dinoCtx.font = "bold 20px Tahoma";
-    dinoCtx.fillText("กด R หรือ Space เพื่อเริ่มใหม่", dW / 2, 240);
+    dinoCtx.fillText("กดปุ่มเริ่มเกมกลางจอเพื่อเล่นใหม่", dW / 2, 240);
   } else if (dinoState === "paused") {
     dinoCtx.fillStyle = "rgba(0, 0, 0, 0.4)";
     dinoCtx.fillRect(0, 0, dW, dH);
@@ -4170,6 +4305,7 @@ function renderDino() {
   drawDinoPlayer();
   drawDinoHud();
   drawDinoBuffStatus();
+  drawDinoWfhOverlay();
   drawDinoMilestoneBanner();
   drawDinoScreens();
 }
@@ -4191,7 +4327,7 @@ document.addEventListener("keydown", function(e) {
   if (document.getElementById('mg-hub-dino').style.display === 'none' || !document.getElementById('page-minigame').classList.contains('active')) return;
   if (e.code === "Space" || e.code === "ArrowUp") { e.preventDefault(); dinoJump(); }
   if (e.code === "ArrowDown") { e.preventDefault(); setDinoDuck(true); }
-  if (e.code === "KeyR") { resetDinoGame(); }
+  if (e.code === "KeyR" && (dinoState === "running" || dinoState === "paused")) { resetDinoGame(); }
   if (e.code === "KeyP") { toggleDinoPause(); }
 });
 
@@ -4200,7 +4336,9 @@ document.addEventListener("keyup", function(e) {
   if (e.code === "ArrowDown") setDinoDuck(false);
 });
 
-dinoCanvas.addEventListener("click", dinoJump);
+dinoCanvas.addEventListener("click", function() {
+  if (dinoState === "running") dinoJump();
+});
 
 renderDinoLeaderboard();
 renderDinoGlobalLeaderboard([], isDinoGlobalLeaderboardReady() && getDinoGlobalLeaderboardEndpoint() ? "กำลังโหลดอันดับรวมล่าสุด..." : "อันดับรวมยังไม่พร้อมใช้งาน แต่คะแนนเครื่องนี้ยังบันทึกได้ตามปกติ");

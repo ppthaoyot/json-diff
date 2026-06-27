@@ -8,7 +8,7 @@ function loadDinoHarness() {
   const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
   const uiScript = fs.readFileSync(path.join(__dirname, "..", "assets", "js", "shared", "ui.js"), "utf8");
   const storageScript = fs.readFileSync(path.join(__dirname, "..", "assets", "js", "shared", "storage.js"), "utf8");
-  const scriptMatch = html.match(/const dinoCanvas[\s\S]*?dinoCanvas\.addEventListener\("click", dinoJump\);/);
+  const scriptMatch = html.match(/const dinoCanvas[\s\S]*?dinoCanvas\.addEventListener\("click", function\(\) \{[\s\S]*?\}\);/);
   if (!scriptMatch) {
     throw new Error("Office Dino script not found");
   }
@@ -65,6 +65,7 @@ function loadDinoHarness() {
     "dino-char": { value: "ðŸ‘¨â€ðŸ’»" },
     "dino-speed": { value: "normal" },
     "dino-player-name": { value: "" },
+    "dino-player-start-overlay": { style: { display: "flex" } },
     "dino-current-player-name": { textContent: "" },
     "dino-leaderboard-list": { innerHTML: "" },
     "dino-leaderboard-empty": { style: { display: "block" } },
@@ -118,6 +119,8 @@ function loadDinoHarness() {
         renderDino,
         updateDino,
         dinoJump,
+        beginDinoRun,
+        changeDinoChar,
         drawDinoObs,
         drawDinoBg,
         getDinoDifficultyTier,
@@ -134,6 +137,7 @@ function loadDinoHarness() {
             dinoJumpBufferTimer: typeof dinoJumpBufferTimer === "number" ? dinoJumpBufferTimer : 0,
             dinoShieldCharges: typeof dinoShieldCharges === "number" ? dinoShieldCharges : 0,
             dinoSlowTimer: typeof dinoSlowTimer === "number" ? dinoSlowTimer : 0,
+            dinoWfhCooldownTimer: typeof dinoWfhCooldownTimer === "number" ? dinoWfhCooldownTimer : 0,
             dinoBossEvent: typeof dinoBossEvent === "object" && dinoBossEvent ? Object.assign({}, dinoBossEvent) : null,
             dinoTriggeredBossScores: typeof dinoTriggeredBossScores !== "undefined" ? Array.from(dinoTriggeredBossScores) : [],
             dinoPlayer: Object.assign({}, dinoPlayer),
@@ -152,6 +156,7 @@ function loadDinoHarness() {
           if (typeof next.dinoJumpBufferTimer === "number") dinoJumpBufferTimer = next.dinoJumpBufferTimer;
           if (typeof next.dinoShieldCharges === "number") dinoShieldCharges = next.dinoShieldCharges;
           if (typeof next.dinoSlowTimer === "number") dinoSlowTimer = next.dinoSlowTimer;
+          if (typeof next.dinoWfhCooldownTimer === "number") dinoWfhCooldownTimer = next.dinoWfhCooldownTimer;
           if (next.dinoBossEvent !== undefined) dinoBossEvent = next.dinoBossEvent;
           if (Array.isArray(next.dinoTriggeredBossScores)) dinoTriggeredBossScores = new Set(next.dinoTriggeredBossScores);
           if (typeof next.dinoCurrentPlayerName === "string") dinoCurrentPlayerName = next.dinoCurrentPlayerName;
@@ -372,6 +377,28 @@ test("WFH mode pickup slows obstacle movement for five seconds", () => {
   assert.equal(state.dinoSlowTimer, 299);
 });
 
+test("WFH mode renders a center overlay and adds a short clear lane after ending", () => {
+  const { api, drawCalls } = loadDinoHarness();
+  api.resetDinoGame();
+  api.setState({ dinoState: "running", dinoSlowTimer: 60, dinoNextSpawn: 999 });
+
+  api.renderDino();
+  assert.ok(drawCalls.some((entry) => String(entry.text).includes("WFH MODE")));
+
+  api.setState({ dinoState: "running", dinoSlowTimer: 1, dinoWfhCooldownTimer: 0, dinoNextSpawn: 0, dinoObstacles: [] });
+  api.updateDino();
+  let state = api.getState();
+
+  assert.equal(state.dinoSlowTimer, 0);
+  assert.ok(state.dinoWfhCooldownTimer > 0);
+  assert.equal(state.dinoObstacles.length, 0);
+  assert.ok(state.dinoNextSpawn >= 45);
+
+  api.updateDino();
+  state = api.getState();
+  assert.equal(state.dinoObstacles.length, 0);
+});
+
 test("special pickup activates the immortal piercing buff and HUD text", () => {
   const { api, drawCalls } = loadDinoHarness();
   api.resetDinoGame();
@@ -523,6 +550,46 @@ test("office dino player renders as pixel actor poses for run jump and duck", ()
   assert.ok(duckActorColors.has("#38bdf8"));
   assert.ok(duckActorColors.has("#f8fafc"));
   assert.ok(duckActorColors.has("#050505"));
+});
+
+test("office dino character dropdown changes the pixel actor skin palette", () => {
+  const executiveHarness = loadDinoHarness();
+  executiveHarness.elements["dino-char"].value = "executive";
+  executiveHarness.api.changeDinoChar();
+  executiveHarness.api.setState({ dinoState: "running", dinoNextSpawn: 999, playerBox: { x: 80, y: 177, w: 46, h: 58, grounded: true, ducking: false } });
+  executiveHarness.api.renderDino();
+  const executiveColors = new Set(getActorPixelBounds(executiveHarness.drawCalls).rects.map((entry) => entry.fillStyle));
+
+  const generalHarness = loadDinoHarness();
+  generalHarness.elements["dino-char"].value = "general";
+  generalHarness.api.changeDinoChar();
+  generalHarness.api.setState({ dinoState: "running", dinoNextSpawn: 999, playerBox: { x: 80, y: 177, w: 46, h: 58, grounded: true, ducking: false } });
+  generalHarness.api.renderDino();
+  const generalColors = new Set(getActorPixelBounds(generalHarness.drawCalls).rects.map((entry) => entry.fillStyle));
+
+  assert.ok(executiveColors.has("#111827"));
+  assert.ok(executiveColors.has("#ffffff"));
+  assert.ok(generalColors.has("#22c55e"));
+  assert.ok(generalColors.has("#dcfce7"));
+  assert.notDeepEqual(Array.from(executiveColors).sort(), Array.from(generalColors).sort());
+});
+
+test("office dino only starts from the explicit start action", () => {
+  const { api } = loadDinoHarness();
+
+  api.setState({ dinoState: "ready" });
+  api.dinoJump();
+  let state = api.getState();
+  assert.equal(state.dinoState, "ready");
+
+  api.setState({ dinoState: "gameover" });
+  api.dinoJump();
+  state = api.getState();
+  assert.equal(state.dinoState, "gameover");
+
+  api.beginDinoRun();
+  state = api.getState();
+  assert.equal(state.dinoState, "running");
 });
 
 test("office dino collision game over saves and renders the local leaderboard", () => {
