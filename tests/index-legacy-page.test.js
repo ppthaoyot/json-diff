@@ -12,6 +12,14 @@ test("legacy index uses an in-page minigame tab again", () => {
   assert.doesNotMatch(html, /id="ptab-minigame"[\s\S]*?href="pages\/office-dino\.html"/i);
 });
 
+test("legacy Office Dino shows mini boss keyboard hints", () => {
+  const html = fs.readFileSync(indexPath, "utf8");
+
+  assert.match(html, /Z\s*ปาลูกอม/i);
+  assert.match(html, /X\s*เถียงอย่างสุภาพ/i);
+  assert.match(html, /C\s*ใจเย็น/i);
+});
+
 test("legacy index keeps both local and global Office Dino leaderboards", () => {
   const html = fs.readFileSync(indexPath, "utf8");
 

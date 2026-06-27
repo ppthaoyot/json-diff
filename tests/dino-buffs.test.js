@@ -121,6 +121,7 @@ function loadDinoHarness() {
         dinoJump,
         beginDinoRun,
         changeDinoChar,
+        useDinoBossAction: typeof useDinoBossAction === "function" ? useDinoBossAction : function() {},
         drawDinoObs,
         drawDinoBg,
         getDinoDifficultyTier,
@@ -145,6 +146,10 @@ function loadDinoHarness() {
             dinoLastWfhScore: typeof dinoLastWfhScore === "number" ? dinoLastWfhScore : 0,
             dinoBossEvent: typeof dinoBossEvent === "object" && dinoBossEvent ? Object.assign({}, dinoBossEvent) : null,
             dinoTriggeredBossScores: typeof dinoTriggeredBossScores !== "undefined" ? Array.from(dinoTriggeredBossScores) : [],
+            dinoBossFight: typeof dinoBossFight === "object" && dinoBossFight ? Object.assign({}, dinoBossFight) : null,
+            dinoBossProjectiles: typeof dinoBossProjectiles !== "undefined" ? dinoBossProjectiles.map(function(projectile) { return Object.assign({}, projectile); }) : [],
+            dinoBossPlayer: typeof dinoBossPlayer === "object" && dinoBossPlayer ? Object.assign({}, dinoBossPlayer) : null,
+            dinoBossTriggeredScores: typeof dinoBossTriggeredScores !== "undefined" ? Array.from(dinoBossTriggeredScores) : [],
             dinoPlayer: Object.assign({}, dinoPlayer),
             dinoObstacles: dinoObstacles.map(function(obs) { return Object.assign({}, obs); }),
             floatingTexts: floatingTexts.map(function(ft) { return Object.assign({}, ft); }),
@@ -166,6 +171,10 @@ function loadDinoHarness() {
           if (typeof next.dinoLastWfhScore === "number") dinoLastWfhScore = next.dinoLastWfhScore;
           if (next.dinoBossEvent !== undefined) dinoBossEvent = next.dinoBossEvent;
           if (Array.isArray(next.dinoTriggeredBossScores)) dinoTriggeredBossScores = new Set(next.dinoTriggeredBossScores);
+          if (next.dinoBossFight !== undefined) dinoBossFight = next.dinoBossFight;
+          if (Array.isArray(next.dinoBossProjectiles)) dinoBossProjectiles = next.dinoBossProjectiles.map(function(projectile) { return Object.assign({}, projectile); });
+          if (next.dinoBossPlayer && typeof dinoBossPlayer === "object") Object.assign(dinoBossPlayer, next.dinoBossPlayer);
+          if (Array.isArray(next.dinoBossTriggeredScores)) dinoBossTriggeredScores = new Set(next.dinoBossTriggeredScores);
           if (typeof next.dinoCurrentPlayerName === "string") dinoCurrentPlayerName = next.dinoCurrentPlayerName;
           if (Array.isArray(next.dinoObstacles)) dinoObstacles = next.dinoObstacles.map(function(obs) { return Object.assign({}, obs); });
           if (Array.isArray(next.floatingTexts)) floatingTexts = next.floatingTexts.map(function(ft) { return Object.assign({}, ft); });
@@ -694,7 +703,7 @@ test("jump input buffers shortly before landing", () => {
 test("difficulty milestones render a cinematic center-screen banner", () => {
   const { api, drawCalls } = loadDinoHarness();
   api.resetDinoGame();
-  api.setState({ dinoState: "running", dinoScore: 9999, dinoNextSpawn: 999 });
+  api.setState({ dinoState: "running", dinoScore: 9999, dinoNextSpawn: 999, dinoBossTriggeredScores: [5000, 10000] });
 
   api.updateDino();
   let state = api.getState();
@@ -706,7 +715,7 @@ test("difficulty milestones render a cinematic center-screen banner", () => {
   assert.ok(drawCalls.some((entry) => String(entry.text).includes("RUSH MODE")));
   assert.ok(drawCalls.some((entry) => String(entry.text).includes("\u0e07\u0e32\u0e19\u0e16\u0e32\u0e42\u0e16\u0e21")));
 
-  api.setState({ dinoState: "running", dinoScore: 14999, dinoNextSpawn: 999 });
+  api.setState({ dinoState: "running", dinoScore: 14999, dinoNextSpawn: 999, dinoBossTriggeredScores: [5000, 10000, 15000] });
   api.updateDino();
   state = api.getState();
 
@@ -714,7 +723,7 @@ test("difficulty milestones render a cinematic center-screen banner", () => {
   assert.match(state.dinoMilestoneBanner.title, /\u0e19\u0e23\u0e01\u0e2d\u0e2d\u0e1f\u0e1f\u0e34\u0e28/);
 });
 
-test("boss work flood event triggers every 5000 points without repeating a checkpoint", () => {
+test("mini boss battle triggers at 5000 points and enters the intro state once", () => {
   const { api, drawCalls } = loadDinoHarness();
   api.resetDinoGame();
   api.setState({ dinoState: "running", dinoScore: 4999, dinoNextSpawn: 999 });
@@ -722,36 +731,155 @@ test("boss work flood event triggers every 5000 points without repeating a check
   api.updateDino();
   let state = api.getState();
 
-  assert.equal(state.dinoBossEvent.score, 5000);
-  assert.equal(state.dinoBossEvent.life, 600);
-  assert.equal(JSON.stringify(state.dinoTriggeredBossScores), JSON.stringify([5000]));
+  assert.equal(state.dinoState, "bossIntro");
+  assert.equal(state.dinoBossFight.checkpointScore, 5000);
+  assert.equal(state.dinoBossFight.name, "PM จอมตามงาน");
+  assert.equal(JSON.stringify(state.dinoBossTriggeredScores), JSON.stringify([5000]));
 
   api.renderDino();
-  assert.ok(drawCalls.some((entry) => String(entry.text).includes("\u0e07\u0e32\u0e19\u0e16\u0e32\u0e42\u0e16\u0e21")));
+  assert.ok(drawCalls.some((entry) => String(entry.text).includes("MINI BOSS")));
+  assert.ok(drawCalls.some((entry) => String(entry.text).includes("PM จอมตามงาน")));
 
-  api.setState({ dinoBossEvent: null, dinoScore: 5001, dinoNextSpawn: 999 });
+  api.setState({ dinoState: "running", dinoBossFight: null, dinoScore: 5001, dinoNextSpawn: 999 });
   api.updateDino();
   state = api.getState();
 
-  assert.equal(state.dinoBossEvent, null);
-  assert.equal(JSON.stringify(state.dinoTriggeredBossScores), JSON.stringify([5000]));
+  assert.equal(state.dinoState, "running");
+  assert.equal(state.dinoBossFight, null);
+  assert.equal(JSON.stringify(state.dinoBossTriggeredScores), JSON.stringify([5000]));
 });
 
-test("boss work flood event uses a gentle themed obstacle pool", () => {
+test("mini boss intro advances to a playable fight and blocks runner obstacle spawning", () => {
   const { api, math } = loadDinoHarness();
   api.resetDinoGame();
   api.setState({
-    dinoBossEvent: { score: 5000, life: 600, maxLife: 600 },
-    dinoScore: 5200
+    dinoState: "running",
+    dinoScore: 4999,
+    dinoNextSpawn: 0,
+    dinoObstacles: []
   });
-  const rolls = [0.9, 0, 0.9, 0.5];
-  math.random = () => rolls.shift() ?? 0.5;
+  math.random = () => 0.5;
 
-  api.spawnDinoObstacle();
-  const state = api.getState();
+  api.updateDino();
+  let state = api.getState();
+  assert.equal(state.dinoState, "bossIntro");
 
-  assert.equal(state.dinoObstacles[0].label, "\u0e07\u0e32\u0e19\u0e14\u0e48\u0e27\u0e19 x2");
-  assert.ok(state.dinoNextSpawn >= 46, "boss event should stay readable and not spam obstacles");
+  for (let i = 0; i < 65; i++) api.updateDino();
+  state = api.getState();
+
+  assert.equal(state.dinoState, "bossFight");
+  assert.equal(state.dinoObstacles.length, 0);
+  assert.equal(state.dinoBossPlayer.hp, state.dinoBossPlayer.maxHp);
+});
+
+test("mini boss fight spawns falling work cards that can hurt the boss player", () => {
+  const { api, math } = loadDinoHarness();
+  api.resetDinoGame();
+  api.setState({
+    dinoState: "running",
+    dinoScore: 4999,
+    dinoNextSpawn: 999
+  });
+  math.random = () => 0.5;
+
+  api.updateDino();
+  for (let i = 0; i < 65; i++) api.updateDino();
+  for (let i = 0; i < 45; i++) api.updateDino();
+  let state = api.getState();
+
+  assert.equal(state.dinoState, "bossFight");
+  assert.ok(state.dinoBossProjectiles.length > 0);
+  assert.ok(state.dinoBossProjectiles[0].y > -40);
+
+  api.setState({
+    dinoBossPlayer: { x: 430, y: 205, w: 46, h: 54, invincibleTime: 0 },
+    dinoBossProjectiles: [
+      { x: 430, y: 205, w: 42, h: 42, label: "งานถาโถม", speed: 5 }
+    ]
+  });
+
+  api.updateDino();
+  state = api.getState();
+
+  assert.ok(state.dinoBossPlayer.hp < state.dinoBossPlayer.maxHp);
+  assert.ok(state.dinoBossPlayer.stress > 0);
+  assert.equal(state.dinoBossProjectiles.length, 0);
+});
+
+test("mini boss actions Z X C damage, slow, calm, and protect the player", () => {
+  const { api } = loadDinoHarness();
+  api.resetDinoGame();
+  api.setState({
+    dinoState: "bossFight",
+    dinoBossFight: {
+      checkpointScore: 5000,
+      name: "PM จอมตามงาน",
+      hp: 60,
+      maxHp: 60,
+      projectileTimer: 30,
+      projectileInterval: 40,
+      projectileSpeed: 4,
+      attacks: ["งานด่วน"],
+      introText: "ตามงานหน่อย",
+      defeatedText: "พักก่อน"
+    },
+    dinoBossPlayer: { hp: 5, maxHp: 5, stress: 50, invincibleTime: 0, projectileSlowTimer: 0 }
+  });
+
+  api.useDinoBossAction("candy");
+  let state = api.getState();
+  assert.ok(state.dinoBossFight.hp < 60);
+  const afterCandyHp = state.dinoBossFight.hp;
+
+  api.useDinoBossAction("argue");
+  state = api.getState();
+  assert.ok(state.dinoBossFight.hp < afterCandyHp - 1);
+  assert.ok(state.dinoBossPlayer.projectileSlowTimer > 0);
+
+  api.useDinoBossAction("calm");
+  state = api.getState();
+  assert.ok(state.dinoBossPlayer.stress < 50);
+  assert.ok(state.dinoBossPlayer.invincibleTime > 0);
+});
+
+test("mini boss defeat shows a win state then returns to runner without retriggering", () => {
+  const { api } = loadDinoHarness();
+  api.resetDinoGame();
+  api.setState({
+    dinoState: "bossFight",
+    dinoScore: 5200,
+    dinoBossTriggeredScores: [5000],
+    dinoBossFight: {
+      checkpointScore: 5000,
+      name: "PM จอมตามงาน",
+      hp: 4,
+      maxHp: 60,
+      projectileTimer: 30,
+      projectileInterval: 40,
+      projectileSpeed: 4,
+      attacks: ["งานด่วน"],
+      introText: "ตามงานหน่อย",
+      defeatedText: "พักก่อน"
+    },
+    dinoBossProjectiles: [{ x: 100, y: 100, w: 42, h: 42, label: "งานถาโถม", speed: 5 }]
+  });
+
+  api.useDinoBossAction("candy");
+  let state = api.getState();
+  assert.equal(state.dinoState, "bossWin");
+  assert.equal(state.dinoBossProjectiles.length, 0);
+
+  for (let i = 0; i < 95; i++) api.updateDino();
+  state = api.getState();
+
+  assert.equal(state.dinoState, "running");
+  assert.equal(state.dinoBossFight, null);
+  assert.equal(JSON.stringify(state.dinoBossTriggeredScores), JSON.stringify([5000]));
+
+  api.setState({ dinoScore: 5201, dinoNextSpawn: 999 });
+  api.updateDino();
+  state = api.getState();
+  assert.equal(state.dinoState, "running");
 });
 
 test("ordinary obstacles render clear jump and duck action cues", () => {
