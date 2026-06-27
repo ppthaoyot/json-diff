@@ -18,12 +18,14 @@ Use [office-dino-leaderboard.gs](/D:/SiamSmile_Work/Workshop/json-diff/apps-scri
 ## Behavior
 
 - Each submitted run is appended to the sheet.
-- The API returns the best score per player name.
+- The API returns the best score per player name for the requested speed mode.
 - The frontend shows only the top 20 rows.
+- Existing rows without a speed mode are treated as `normal`.
+- After updating `office-dino-leaderboard.gs`, redeploy the Apps Script web app as a new version so the `/exec` URL uses the latest code.
 
 ## Endpoints
 
-- `GET ?action=leaderboard&limit=20&callback=...`
-  Returns JSONP for the shared leaderboard.
+- `GET ?action=leaderboard&limit=20&speedMode=normal&callback=...`
+  Returns JSONP for the shared leaderboard filtered by `baby`, `easy`, `normal`, or `hard`.
 - `POST action=submit`
-  Accepts `name`, `score`, `level`, and `timestamp`.
+  Accepts `name`, `score`, `level`, `speedMode`, `speedLabel`, and `timestamp`.

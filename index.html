@@ -8,7 +8,7 @@
 <link rel="canonical" href="/index.html">
 <meta property="og:title" content="Developer Tools">
 <meta property="og:description" content="Use the original all-in-one page or jump to the new standalone pages for focused workflows and future SEO support.">
-<meta name="office-dino-global-endpoint" content="https://script.google.com/macros/s/AKfycbwV3jKhcFK6J1PJC61OmHIve7_xNyFxFAyWXBUOIgPCuESb0PZUf_pwWjrxVwYtmsXc9Q/exec">
+<meta name="office-dino-global-endpoint" content="https://script.google.com/macros/s/AKfycbz8wuMkDDU9myDoIJdjnvaKY0aCICJRXLDdY6konbAGpxjxR_s_JES4uQkYcMIBjkT6/exec">
 <link rel="stylesheet" href="assets/css/base.css">
 <link rel="stylesheet" href="assets/css/layout.css">
 <link rel="stylesheet" href="assets/css/components.css">
@@ -2928,6 +2928,21 @@ function beginDinoRun() {
   resetDinoGame();
 }
 
+function getDinoCurrentSpeedMode() {
+  const speedSelect = document.getElementById("dino-speed");
+  return speedSelect && speedSelect.value ? speedSelect.value : "normal";
+}
+
+function getDinoSpeedLabel(speedMode) {
+  const labels = {
+    baby: "\u0e40\u0e1a\u0e1a\u0e35\u0e4b (\u0e0a\u0e49\u0e32\u0e21\u0e32\u0e01)",
+    easy: "\u0e2d\u0e2d\u0e1f\u0e1f\u0e34\u0e28\u0e0b\u0e34\u0e19\u0e42\u0e14\u0e23\u0e21 (\u0e07\u0e48\u0e32\u0e22)",
+    normal: "\u0e01\u0e25\u0e32\u0e07\u0e46 (\u0e1b\u0e01\u0e15\u0e34)",
+    hard: "\u0e01\u0e23\u0e49\u0e32\u0e19\u0e42\u0e25\u0e01 (\u0e22\u0e32\u0e01)"
+  };
+  return labels[speedMode] || labels.normal;
+}
+
 function renderDinoLeaderboard() {
   const list = document.getElementById("dino-leaderboard-list");
   const empty = document.getElementById("dino-leaderboard-empty");
@@ -2943,14 +2958,18 @@ function renderDinoLeaderboard() {
   }).join("");
 }
 
-function renderDinoGlobalLeaderboard(rows, message) {
+function renderDinoGlobalLeaderboard(rows, message, speedMode) {
   const list = document.getElementById("dino-global-leaderboard-list");
   const empty = document.getElementById("dino-global-leaderboard-empty");
   const status = document.getElementById("dino-global-leaderboard-status");
+  const title = document.getElementById("dino-global-leaderboard-title");
   if (!list || !empty || !status) return;
 
-  const normalizedRows = normalizeDinoGlobalLeaderboardRows(rows || []);
-  status.textContent = message || (getDinoGlobalLeaderboardEndpoint() ? "พร้อมแข่งบนอันดับรวมแล้ว" : "ตั้งค่า Google Apps Script URL ก่อน แล้วอันดับรวมจะแสดงตรงนี้");
+  const currentSpeedMode = speedMode || getDinoCurrentSpeedMode();
+  const speedLabel = getDinoSpeedLabel(currentSpeedMode);
+  const normalizedRows = normalizeDinoGlobalLeaderboardRows(rows || [], currentSpeedMode);
+  if (title) title.textContent = "Global Top 20 - " + speedLabel;
+  status.textContent = message || (getDinoGlobalLeaderboardEndpoint() ? "พร้อมแข่งบนอันดับรวมระดับ " + speedLabel + " แล้ว" : "ตั้งค่า Google Apps Script URL ก่อน แล้วอันดับรวมจะแสดงตรงนี้");
   empty.style.display = normalizedRows.length ? "none" : "block";
   list.innerHTML = normalizedRows.map(function(row, index) {
     return '<li class="dino-leaderboard-item">'
@@ -3000,12 +3019,14 @@ function importDinoLeaderboardFromPrompt() {
 }
 
 function syncDinoGlobalLeaderboard(showToastOnError) {
-  renderDinoGlobalLeaderboard([], "กำลังโหลดอันดับรวม...");
-  return loadDinoGlobalLeaderboard().then(function(payload) {
-    renderDinoGlobalLeaderboard(payload.rows, payload.message || "อัปเดตอันดับรวมล่าสุดแล้ว");
+  const speedMode = getDinoCurrentSpeedMode();
+  const speedLabel = getDinoSpeedLabel(speedMode);
+  renderDinoGlobalLeaderboard([], "กำลังโหลดอันดับรวมระดับ " + speedLabel + "...", speedMode);
+  return loadDinoGlobalLeaderboard(speedMode).then(function(payload) {
+    renderDinoGlobalLeaderboard(payload.rows, payload.message || "อัปเดตอันดับรวมระดับ " + speedLabel + " ล่าสุดแล้ว", speedMode);
     return payload;
   }).catch(function(err) {
-    renderDinoGlobalLeaderboard([], "โหลดอันดับรวมไม่สำเร็จ");
+    renderDinoGlobalLeaderboard([], "โหลดอันดับรวมระดับ " + speedLabel + " ไม่สำเร็จ", speedMode);
     if (showToastOnError) {
       showToast("โหลดอันดับรวมไม่สำเร็จ", String((err && err.message) || err || "unknown error"), "err");
     }
@@ -3015,7 +3036,8 @@ function syncDinoGlobalLeaderboard(showToastOnError) {
 
 function submitDinoGlobalScore(entry) {
   if (!getDinoGlobalLeaderboardEndpoint()) return Promise.resolve();
-  renderDinoGlobalLeaderboard([], "กำลังส่งคะแนนขึ้นอันดับรวม...");
+  const speedMode = entry.speedMode || getDinoCurrentSpeedMode();
+  renderDinoGlobalLeaderboard([], "กำลังส่งคะแนนขึ้นอันดับรวมระดับ " + getDinoSpeedLabel(speedMode) + "...", speedMode);
   return submitDinoGlobalLeaderboardEntry(entry).then(function() {
     return syncDinoGlobalLeaderboard(false);
   }).then(function() {
@@ -3031,6 +3053,8 @@ function onDinoGameOver() {
     name: dinoCurrentPlayerName || getDefaultPlayerName(),
     score: dinoScore,
     level: getDinoLevel(),
+    speedMode: getDinoCurrentSpeedMode(),
+    speedLabel: getDinoSpeedLabel(getDinoCurrentSpeedMode()),
     timestamp: Date.now()
   };
   saveLeaderboardEntry(entry);
@@ -3051,7 +3075,10 @@ let dinoLoopStarted = false;
 let dinoHP = dinoMaxHP;
 let dinoInvincible = 0;
 let dinoDashTimer = 0;
+let dinoJumpBufferTimer = 0;
+const dinoJumpBufferMax = 7;
 let floatingTexts = [];
+let dinoMilestoneBanner = null;
 let dinoCurrentPlayerName = "";
 let dinoLastDifficultyTier = "normal";
 
@@ -3163,6 +3190,11 @@ function changeDinoSpeed() {
   else if (mode === "normal") { dinoConfig.baseSpeed = 5.5; dinoConfig.maxSpeed = 14; }
   else if (mode === "hard") { dinoConfig.baseSpeed = 7.5; dinoConfig.maxSpeed = 19; }
   resetDinoGame();
+  if (getDinoGlobalLeaderboardEndpoint()) {
+    syncDinoGlobalLeaderboard(false);
+  } else {
+    renderDinoGlobalLeaderboard([], "", getDinoCurrentSpeedMode());
+  }
 }
 
 function resetDinoGame() {
@@ -3176,7 +3208,9 @@ function resetDinoGame() {
   dinoHP = dinoMaxHP;
   dinoInvincible = 0;
   dinoDashTimer = 0;
+  dinoJumpBufferTimer = 0;
   floatingTexts = [];
+  dinoMilestoneBanner = null;
   dinoLastDifficultyTier = "normal";
 
   dinoPlayer.y = dinoGroundY - 58;
@@ -3238,14 +3272,37 @@ function createDinoObstacle(type, x, floating, flags) {
 function showDinoDifficultyMilestone(tier) {
   if (!tier.message || dinoLastDifficultyTier === tier.name) return;
   dinoLastDifficultyTier = tier.name;
-  floatingTexts.push({
-    x: dW / 2 - 80,
-    y: 96,
-    text: tier.message,
-    color: tier.name === "hell" ? "#e74c3c" : "#e67e22",
-    life: 90,
-    maxLife: 90
-  });
+  dinoMilestoneBanner = {
+    tier: tier.name,
+    title: tier.name === "hell"
+      ? "\u0e19\u0e23\u0e01\u0e2d\u0e2d\u0e1f\u0e1f\u0e34\u0e28\u0e40\u0e1b\u0e34\u0e14\u0e09\u0e32\u0e01!"
+      : "\u0e07\u0e32\u0e19\u0e16\u0e32\u0e42\u0e16\u0e21!",
+    kicker: tier.name === "hell" ? "HELL MODE" : "RUSH MODE",
+    hint: tier.name === "hell"
+      ? "\u0e2b\u0e31\u0e27\u0e2b\u0e19\u0e49\u0e32 + Audit + KPI \u0e21\u0e32\u0e1e\u0e23\u0e49\u0e2d\u0e21\u0e01\u0e31\u0e19"
+      : "\u0e2d\u0e48\u0e32\u0e19\u0e08\u0e31\u0e07\u0e2b\u0e27\u0e30\u0e43\u0e2b\u0e49\u0e14\u0e35 \u0e07\u0e32\u0e19\u0e08\u0e30\u0e21\u0e32\u0e16\u0e35\u0e48\u0e02\u0e36\u0e49\u0e19",
+    color: tier.name === "hell" ? "#e74c3c" : "#f39c12",
+    glow: tier.name === "hell" ? "rgba(231, 76, 60, 0.55)" : "rgba(243, 156, 18, 0.50)",
+    life: 120,
+    maxLife: 120
+  };
+}
+
+function performDinoJump() {
+  dinoJumpBufferTimer = 0;
+  dinoPlayer.vy = dinoConfig.jumpPower;
+  dinoPlayer.grounded = false;
+  dinoPlayer.ducking = false;
+  dinoPlayer.h = 58;
+  for (let i = 0; i < 4; i++) {
+    dinoParticles.push({
+      x: dinoPlayer.x + 10,
+      y: dinoGroundY - 8,
+      vx: -Math.random() * 2,
+      vy: -Math.random() * 2,
+      life: 14
+    });
+  }
 }
 
 function dinoJump() {
@@ -3253,24 +3310,18 @@ function dinoJump() {
     beginDinoRun();
     return;
   }
+  if (dinoState !== "running") return;
   if (dinoPlayer.grounded && !dinoPlayer.ducking) {
-    dinoPlayer.vy = dinoConfig.jumpPower;
-    dinoPlayer.grounded = false;
-    for (let i = 0; i < 6; i++) {
-      dinoParticles.push({
-        x: dinoPlayer.x + 10,
-        y: dinoGroundY - 8,
-        vx: -Math.random() * 2,
-        vy: -Math.random() * 2,
-        life: 20
-      });
-    }
+    performDinoJump();
+  } else if (!dinoPlayer.ducking) {
+    dinoJumpBufferTimer = dinoJumpBufferMax;
   }
 }
 
 function setDinoDuck(isDucking) {
   if (dinoState !== "running") return;
   dinoPlayer.ducking = isDucking && dinoPlayer.grounded;
+  if (dinoPlayer.ducking) dinoJumpBufferTimer = 0;
   dinoPlayer.h = dinoPlayer.ducking ? 34 : 58;
   dinoPlayer.y = dinoGroundY - dinoPlayer.h;
 }
@@ -3388,7 +3439,7 @@ function updateDino() {
     dinoSpeed += 6; // Boost speed
     dinoScore += 2; // Extra score while dashing
     dinoDashTimer--;
-    if (dinoFrame % 2 === 0) {
+    if (dinoFrame % 4 === 0) {
       dinoParticles.push({ x: dinoPlayer.x, y: dinoPlayer.y + dinoPlayer.h/2, vx: -3 - Math.random()*3, vy: (Math.random()-0.5)*2, life: 15 });
     }
   }
@@ -3403,6 +3454,11 @@ function updateDino() {
     dinoPlayer.y = dinoGroundY - dinoPlayer.h;
     dinoPlayer.vy = 0;
     dinoPlayer.grounded = true;
+  }
+  if (dinoPlayer.grounded && dinoJumpBufferTimer > 0 && !dinoPlayer.ducking) {
+    performDinoJump();
+  } else if (dinoJumpBufferTimer > 0) {
+    dinoJumpBufferTimer--;
   }
 
   dinoNextSpawn--;
@@ -3423,6 +3479,10 @@ function updateDino() {
     ft.life--;
   }
   floatingTexts = floatingTexts.filter(ft => ft.life > 0);
+  if (dinoMilestoneBanner) {
+    dinoMilestoneBanner.life--;
+    if (dinoMilestoneBanner.life <= 0) dinoMilestoneBanner = null;
+  }
 
   checkDinoCollision();
 }
@@ -3468,12 +3528,12 @@ function drawDinoPlayer() {
   
   if (dinoDashTimer > 0) {
     dinoCtx.shadowColor = "#9b59b6";
-    dinoCtx.shadowBlur = 12;
+    dinoCtx.shadowBlur = 0;
     dinoCtx.shadowOffsetY = 0;
   } else {
-    dinoCtx.shadowColor = "rgba(0,0,0,0.3)";
-    dinoCtx.shadowBlur = 4;
-    dinoCtx.shadowOffsetY = 2;
+    dinoCtx.shadowColor = "transparent";
+    dinoCtx.shadowBlur = 0;
+    dinoCtx.shadowOffsetY = 0;
   }
   
   dinoCtx.fillText(dinoConfig.playerEmoji, dinoPlayer.x + dinoPlayer.w / 2, dinoPlayer.y + dinoPlayer.h / 2 + bob);
@@ -3519,35 +3579,19 @@ function drawDinoObs(obs) {
 }
 
 function drawDinoPickupAura(obs, palette) {
-  const cx = obs.x + obs.w / 2;
-  const cy = obs.y + obs.h / 2;
-  const pulse = 1 + Math.sin(dinoFrame / 6 + cx / 40) * 0.08;
-  const radius = Math.max(obs.w, obs.h) * 0.52 * pulse;
+  const pad = 6;
   dinoCtx.save();
-  dinoCtx.beginPath();
-  dinoCtx.globalAlpha = 0.22;
   dinoCtx.fillStyle = palette.glow;
-  dinoCtx.arc(cx, cy, radius + 10, 0, Math.PI * 2);
-  dinoCtx.fill();
-  dinoCtx.globalAlpha = 0.95;
-  dinoCtx.lineWidth = 3;
-  dinoCtx.strokeStyle = palette.ring;
-  dinoCtx.beginPath();
-  dinoCtx.arc(cx, cy, radius, 0, Math.PI * 2);
-  dinoCtx.stroke();
+  dinoCtx.fillRect(obs.x - pad, obs.y - pad, obs.w + pad * 2, obs.h + pad * 2);
+  dinoCtx.fillStyle = palette.ring;
+  dinoCtx.fillRect(obs.x - pad, obs.y - pad, obs.w + pad * 2, 4);
+  dinoCtx.fillRect(obs.x - pad, obs.y + obs.h + pad - 4, obs.w + pad * 2, 4);
+  dinoCtx.fillRect(obs.x - pad, obs.y - pad, 4, obs.h + pad * 2);
+  dinoCtx.fillRect(obs.x + obs.w + pad - 4, obs.y - pad, 4, obs.h + pad * 2);
   if (obs.isSpecial) {
-    dinoCtx.lineWidth = 2;
-    dinoCtx.strokeStyle = palette.accent;
-    dinoCtx.beginPath();
-    dinoCtx.arc(cx, cy, radius + 8, 0, Math.PI * 2);
-    dinoCtx.stroke();
-    for (let i = 0; i < 3; i++) {
-      const angle = dinoFrame / 10 + i * (Math.PI * 2 / 3);
-      const sparkX = cx + Math.cos(angle) * (radius + 12);
-      const sparkY = cy + Math.sin(angle) * (radius + 12);
-      dinoCtx.fillStyle = palette.accent;
-      dinoCtx.fillRect(sparkX - 2, sparkY - 2, 4, 4);
-    }
+    dinoCtx.fillStyle = palette.accent;
+    dinoCtx.fillRect(obs.x - pad - 5, obs.y + 8, 4, 10);
+    dinoCtx.fillRect(obs.x + obs.w + pad + 1, obs.y + obs.h - 18, 4, 10);
   }
   dinoCtx.restore();
 }
@@ -3569,6 +3613,42 @@ function drawDinoPickupBadge(obs, text, background, color) {
   dinoCtx.restore();
 }
 
+function drawDinoActionCue(obs) {
+  if (obs.isPowerup || obs.isSpecial) return;
+  const cx = obs.x + obs.w / 2;
+  dinoCtx.save();
+  dinoCtx.textAlign = "center";
+  dinoCtx.textBaseline = "middle";
+  dinoCtx.font = "bold 12px Tahoma";
+  dinoCtx.lineWidth = 2;
+  if (obs.floating) {
+    const safeY = Math.min(dinoGroundY - 38, obs.y + obs.h + 22);
+    dinoCtx.strokeStyle = "rgba(230, 126, 34, 0.85)";
+    dinoCtx.setLineDash && dinoCtx.setLineDash([6, 5]);
+    dinoCtx.beginPath();
+    dinoCtx.moveTo(obs.x - 12, safeY);
+    dinoCtx.lineTo(obs.x + obs.w + 12, safeY);
+    dinoCtx.stroke();
+    dinoCtx.setLineDash && dinoCtx.setLineDash([]);
+    dinoCtx.fillStyle = "rgba(230, 126, 34, 0.96)";
+    dinoCtx.fillRect(cx - 34, safeY + 8, 68, 20);
+    dinoCtx.fillStyle = "#ffffff";
+    dinoCtx.fillText("\u0e2b\u0e21\u0e2d\u0e1a!", cx, safeY + 18);
+  } else {
+    const markerY = dinoGroundY - 8;
+    dinoCtx.strokeStyle = "rgba(192, 57, 43, 0.85)";
+    dinoCtx.beginPath();
+    dinoCtx.moveTo(obs.x - 10, markerY);
+    dinoCtx.lineTo(obs.x + obs.w + 10, markerY);
+    dinoCtx.stroke();
+    dinoCtx.fillStyle = "rgba(192, 57, 43, 0.96)";
+    dinoCtx.fillRect(cx - 38, obs.y - 54, 76, 20);
+    dinoCtx.fillStyle = "#ffffff";
+    dinoCtx.fillText("\u0e01\u0e23\u0e30\u0e42\u0e14\u0e14!", cx, obs.y - 44);
+  }
+  dinoCtx.restore();
+}
+
 function drawDinoObs(obs) {
   const palette = obs.isSpecial
     ? { glow: "rgba(155, 89, 182, 0.55)", ring: "#f7d774", accent: "#ffffff", label: "#8e44ad", badgeBg: "#2c0f3a", badgeText: "#fdf1a4" }
@@ -3579,12 +3659,13 @@ function drawDinoObs(obs) {
   dinoCtx.font = "40px Tahoma";
   dinoCtx.textAlign = "center";
   dinoCtx.textBaseline = "middle";
+  drawDinoActionCue(obs);
   if (palette) {
     drawDinoPickupAura(obs, palette);
   }
-  dinoCtx.shadowColor = palette ? palette.glow : "rgba(0,0,0,0.3)";
-  dinoCtx.shadowBlur = palette ? 18 : 4;
-  dinoCtx.shadowOffsetY = 2;
+  dinoCtx.shadowColor = "transparent";
+  dinoCtx.shadowBlur = 0;
+  dinoCtx.shadowOffsetY = 0;
   dinoCtx.fillText(obs.emoji, obs.x + obs.w / 2, obs.y + obs.h / 2);
   dinoCtx.shadowColor = "transparent";
   dinoCtx.font = "bold 14px Tahoma";
@@ -3598,11 +3679,6 @@ function drawDinoObs(obs) {
     dinoCtx.fillStyle = "#c0392b";
   }
   dinoCtx.fillText(obs.label, obs.x + obs.w / 2, obs.y - 12);
-  if (obs.floating) {
-    dinoCtx.font = "bold 13px Tahoma";
-    dinoCtx.fillStyle = "#e67e22";
-    dinoCtx.fillText("\u0e2b\u0e21\u0e2d\u0e1a!", obs.x + obs.w / 2, obs.y + obs.h + 16);
-  }
   dinoCtx.restore();
 }
 
@@ -3622,6 +3698,47 @@ function drawDinoBuffStatus() {
   dinoCtx.textAlign = "left";
   dinoCtx.fillStyle = "#8e44ad";
   dinoCtx.fillText(dinoBuffLabel + " " + (Math.max(dinoDashTimer, dinoInvincible) / 60).toFixed(1) + "s", 24, 52);
+  dinoCtx.restore();
+}
+
+function drawDinoMilestoneBanner() {
+  if (!dinoMilestoneBanner) return;
+  const progress = dinoMilestoneBanner.life / dinoMilestoneBanner.maxLife;
+  const fade = Math.min(1, progress * 4, (1 - progress) * 5);
+  const pulse = 1 + Math.sin(dinoFrame / 5) * 0.025;
+  const boxW = dinoMilestoneBanner.tier === "hell" ? 520 : 460;
+  const boxH = 112;
+  const x = dW / 2 - boxW / 2;
+  const y = dH / 2 - boxH / 2 - 10;
+
+  dinoCtx.save();
+  dinoCtx.globalAlpha = Math.max(0, fade);
+  dinoCtx.shadowColor = "transparent";
+  dinoCtx.shadowBlur = 0;
+  dinoCtx.fillStyle = "rgba(20, 24, 32, 0.86)";
+  dinoCtx.fillRect(x, y, boxW, boxH);
+  dinoCtx.shadowBlur = 0;
+  dinoCtx.strokeStyle = dinoMilestoneBanner.color;
+  dinoCtx.lineWidth = 4;
+  dinoCtx.strokeRect(x + 4, y + 4, boxW - 8, boxH - 8);
+
+  dinoCtx.textAlign = "center";
+  dinoCtx.textBaseline = "middle";
+  dinoCtx.fillStyle = dinoMilestoneBanner.color;
+  dinoCtx.font = "bold 18px Tahoma";
+  dinoCtx.fillText(dinoMilestoneBanner.kicker, dW / 2, y + 26);
+
+  dinoCtx.save();
+  dinoCtx.translate(dW / 2, y + 58);
+  dinoCtx.scale(pulse, pulse);
+  dinoCtx.fillStyle = "#ffffff";
+  dinoCtx.font = "bold 34px Tahoma";
+  dinoCtx.fillText(dinoMilestoneBanner.title, 0, 0);
+  dinoCtx.restore();
+
+  dinoCtx.fillStyle = "rgba(255,255,255,0.86)";
+  dinoCtx.font = "bold 14px Tahoma";
+  dinoCtx.fillText(dinoMilestoneBanner.hint, dW / 2, y + 92);
   dinoCtx.restore();
 }
 
@@ -3721,6 +3838,7 @@ function renderDino() {
   drawDinoPlayer();
   drawDinoHud();
   drawDinoBuffStatus();
+  drawDinoMilestoneBanner();
   drawDinoScreens();
 }
 

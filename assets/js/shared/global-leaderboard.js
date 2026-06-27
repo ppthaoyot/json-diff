@@ -11,37 +11,51 @@ function getDinoGlobalLeaderboardEndpoint() {
   return "";
 }
 
+function normalizeDinoSpeedMode(speedMode) {
+  var value = String(speedMode || "normal").trim().toLowerCase();
+  return /^(baby|easy|normal|hard)$/.test(value) ? value : "normal";
+}
+
 function normalizeDinoGlobalLeaderboardEntry(entry) {
+  var speedMode = normalizeDinoSpeedMode(entry && entry.speedMode);
   return {
     name: String((entry && entry.name) || "").trim() || getDefaultPlayerName(),
     score: Number((entry && entry.score) || 0),
     level: String((entry && entry.level) || ""),
+    speedMode: speedMode,
+    speedLabel: String((entry && entry.speedLabel) || speedMode),
     timestamp: Number((entry && entry.timestamp) || Date.now())
   };
 }
 
-function normalizeDinoGlobalLeaderboardRows(rows) {
+function normalizeDinoGlobalLeaderboardRows(rows, speedMode) {
   if (!Array.isArray(rows)) return [];
-  return sortLeaderboardEntries(rows.map(normalizeDinoGlobalLeaderboardEntry)).slice(0, dinoLeaderboardLimit);
+  var targetSpeedMode = normalizeDinoSpeedMode(speedMode);
+  return sortLeaderboardEntries(rows.map(normalizeDinoGlobalLeaderboardEntry).filter(function(row) {
+    return row.speedMode === targetSpeedMode;
+  })).slice(0, dinoLeaderboardLimit);
 }
 
-function normalizeDinoGlobalLeaderboardPayload(payload) {
+function normalizeDinoGlobalLeaderboardPayload(payload, speedMode) {
   var source = payload && typeof payload === "object" ? payload : {};
   return {
     ok: Boolean(source.ok !== false),
-    rows: normalizeDinoGlobalLeaderboardRows(source.rows),
+    rows: normalizeDinoGlobalLeaderboardRows(source.rows, speedMode),
     message: String(source.message || ""),
+    speedMode: normalizeDinoSpeedMode(source.speedMode || speedMode),
     updatedAt: Number(source.updatedAt || Date.now())
   };
 }
 
-function loadDinoGlobalLeaderboard() {
+function loadDinoGlobalLeaderboard(speedMode) {
   var endpoint = getDinoGlobalLeaderboardEndpoint();
+  var normalizedSpeedMode = normalizeDinoSpeedMode(speedMode);
   if (!endpoint) {
     return Promise.resolve({
       ok: false,
       rows: [],
       message: "global leaderboard is not configured",
+      speedMode: normalizedSpeedMode,
       updatedAt: Date.now()
     });
   }
@@ -76,7 +90,7 @@ function loadDinoGlobalLeaderboard() {
 
     window[callbackName] = function(payload) {
       cleanup();
-      resolve(normalizeDinoGlobalLeaderboardPayload(payload));
+      resolve(normalizeDinoGlobalLeaderboardPayload(payload, normalizedSpeedMode));
     };
 
     script.onerror = function() {
@@ -88,6 +102,7 @@ function loadDinoGlobalLeaderboard() {
       + (endpoint.indexOf("?") >= 0 ? "&" : "?")
       + "action=leaderboard"
       + "&limit=" + encodeURIComponent(String(dinoLeaderboardLimit))
+      + "&speedMode=" + encodeURIComponent(normalizedSpeedMode)
       + "&callback=" + encodeURIComponent(callbackName)
       + "&_=" + encodeURIComponent(String(Date.now()));
 
@@ -129,6 +144,8 @@ function submitDinoGlobalLeaderboardEntry(entry) {
       ["name", normalized.name],
       ["score", String(normalized.score)],
       ["level", normalized.level],
+      ["speedMode", normalized.speedMode],
+      ["speedLabel", normalized.speedLabel],
       ["timestamp", String(normalized.timestamp)]
     ].forEach(function(pair) {
       var input = document.createElement("input");

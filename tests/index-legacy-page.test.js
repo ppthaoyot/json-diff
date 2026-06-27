@@ -33,3 +33,11 @@ test("legacy minigame hub restores Office Dino as a grid after switching back fr
 
   assert.match(html, /document\.getElementById\('mg-hub-dino'\)\.style\.display\s*=\s*\(game === 'dino'\)\s*\?\s*'grid'\s*:\s*'none'/i);
 });
+
+test("legacy Office Dino submits global scores with the selected speed mode", () => {
+  const html = fs.readFileSync(indexPath, "utf8");
+
+  assert.match(html, /function getDinoCurrentSpeedMode\(\)/i);
+  assert.match(html, /speedMode:\s*getDinoCurrentSpeedMode\(\)/i);
+  assert.match(html, /syncDinoGlobalLeaderboard\(false\)/i);
+});

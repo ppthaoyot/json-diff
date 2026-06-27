@@ -36,7 +36,13 @@ function loadDinoHarness() {
     lineTo() {},
     stroke() {},
     clearRect() {},
-    fillRect() {},
+    fillRect(x, y, w, h) {
+      drawCalls.push({ kind: "fillRect", x, y, w, h });
+    },
+    strokeRect() {},
+    translate() {},
+    scale() {},
+    setLineDash() {},
     fillText(text, x, y) {
       drawCalls.push({ text, x, y });
     }
@@ -95,32 +101,44 @@ function loadDinoHarness() {
         checkDinoCollision,
         resetDinoGame,
         renderDino,
+        updateDino,
+        dinoJump,
         drawDinoObs,
         getDinoDifficultyTier,
         getState() {
           return {
+            dinoState,
             dinoScore,
             dinoNextSpawn,
             dinoHP,
             dinoInvincible,
             dinoDashTimer,
+            dinoJumpBufferTimer: typeof dinoJumpBufferTimer === "number" ? dinoJumpBufferTimer : 0,
+            dinoPlayer: Object.assign({}, dinoPlayer),
             dinoObstacles: dinoObstacles.map(function(obs) { return Object.assign({}, obs); }),
-            floatingTexts: floatingTexts.map(function(ft) { return Object.assign({}, ft); })
+            floatingTexts: floatingTexts.map(function(ft) { return Object.assign({}, ft); }),
+            dinoMilestoneBanner: typeof dinoMilestoneBanner === "object" && dinoMilestoneBanner ? Object.assign({}, dinoMilestoneBanner) : null
           };
         },
         setState(next) {
+          if (typeof next.dinoState === "string") dinoState = next.dinoState;
           if (typeof next.dinoScore === "number") dinoScore = next.dinoScore;
           if (typeof next.dinoNextSpawn === "number") dinoNextSpawn = next.dinoNextSpawn;
           if (typeof next.dinoHP === "number") dinoHP = next.dinoHP;
           if (typeof next.dinoInvincible === "number") dinoInvincible = next.dinoInvincible;
           if (typeof next.dinoDashTimer === "number") dinoDashTimer = next.dinoDashTimer;
+          if (typeof next.dinoJumpBufferTimer === "number") dinoJumpBufferTimer = next.dinoJumpBufferTimer;
           if (Array.isArray(next.dinoObstacles)) dinoObstacles = next.dinoObstacles.map(function(obs) { return Object.assign({}, obs); });
           if (Array.isArray(next.floatingTexts)) floatingTexts = next.floatingTexts.map(function(ft) { return Object.assign({}, ft); });
+          if (next.dinoMilestoneBanner !== undefined) dinoMilestoneBanner = next.dinoMilestoneBanner;
           if (next.playerBox) {
             dinoPlayer.x = next.playerBox.x;
             dinoPlayer.y = next.playerBox.y;
             dinoPlayer.w = next.playerBox.w;
             dinoPlayer.h = next.playerBox.h;
+            if (typeof next.playerBox.vy === "number") dinoPlayer.vy = next.playerBox.vy;
+            if (typeof next.playerBox.grounded === "boolean") dinoPlayer.grounded = next.playerBox.grounded;
+            if (typeof next.playerBox.ducking === "boolean") dinoPlayer.ducking = next.playerBox.ducking;
           }
         }
       };
@@ -241,15 +259,78 @@ test("special pickup activates the immortal piercing buff and HUD text", () => {
   assert.ok(drawCalls.some((entry) => String(entry.text).includes("อมตะทะลวงฟัน")));
 });
 
-test("powerups and special boosts render extra pickup cues beyond ordinary obstacles", () => {
+test("powerups and special boosts render lightweight pixel pickup cues beyond ordinary obstacles", () => {
   const { api, drawCalls } = loadDinoHarness();
 
   api.drawDinoObs({ x: 100, y: 100, w: 48, h: 48, emoji: "❤️", label: "เติมพลัง", isPowerup: true, isSpecial: false, floating: false });
   api.drawDinoObs({ x: 200, y: 100, w: 48, h: 48, emoji: "🚀", label: "ใบลาออก!", isPowerup: false, isSpecial: true, floating: false });
 
-  assert.ok(drawCalls.some((entry) => entry.kind === "arc"));
+  assert.ok(drawCalls.some((entry) => entry.kind === "fillRect"));
+  assert.equal(drawCalls.some((entry) => entry.kind === "arc"), false);
   assert.ok(drawCalls.some((entry) => String(entry.text).includes("BUFF")));
   assert.ok(drawCalls.some((entry) => String(entry.text).includes("BOOST")));
+});
+
+test("jump input buffers shortly before landing", () => {
+  const { api } = loadDinoHarness();
+  api.resetDinoGame();
+  api.setState({
+    dinoState: "running",
+    dinoNextSpawn: 999,
+    playerBox: {
+      x: 80,
+      y: 176,
+      w: 46,
+      h: 58,
+      vy: 2,
+      grounded: false,
+      ducking: false
+    }
+  });
+
+  api.dinoJump();
+  let state = api.getState();
+  assert.ok(state.dinoJumpBufferTimer > 0);
+
+  api.updateDino();
+  state = api.getState();
+
+  assert.equal(state.dinoPlayer.grounded, false);
+  assert.ok(state.dinoPlayer.vy < 0);
+  assert.equal(state.dinoJumpBufferTimer, 0);
+});
+
+test("difficulty milestones render a cinematic center-screen banner", () => {
+  const { api, drawCalls } = loadDinoHarness();
+  api.resetDinoGame();
+  api.setState({ dinoState: "running", dinoScore: 4999, dinoNextSpawn: 999 });
+
+  api.updateDino();
+  let state = api.getState();
+
+  assert.equal(state.dinoMilestoneBanner.tier, "rush");
+  assert.match(state.dinoMilestoneBanner.title, /\u0e07\u0e32\u0e19\u0e16\u0e32\u0e42\u0e16\u0e21/);
+
+  api.renderDino();
+  assert.ok(drawCalls.some((entry) => String(entry.text).includes("RUSH MODE")));
+  assert.ok(drawCalls.some((entry) => String(entry.text).includes("\u0e07\u0e32\u0e19\u0e16\u0e32\u0e42\u0e16\u0e21")));
+
+  api.setState({ dinoState: "running", dinoScore: 9999, dinoNextSpawn: 999 });
+  api.updateDino();
+  state = api.getState();
+
+  assert.equal(state.dinoMilestoneBanner.tier, "hell");
+  assert.match(state.dinoMilestoneBanner.title, /\u0e19\u0e23\u0e01\u0e2d\u0e2d\u0e1f\u0e1f\u0e34\u0e28/);
+});
+
+test("ordinary obstacles render clear jump and duck action cues", () => {
+  const { api, drawCalls } = loadDinoHarness();
+
+  api.drawDinoObs({ x: 120, y: 180, w: 48, h: 52, emoji: "\uD83D\uDCC4", label: "\u0e07\u0e32\u0e19", isPowerup: false, isSpecial: false, floating: false });
+  api.drawDinoObs({ x: 220, y: 120, w: 48, h: 52, emoji: "\uD83D\uDCC4", label: "\u0e07\u0e32\u0e19", isPowerup: false, isSpecial: false, floating: true });
+
+  assert.ok(drawCalls.some((entry) => String(entry.text).includes("\u0e01\u0e23\u0e30\u0e42\u0e14\u0e14!")));
+  assert.ok(drawCalls.some((entry) => String(entry.text).includes("\u0e2b\u0e21\u0e2d\u0e1a!")));
 });
 
 test("office dino increases difficulty after 5000 and 10000 points", () => {

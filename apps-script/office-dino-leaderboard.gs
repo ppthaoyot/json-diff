@@ -1,6 +1,8 @@
 const LEADERBOARD_LIMIT = 20;
 const SCORE_SHEET_NAME = 'scores';
 const DEFAULT_SPREADSHEET_ID = '11MWZgibIYSph7Sn2NYrD0eYZdacsVO7BiVyMBzoJJ2w';
+const DEFAULT_SPEED_MODE = 'normal';
+const SPEED_MODES = ['baby', 'easy', 'normal', 'hard'];
 
 function doGet(e) {
   const params = (e && e.parameter) || {};
@@ -16,9 +18,11 @@ function doGet(e) {
   }
 
   const limit = Math.max(1, Math.min(Number(params.limit || LEADERBOARD_LIMIT), LEADERBOARD_LIMIT));
+  const speedMode = normalizeSpeedMode_(params.speedMode);
   const payload = {
     ok: true,
-    rows: getLeaderboardRows_(limit),
+    rows: getLeaderboardRows_(limit, speedMode),
+    speedMode: speedMode,
     updatedAt: Date.now()
   };
   return createJsonOutput_(payload, params.callback);
@@ -49,12 +53,16 @@ function parseIncomingEntry_(e) {
   const name = String(payload.name || '').trim().slice(0, 32) || 'ผู้เล่นนิรนาม';
   const score = Math.max(0, Number(payload.score || 0));
   const level = String(payload.level || '').trim().slice(0, 80);
+  const speedMode = normalizeSpeedMode_(payload.speedMode);
+  const speedLabel = String(payload.speedLabel || speedMode).trim().slice(0, 40);
   const timestamp = Number(payload.timestamp || Date.now());
 
   return {
     name: name,
     score: score,
     level: level,
+    speedMode: speedMode,
+    speedLabel: speedLabel,
     timestamp: timestamp
   };
 }
@@ -66,11 +74,14 @@ function appendScoreRow_(entry) {
     entry.name,
     entry.score,
     entry.level,
-    entry.timestamp
+    entry.timestamp,
+    entry.speedMode,
+    entry.speedLabel
   ]);
 }
 
-function getLeaderboardRows_(limit) {
+function getLeaderboardRows_(limit, speedMode) {
+  const targetSpeedMode = normalizeSpeedMode_(speedMode);
   const sheet = getScoreSheet_();
   const values = sheet.getDataRange().getValues();
   if (values.length <= 1) return [];
@@ -82,9 +93,12 @@ function getLeaderboardRows_(limit) {
       name: String(row[1] || '').trim(),
       score: Number(row[2] || 0),
       level: String(row[3] || ''),
-      timestamp: Number(row[4] || 0)
+      timestamp: Number(row[4] || 0),
+      speedMode: normalizeSpeedMode_(row[5]),
+      speedLabel: String(row[6] || normalizeSpeedMode_(row[5])).trim()
     };
     if (!entry.name) continue;
+    if (entry.speedMode !== targetSpeedMode) continue;
 
     const current = bestByName[entry.name];
     if (!current || entry.score > current.score || (entry.score === current.score && entry.timestamp < current.timestamp)) {
@@ -114,9 +128,30 @@ function getScoreSheet_() {
   let sheet = spreadsheet.getSheetByName(SCORE_SHEET_NAME);
   if (!sheet) {
     sheet = spreadsheet.insertSheet(SCORE_SHEET_NAME);
-    sheet.appendRow(['created_at', 'name', 'score', 'level', 'timestamp']);
+    sheet.appendRow(['created_at', 'name', 'score', 'level', 'timestamp', 'speed_mode', 'speed_label']);
+  } else {
+    ensureScoreSheetHeader_(sheet);
   }
   return sheet;
+}
+
+function ensureScoreSheetHeader_(sheet) {
+  const headerRange = sheet.getRange(1, 1, 1, 7);
+  const header = headerRange.getValues()[0];
+  const expected = ['created_at', 'name', 'score', 'level', 'timestamp', 'speed_mode', 'speed_label'];
+  let changed = false;
+  for (let i = 0; i < expected.length; i++) {
+    if (!header[i]) {
+      header[i] = expected[i];
+      changed = true;
+    }
+  }
+  if (changed) headerRange.setValues([header]);
+}
+
+function normalizeSpeedMode_(speedMode) {
+  const value = String(speedMode || DEFAULT_SPEED_MODE).trim().toLowerCase();
+  return SPEED_MODES.indexOf(value) >= 0 ? value : DEFAULT_SPEED_MODE;
 }
 
 function createJsonOutput_(payload, callbackName) {
