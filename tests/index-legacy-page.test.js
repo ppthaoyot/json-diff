@@ -59,3 +59,11 @@ test("legacy Office Dino speed presets are relaxed for easier early play", () =>
   assert.match(html, /mode === "normal"[\s\S]*dinoConfig\.baseSpeed\s*=\s*4\.3[\s\S]*dinoConfig\.maxSpeed\s*=\s*10\.5/i);
   assert.match(html, /mode === "hard"[\s\S]*dinoConfig\.baseSpeed\s*=\s*5\.8[\s\S]*dinoConfig\.maxSpeed\s*=\s*14\.5/i);
 });
+
+test("legacy Office Dino exposes a share score card action after game over", () => {
+  const html = fs.readFileSync(indexPath, "utf8");
+
+  assert.match(html, /id="dino-score-card"/i);
+  assert.match(html, /onclick="copyDinoScoreCard\(\)"/i);
+  assert.match(html, /function buildDinoScoreCardText\([^)]*\)/i);
+});

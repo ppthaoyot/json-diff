@@ -50,7 +50,9 @@ function loadLeaderboardHarness() {
     "dino-global-leaderboard-list": { innerHTML: "" },
     "dino-global-leaderboard-empty": { style: { display: "block" } },
     "dino-global-leaderboard-status": { textContent: "" },
-    "dino-global-leaderboard-title": { textContent: "" }
+    "dino-global-leaderboard-title": { textContent: "" },
+    "dino-score-card": { style: { display: "none" } },
+    "dino-score-card-text": { textContent: "" }
   };
 
   const context = {
@@ -140,6 +142,9 @@ test("office dino game over saves and immediately renders the local leaderboard"
   assert.equal(elements["dino-leaderboard-empty"].style.display, "none");
   assert.match(elements["dino-leaderboard-list"].innerHTML, /Pixel Runner/);
   assert.match(elements["dino-leaderboard-list"].innerHTML, /1234/);
+  assert.equal(elements["dino-score-card"].style.display, "block");
+  assert.match(elements["dino-score-card-text"].textContent, /Pixel Runner/);
+  assert.match(elements["dino-score-card-text"].textContent, /1,234|1234/);
 });
 
 test("saveLeaderboardEntry keeps only the top 20 scores in descending order", () => {

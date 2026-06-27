@@ -1266,6 +1266,23 @@ canvas#dino-game {
 .dino-current-player strong {
   color: var(--text-primary);
 }
+.dino-score-card {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid rgba(39, 174, 96, 0.35);
+  border-radius: var(--radius-md);
+  background: rgba(39, 174, 96, 0.08);
+  color: var(--text-primary);
+}
+.dino-score-card strong {
+  display: block;
+  margin-bottom: 6px;
+}
+.dino-score-card p {
+  margin: 0 0 10px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
 .dino-leaderboard {
   margin-top: 0;
 }
@@ -1671,6 +1688,11 @@ canvas#dino-game {
             <button class="hub-btn" onclick="toggleDinoPause()" id="dino-pause-btn" style="margin-left: 8px; padding: 2px 10px; font-size: 12px;">⏸️ พักเบรก (Pause)</button>
           </div>
           <div style="color:var(--text-tertiary);">หลบ Bug มรณะ Scope งอก Deadline บีบคอ และ Production Down ให้รอด!</div>
+        </div>
+        <div class="dino-score-card" id="dino-score-card" style="display:none;">
+          <strong>แชร์คะแนนความว่าง</strong>
+          <p id="dino-score-card-text">จบเกมแล้วข้อความแชร์คะแนนจะแสดงตรงนี้</p>
+          <button class="hub-btn" type="button" onclick="copyDinoScoreCard()">คัดลอก Score Card</button>
         </div>
         </div>
 
@@ -3076,6 +3098,53 @@ function submitDinoGlobalScore(entry) {
   });
 }
 
+function buildDinoScoreCardText(entry) {
+  const source = entry || {
+    name: dinoCurrentPlayerName || getDefaultPlayerName(),
+    score: dinoScore,
+    level: getDinoLevel(),
+    speedLabel: getDinoSpeedLabel(getDinoCurrentSpeedMode())
+  };
+  return "ผมอู้ได้ " + Number(source.score || 0).toLocaleString("th-TH") + " คะแนน"
+    + " ระดับ: " + (source.level || getDinoLevel())
+    + " | โหมด: " + (source.speedLabel || getDinoSpeedLabel(getDinoCurrentSpeedMode()))
+    + " | ผู้เล่น: " + (source.name || getDefaultPlayerName())
+    + " #OfficeDino";
+}
+
+function renderDinoScoreCard(entry) {
+  const card = document.getElementById("dino-score-card");
+  const text = document.getElementById("dino-score-card-text");
+  if (!card || !text) return;
+  if (!entry) {
+    card.style.display = "none";
+    text.textContent = "จบเกมแล้วข้อความแชร์คะแนนจะแสดงตรงนี้";
+    return;
+  }
+  text.textContent = buildDinoScoreCardText(entry);
+  card.style.display = "block";
+}
+
+function copyDinoScoreCard() {
+  const text = buildDinoScoreCardText();
+  const fallbackCopy = function() {
+    if (typeof prompt === "function") {
+      prompt("คัดลอก Score Card", text);
+    } else {
+      showToast("Score Card พร้อมแล้ว", text, "ok");
+    }
+  };
+  if (typeof navigator !== "undefined" && navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function() {
+      showToast("คัดลอก Score Card แล้ว", "เอาไปแปะชวนเพื่อนแข่งได้เลย", "ok");
+    }).catch(function() {
+      fallbackCopy();
+    });
+    return;
+  }
+  fallbackCopy();
+}
+
 function onDinoGameOver() {
   const entry = {
     name: dinoCurrentPlayerName || getDefaultPlayerName(),
@@ -3087,6 +3156,7 @@ function onDinoGameOver() {
   };
   saveLeaderboardEntry(entry);
   renderDinoLeaderboard();
+  renderDinoScoreCard(entry);
   submitDinoGlobalScore(entry);
 }
 
@@ -3109,6 +3179,10 @@ let floatingTexts = [];
 let dinoMilestoneBanner = null;
 let dinoCurrentPlayerName = "";
 let dinoLastDifficultyTier = "normal";
+let dinoShieldCharges = 0;
+let dinoSlowTimer = 0;
+let dinoBossEvent = null;
+let dinoTriggeredBossScores = new Set();
 
 const dinoPlayer = {
   x: 80,
@@ -3158,6 +3232,9 @@ const dinoDifficultyTiers = [
 ];
 
 const dinoPowerupTypes = [
+  { emoji: "☕", label: "กาแฟเติมใจ", w: 48, h: 52, effect: "coffee-heal" },
+  { emoji: "🛡️", label: "ประชุมบังหน้า", w: 50, h: 52, effect: "shield" },
+  { emoji: "🏠", label: "WFH Mode", w: 50, h: 52, effect: "slow" },
   { emoji: "🍵", label: "ชาไข่มุกต่อชีวิต" },
   { emoji: "🚽", label: "อู้ไปขี้" },
   { emoji: "🚬", label: "สูดอากาศแป๊บ" },
@@ -3169,6 +3246,13 @@ const dinoSpecialTypes = [
   { emoji: "🚀", label: "ใบลาออก!" },
   { emoji: "🛵", label: "แว้นกลับบ้าน" },
   { emoji: "🏃", label: "หนีเจ้านาย" }
+];
+
+const dinoBossObstacleTypes = [
+  { emoji: "🔥", label: "งานด่วน x2", w: 58, h: 58 },
+  { emoji: "📅", label: "ประชุมฉุกเฉิน", w: 58, h: 56 },
+  { emoji: "🚨", label: "Production ถามหา", w: 60, h: 58 },
+  { emoji: "🧑‍💼", label: "PM โผล่หลังไหล่", w: 64, h: 58 }
 ];
 
 function normalizeDinoPickupType(type, kind) {
@@ -3304,6 +3388,10 @@ function resetDinoGame() {
   dinoInvincible = 0;
   dinoDashTimer = 0;
   dinoJumpBufferTimer = 0;
+  dinoShieldCharges = 0;
+  dinoSlowTimer = 0;
+  dinoBossEvent = null;
+  dinoTriggeredBossScores = new Set();
   floatingTexts = [];
   dinoMilestoneBanner = null;
   dinoLastDifficultyTier = "normal";
@@ -3315,6 +3403,7 @@ function resetDinoGame() {
   dinoPlayer.h = 58;
   
   document.getElementById("dino-pause-btn").textContent = "⏸️ พักเบรก (Pause)";
+  renderDinoScoreCard(null);
 }
 
 function toggleDinoPause() {
@@ -3342,7 +3431,33 @@ function getDinoDifficultyTier() {
   return dinoDifficultyTiers[dinoDifficultyTiers.length - 1];
 }
 
+function isDinoBossEventActive() {
+  return dinoBossEvent && dinoBossEvent.life > 0;
+}
+
+function triggerDinoBossEventIfNeeded() {
+  const checkpoint = Math.floor(dinoScore / 5000) * 5000;
+  if (checkpoint < 5000 || dinoTriggeredBossScores.has(checkpoint)) return;
+  dinoTriggeredBossScores.add(checkpoint);
+  dinoBossEvent = {
+    score: checkpoint,
+    life: 600,
+    maxLife: 600
+  };
+  dinoMilestoneBanner = {
+    tier: "boss",
+    title: "Boss งานถาโถม",
+    kicker: "WORK FLOOD",
+    hint: "ตั้งสติไว้ งานมาเป็นธีม แต่ยังหลบได้สบายๆ",
+    color: "#16a085",
+    glow: "rgba(22, 160, 133, 0.50)",
+    life: 150,
+    maxLife: 150
+  };
+}
+
 function getDinoObstaclePool(tier) {
+  if (isDinoBossEventActive()) return dinoBossObstacleTypes;
   if (tier.name === "hell") return dinoObstacleTypes.concat(dinoRushObstacleTypes, dinoHellObstacleTypes);
   if (tier.name === "rush") return dinoObstacleTypes.concat(dinoRushObstacleTypes);
   return dinoObstacleTypes;
@@ -3423,6 +3538,7 @@ function setDinoDuck(isDucking) {
 
 function spawnDinoObstacle() {
   const tier = getDinoDifficultyTier();
+  const bossActive = isDinoBossEventActive();
   const obstaclePool = getDinoObstaclePool(tier);
   let powerupChance = 0.35 - (dinoScore / 6000);
   if (powerupChance < 0.02) powerupChance = 0.02;
@@ -3432,27 +3548,32 @@ function spawnDinoObstacle() {
   if (isPowerup) {
     type = normalizeDinoPickupType(dinoPowerupTypes[Math.floor(Math.random() * dinoPowerupTypes.length)], "powerup");
   } else {
-    if (dinoScore > 400 && Math.random() < tier.specialChance) {
+    if (!bossActive && dinoScore > 400 && Math.random() < tier.specialChance) {
       isSpecial = true;
       type = normalizeDinoPickupType(dinoSpecialTypes[Math.floor(Math.random() * dinoSpecialTypes.length)], "special");
     } else {
       type = obstaclePool[Math.floor(Math.random() * obstaclePool.length)];
     }
   }
-  const floating = !isPowerup && !isSpecial && Math.random() < tier.floatingChance && dinoScore > 300;
+  const floatingChance = bossActive ? 0.22 : tier.floatingChance;
+  const floating = !isPowerup && !isSpecial && Math.random() < floatingChance && dinoScore > 300;
 
   dinoObstacles.push(createDinoObstacle(type, dW + 20, floating, { isPowerup, isSpecial }));
 
-  if (!isPowerup && !isSpecial && Math.random() < tier.comboChance) {
+  if (!bossActive && !isPowerup && !isSpecial && Math.random() < tier.comboChance) {
     const comboType = obstaclePool[Math.floor(Math.random() * obstaclePool.length)];
     const comboFloating = !floating && Math.random() < 0.5;
     dinoObstacles.push(createDinoObstacle(comboType, dW + 150, comboFloating, { isPowerup: false, isSpecial: false }));
   }
 
-  dinoNextSpawn = tier.spawnMin + Math.floor(Math.random() * (tier.spawnMax - tier.spawnMin + 1));
-  if (dinoScore > 800 && tier.name === "normal") dinoNextSpawn -= 15;
-  if (dinoScore > 1600 && tier.name === "normal") dinoNextSpawn -= 15;
-  dinoNextSpawn = Math.max(tier.spawnMin, dinoNextSpawn);
+  if (bossActive) {
+    dinoNextSpawn = 46 + Math.floor(Math.random() * 19);
+  } else {
+    dinoNextSpawn = tier.spawnMin + Math.floor(Math.random() * (tier.spawnMax - tier.spawnMin + 1));
+    if (dinoScore > 800 && tier.name === "normal") dinoNextSpawn -= 15;
+    if (dinoScore > 1600 && tier.name === "normal") dinoNextSpawn -= 15;
+    dinoNextSpawn = Math.max(tier.spawnMin, dinoNextSpawn);
+  }
 }
 
 let lastDinoHitReason = "";
@@ -3467,7 +3588,21 @@ function checkDinoCollision() {
     if (hit) {
       if (obs.isPowerup) {
         const powerupEffect = obs.effect || (obs.label === "เติมพลัง" ? "refill" : "heal");
-        if (powerupEffect === "refill") {
+        if (powerupEffect === "coffee-heal") {
+          if (dinoHP < dinoMaxHP) {
+            dinoHP++;
+            floatingTexts.push({ x: dinoPlayer.x, y: dinoPlayer.y - 20, text: "กาแฟเติมใจ +1", color: "#8e5a2a", life: 45, maxLife: 45 });
+          } else {
+            dinoScore += 60;
+            floatingTexts.push({ x: dinoPlayer.x, y: dinoPlayer.y - 20, text: "กาแฟล้นแก้ว +60", color: "#f39c12", life: 45, maxLife: 45 });
+          }
+        } else if (powerupEffect === "shield") {
+          dinoShieldCharges = Math.min(2, dinoShieldCharges + 1);
+          floatingTexts.push({ x: dinoPlayer.x, y: dinoPlayer.y - 20, text: "ประชุมบังหน้า +1", color: "#3498db", life: 45, maxLife: 45 });
+        } else if (powerupEffect === "slow") {
+          dinoSlowTimer = 300;
+          floatingTexts.push({ x: dinoPlayer.x, y: dinoPlayer.y - 20, text: "WFH Mode 5s", color: "#16a085", life: 45, maxLife: 45 });
+        } else if (powerupEffect === "refill") {
           const restored = dinoMaxHP - dinoHP;
           dinoHP = dinoMaxHP;
           if (restored > 0) {
@@ -3502,6 +3637,12 @@ function checkDinoCollision() {
           }
           dinoObstacles.splice(i, 1);
           i--;
+        } else if (dinoShieldCharges > 0) {
+          dinoShieldCharges--;
+          dinoInvincible = 30;
+          floatingTexts.push({ x: dinoPlayer.x, y: dinoPlayer.y - 20, text: "ประชุมบังไว้!", color: "#3498db", life: 40, maxLife: 40 });
+          dinoObstacles.splice(i, 1);
+          i--;
         } else if (dinoInvincible <= 0) {
           dinoHP--;
           dinoInvincible = 50;
@@ -3526,6 +3667,11 @@ function updateDino() {
   if (dinoState !== "running") return;
   dinoFrame++;
   dinoScore += 1;
+  if (dinoBossEvent) {
+    dinoBossEvent.life--;
+    if (dinoBossEvent.life <= 0) dinoBossEvent = null;
+  }
+  triggerDinoBossEventIfNeeded();
   const tier = getDinoDifficultyTier();
   showDinoDifficultyMilestone(tier);
   dinoSpeed = Math.min(dinoConfig.maxSpeed + tier.maxSpeedBonus, dinoConfig.baseSpeed + dinoScore / 350);
@@ -3538,6 +3684,7 @@ function updateDino() {
       dinoParticles.push({ x: dinoPlayer.x, y: dinoPlayer.y + dinoPlayer.h/2, vx: -3 - Math.random()*3, vy: (Math.random()-0.5)*2, life: 15 });
     }
   }
+  const obstacleSpeed = dinoSlowTimer > 0 ? dinoSpeed * 0.55 : dinoSpeed;
 
   dinoScoreText.textContent = dinoScore;
   dinoLevelText.textContent = getDinoLevel();
@@ -3559,7 +3706,7 @@ function updateDino() {
   dinoNextSpawn--;
   if (dinoNextSpawn <= 0) spawnDinoObstacle();
 
-  for (const obs of dinoObstacles) obs.x -= dinoSpeed;
+  for (const obs of dinoObstacles) obs.x -= obstacleSpeed;
   dinoObstacles = dinoObstacles.filter(obs => obs.x + obs.w > -40);
 
   for (const p of dinoParticles) {
@@ -3568,6 +3715,7 @@ function updateDino() {
   dinoParticles = dinoParticles.filter(p => p.life > 0);
 
   if (dinoInvincible > 0) dinoInvincible--;
+  if (dinoSlowTimer > 0) dinoSlowTimer--;
   
   for (const ft of floatingTexts) {
     ft.y -= 1;
@@ -3863,12 +4011,25 @@ function drawDinoParticles() {
 }
 
 function drawDinoBuffStatus() {
-  if (dinoDashTimer <= 0 && dinoInvincible <= 0) return;
+  if (dinoDashTimer <= 0 && dinoInvincible <= 0 && dinoShieldCharges <= 0 && dinoSlowTimer <= 0) return;
   dinoCtx.save();
   dinoCtx.font = "bold 14px Tahoma";
   dinoCtx.textAlign = "left";
-  dinoCtx.fillStyle = "#8e44ad";
-  dinoCtx.fillText(dinoBuffLabel + " " + (Math.max(dinoDashTimer, dinoInvincible) / 60).toFixed(1) + "s", 24, 52);
+  let y = 52;
+  if (dinoDashTimer > 0 || dinoInvincible > 0) {
+    dinoCtx.fillStyle = "#8e44ad";
+    dinoCtx.fillText(dinoBuffLabel + " " + (Math.max(dinoDashTimer, dinoInvincible) / 60).toFixed(1) + "s", 24, y);
+    y += 20;
+  }
+  if (dinoShieldCharges > 0) {
+    dinoCtx.fillStyle = "#3498db";
+    dinoCtx.fillText("ประชุมบังหน้า x" + dinoShieldCharges, 24, y);
+    y += 20;
+  }
+  if (dinoSlowTimer > 0) {
+    dinoCtx.fillStyle = "#16a085";
+    dinoCtx.fillText("WFH Mode " + (dinoSlowTimer / 60).toFixed(1) + "s", 24, y);
+  }
   dinoCtx.restore();
 }
 

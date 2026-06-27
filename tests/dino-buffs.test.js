@@ -71,7 +71,9 @@ function loadDinoHarness() {
     "dino-global-leaderboard-list": { innerHTML: "" },
     "dino-global-leaderboard-empty": { style: { display: "block" } },
     "dino-global-leaderboard-status": { textContent: "" },
-    "dino-global-leaderboard-title": { textContent: "" }
+    "dino-global-leaderboard-title": { textContent: "" },
+    "dino-score-card": { style: { display: "none" } },
+    "dino-score-card-text": { textContent: "" }
   };
 
   const math = Object.create(Math);
@@ -130,6 +132,10 @@ function loadDinoHarness() {
             dinoInvincible,
             dinoDashTimer,
             dinoJumpBufferTimer: typeof dinoJumpBufferTimer === "number" ? dinoJumpBufferTimer : 0,
+            dinoShieldCharges: typeof dinoShieldCharges === "number" ? dinoShieldCharges : 0,
+            dinoSlowTimer: typeof dinoSlowTimer === "number" ? dinoSlowTimer : 0,
+            dinoBossEvent: typeof dinoBossEvent === "object" && dinoBossEvent ? Object.assign({}, dinoBossEvent) : null,
+            dinoTriggeredBossScores: typeof dinoTriggeredBossScores !== "undefined" ? Array.from(dinoTriggeredBossScores) : [],
             dinoPlayer: Object.assign({}, dinoPlayer),
             dinoObstacles: dinoObstacles.map(function(obs) { return Object.assign({}, obs); }),
             floatingTexts: floatingTexts.map(function(ft) { return Object.assign({}, ft); }),
@@ -144,6 +150,10 @@ function loadDinoHarness() {
           if (typeof next.dinoInvincible === "number") dinoInvincible = next.dinoInvincible;
           if (typeof next.dinoDashTimer === "number") dinoDashTimer = next.dinoDashTimer;
           if (typeof next.dinoJumpBufferTimer === "number") dinoJumpBufferTimer = next.dinoJumpBufferTimer;
+          if (typeof next.dinoShieldCharges === "number") dinoShieldCharges = next.dinoShieldCharges;
+          if (typeof next.dinoSlowTimer === "number") dinoSlowTimer = next.dinoSlowTimer;
+          if (next.dinoBossEvent !== undefined) dinoBossEvent = next.dinoBossEvent;
+          if (Array.isArray(next.dinoTriggeredBossScores)) dinoTriggeredBossScores = new Set(next.dinoTriggeredBossScores);
           if (typeof next.dinoCurrentPlayerName === "string") dinoCurrentPlayerName = next.dinoCurrentPlayerName;
           if (Array.isArray(next.dinoObstacles)) dinoObstacles = next.dinoObstacles.map(function(obs) { return Object.assign({}, obs); });
           if (Array.isArray(next.floatingTexts)) floatingTexts = next.floatingTexts.map(function(ft) { return Object.assign({}, ft); });
@@ -174,7 +184,7 @@ function loadDinoHarness() {
 test("spawned powerup pickup has a drawable hitbox", () => {
   const { api, math } = loadDinoHarness();
   api.setState({ dinoScore: 400 });
-  const rolls = [0.1, 0.7];
+  const rolls = [0.1, 0.75];
   math.random = () => rolls.shift() ?? 0.5;
 
   api.spawnDinoObstacle();
@@ -245,6 +255,121 @@ test("energy refill pickup restores HP to full and shows feedback", () => {
 
   assert.equal(state.dinoHP, 3);
   assert.ok(state.floatingTexts.some((entry) => String(entry.text).includes("เติมพลัง")));
+});
+
+test("coffee heart pickup restores one HP with a readable coffee message", () => {
+  const { api } = loadDinoHarness();
+  api.resetDinoGame();
+  api.setState({
+    dinoHP: 2,
+    dinoObstacles: [
+      {
+        x: 80,
+        y: 177,
+        w: 48,
+        h: 52,
+        emoji: "\u2615",
+        label: "\u0e01\u0e32\u0e41\u0e1f\u0e40\u0e15\u0e34\u0e21\u0e43\u0e08",
+        effect: "coffee-heal",
+        isPowerup: true,
+        isSpecial: false
+      }
+    ]
+  });
+
+  api.checkDinoCollision();
+  const state = api.getState();
+
+  assert.equal(state.dinoHP, 3);
+  assert.ok(state.floatingTexts.some((entry) => String(entry.text).includes("\u0e01\u0e32\u0e41\u0e1f")));
+});
+
+test("meeting shield pickup blocks the next ordinary hit once", () => {
+  const { api } = loadDinoHarness();
+  api.resetDinoGame();
+  api.setState({
+    dinoHP: 3,
+    dinoShieldCharges: 0,
+    dinoObstacles: [
+      {
+        x: 80,
+        y: 177,
+        w: 48,
+        h: 52,
+        emoji: "\uD83D\uDEE1\uFE0F",
+        label: "\u0e1b\u0e23\u0e30\u0e0a\u0e38\u0e21\u0e1a\u0e31\u0e07\u0e2b\u0e19\u0e49\u0e32",
+        effect: "shield",
+        isPowerup: true,
+        isSpecial: false
+      }
+    ]
+  });
+
+  api.checkDinoCollision();
+  let state = api.getState();
+  assert.equal(state.dinoShieldCharges, 1);
+
+  api.setState({
+    dinoInvincible: 0,
+    dinoObstacles: [
+      {
+        x: 80,
+        y: 177,
+        w: 48,
+        h: 52,
+        emoji: "\uD83D\uDCC4",
+        label: "\u0e07\u0e32\u0e19",
+        isPowerup: false,
+        isSpecial: false
+      }
+    ]
+  });
+
+  api.checkDinoCollision();
+  state = api.getState();
+
+  assert.equal(state.dinoHP, 3);
+  assert.equal(state.dinoShieldCharges, 0);
+  assert.equal(state.dinoObstacles.length, 0);
+});
+
+test("WFH mode pickup slows obstacle movement for five seconds", () => {
+  const { api } = loadDinoHarness();
+  api.resetDinoGame();
+  api.setState({
+    dinoObstacles: [
+      {
+        x: 80,
+        y: 177,
+        w: 48,
+        h: 52,
+        emoji: "\uD83C\uDFE0",
+        label: "WFH Mode",
+        effect: "slow",
+        isPowerup: true,
+        isSpecial: false
+      }
+    ]
+  });
+
+  api.checkDinoCollision();
+  let state = api.getState();
+  assert.equal(state.dinoSlowTimer, 300);
+
+  api.setState({
+    dinoState: "running",
+    dinoScore: 0,
+    dinoNextSpawn: 999,
+    dinoObstacles: [
+      { x: 500, y: 177, w: 48, h: 52, emoji: "\uD83D\uDCC4", label: "\u0e07\u0e32\u0e19", isPowerup: false, isSpecial: false }
+    ]
+  });
+
+  api.updateDino();
+  state = api.getState();
+
+  assert.ok(state.dinoObstacles[0].x > 496, "slow mode should move obstacles less than the normal 4.3px base speed");
+  assert.equal(state.dinoSlowTimer, 299);
 });
 
 test("special pickup activates the immortal piercing buff and HUD text", () => {
@@ -477,6 +602,46 @@ test("difficulty milestones render a cinematic center-screen banner", () => {
 
   assert.equal(state.dinoMilestoneBanner.tier, "hell");
   assert.match(state.dinoMilestoneBanner.title, /\u0e19\u0e23\u0e01\u0e2d\u0e2d\u0e1f\u0e1f\u0e34\u0e28/);
+});
+
+test("boss work flood event triggers every 5000 points without repeating a checkpoint", () => {
+  const { api, drawCalls } = loadDinoHarness();
+  api.resetDinoGame();
+  api.setState({ dinoState: "running", dinoScore: 4999, dinoNextSpawn: 999 });
+
+  api.updateDino();
+  let state = api.getState();
+
+  assert.equal(state.dinoBossEvent.score, 5000);
+  assert.equal(state.dinoBossEvent.life, 600);
+  assert.equal(JSON.stringify(state.dinoTriggeredBossScores), JSON.stringify([5000]));
+
+  api.renderDino();
+  assert.ok(drawCalls.some((entry) => String(entry.text).includes("\u0e07\u0e32\u0e19\u0e16\u0e32\u0e42\u0e16\u0e21")));
+
+  api.setState({ dinoBossEvent: null, dinoScore: 5001, dinoNextSpawn: 999 });
+  api.updateDino();
+  state = api.getState();
+
+  assert.equal(state.dinoBossEvent, null);
+  assert.equal(JSON.stringify(state.dinoTriggeredBossScores), JSON.stringify([5000]));
+});
+
+test("boss work flood event uses a gentle themed obstacle pool", () => {
+  const { api, math } = loadDinoHarness();
+  api.resetDinoGame();
+  api.setState({
+    dinoBossEvent: { score: 5000, life: 600, maxLife: 600 },
+    dinoScore: 5200
+  });
+  const rolls = [0.9, 0, 0.9, 0.5];
+  math.random = () => rolls.shift() ?? 0.5;
+
+  api.spawnDinoObstacle();
+  const state = api.getState();
+
+  assert.equal(state.dinoObstacles[0].label, "\u0e07\u0e32\u0e19\u0e14\u0e48\u0e27\u0e19 x2");
+  assert.ok(state.dinoNextSpawn >= 46, "boss event should stay readable and not spam obstacles");
 });
 
 test("ordinary obstacles render clear jump and duck action cues", () => {
