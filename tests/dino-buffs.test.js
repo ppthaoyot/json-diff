@@ -390,6 +390,35 @@ test("meeting shield pickup blocks the next ordinary hit once", () => {
   assert.equal(state.dinoObstacles.length, 0);
 });
 
+test("ordinary obstacle hitboxes are forgiving near the visual edge", () => {
+  const { api } = loadDinoHarness();
+  api.resetDinoGame();
+  api.setState({
+    dinoState: "running",
+    dinoHP: 3,
+    dinoInvincible: 0,
+    playerBox: { x: 80, y: 177, w: 46, h: 58, grounded: true, ducking: false },
+    dinoObstacles: [
+      {
+        x: 111,
+        y: 177,
+        w: 62,
+        h: 58,
+        emoji: "\uD83E\uDDD1\u200D\uD83D\uDCBC",
+        label: "PM ตามงาน",
+        isPowerup: false,
+        isSpecial: false
+      }
+    ]
+  });
+
+  api.checkDinoCollision();
+  const state = api.getState();
+
+  assert.equal(state.dinoHP, 3);
+  assert.equal(state.dinoState, "running");
+});
+
 test("WFH mode pickup slows obstacle movement for five seconds", () => {
   const { api } = loadDinoHarness();
   api.resetDinoGame();
@@ -916,6 +945,7 @@ test("late game can spawn controlled obstacle combos", () => {
 
   assert.equal(state.dinoObstacles.length, 2);
   assert.ok(state.dinoObstacles[1].x > state.dinoObstacles[0].x);
+  assert.ok(state.dinoObstacles[1].x - state.dinoObstacles[0].x >= 200);
   assert.equal(Boolean(state.dinoObstacles[0].isPowerup), false);
   assert.equal(Boolean(state.dinoObstacles[1].isPowerup), false);
   assert.ok(state.dinoNextSpawn <= 44);

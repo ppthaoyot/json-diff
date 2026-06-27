@@ -3940,7 +3940,7 @@ function spawnDinoObstacle() {
   if (!bossActive && !isPowerup && !isSpecial && Math.random() < tier.comboChance) {
     const comboType = obstaclePool[Math.floor(Math.random() * obstaclePool.length)];
     const comboFloating = !floating && Math.random() < 0.5;
-    dinoObstacles.push(createDinoObstacle(comboType, dW + 150, comboFloating, { isPowerup: false, isSpecial: false }));
+    dinoObstacles.push(createDinoObstacle(comboType, dW + 230, comboFloating, { isPowerup: false, isSpecial: false }));
   }
 
   if (bossActive) {
@@ -3959,7 +3959,7 @@ function checkDinoCollision() {
   const pBox = { x: dinoPlayer.x + 8, y: dinoPlayer.y + 8, w: dinoPlayer.w - 16, h: dinoPlayer.h - 10 };
   for (let i = 0; i < dinoObstacles.length; i++) {
     const obs = dinoObstacles[i];
-    const oBox = { x: obs.x + 6, y: obs.y + 6, w: obs.w - 12, h: obs.h - 8 };
+    const oBox = { x: obs.x + 10, y: obs.y + 8, w: Math.max(18, obs.w - 20), h: Math.max(18, obs.h - 14) };
     const hit = pBox.x < oBox.x + oBox.w && pBox.x + pBox.w > oBox.x && pBox.y < oBox.y + oBox.h && pBox.y + pBox.h > oBox.y;
     
     if (hit) {
