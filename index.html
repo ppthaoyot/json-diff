@@ -1169,7 +1169,7 @@ textarea.invalid { border-color: #E24B4A; }
 /* ---- Office Dino Game ---- */
 #mg-hub-dino {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
   align-items: start;
 }
@@ -1190,11 +1190,14 @@ textarea.invalid { border-color: #E24B4A; }
 .dino-canvas-wrap { border: 3px solid var(--border-md); border-radius: var(--radius-md); overflow: hidden; background: #fff; }
 .dino-layout {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
   align-items: start;
 }
-.dino-stage-panel,
+.dino-stage-panel {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
 .dino-side-panel {
   min-width: 0;
 }
@@ -1220,8 +1223,11 @@ canvas#dino-game {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--bg-secondary);
-  grid-column: 2;
-  grid-row: 2;
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
 }
 #mg-hub-dino .dino-leaderboard:first-of-type > div[style*="display:flex"][style*="flex-wrap:wrap"],
 #mg-hub-dino .dino-leaderboard:first-of-type > div[style*="font-size:12px"][style*="line-height:1.6"],
@@ -1252,15 +1258,16 @@ canvas#dino-game {
   color: var(--text-primary);
 }
 .dino-current-player {
-  margin-top: 10px;
+  margin-top: 8px;
   font-size: 13px;
   color: var(--text-secondary);
+  text-align: left;
 }
 .dino-current-player strong {
   color: var(--text-primary);
 }
 .dino-leaderboard {
-  margin-top: 14px;
+  margin-top: 0;
 }
 .dino-leaderboard h3 {
   font-size: 15px;
@@ -1330,7 +1337,7 @@ canvas#dino-game {
   }
   .dino-meta-panel {
     grid-column: 1;
-    grid-row: auto;
+    grid-template-columns: 1fr;
   }
 }
 .mg-wrap.mg-wrap-dino {
@@ -1643,17 +1650,31 @@ canvas#dino-game {
           </div>
         </div>
 
-        <div class="dino-canvas-wrap">
-          <canvas id="dino-game" width="900" height="300"></canvas>
-        </div>
-
-        <div class="dino-meta-panel">
+        <div class="dino-stage-panel">
           <form class="dino-player-form" id="dino-player-form" onsubmit="beginDinoRun(); return false;">
             <label for="dino-player-name">ชื่อผู้เล่น</label>
             <input id="dino-player-name" type="text" maxlength="32" placeholder="ใส่ชื่อ หรือปล่อยว่างให้สุ่มชื่อกวนๆ">
             <button class="hub-btn" type="submit" id="dino-player-start-btn">เริ่มเล่น</button>
           </form>
           <div class="dino-current-player">ผู้เล่นปัจจุบัน: <strong id="dino-current-player-name">ยังไม่ได้เริ่ม</strong></div>
+
+        <div class="dino-canvas-wrap">
+          <canvas id="dino-game" width="900" height="300"></canvas>
+        </div>
+
+        <div class="dino-controls">
+          <div>
+            <span class="dino-badge">Space / ↑</span> กระโดด
+            <span class="dino-badge">↓</span> หมอบ
+            <span class="dino-badge">P</span> Pause
+            <span class="dino-badge">R</span> เริ่มใหม่
+            <button class="hub-btn" onclick="toggleDinoPause()" id="dino-pause-btn" style="margin-left: 8px; padding: 2px 10px; font-size: 12px;">⏸️ พักเบรก (Pause)</button>
+          </div>
+          <div style="color:var(--text-tertiary);">หลบ Bug มรณะ Scope งอก Deadline บีบคอ และ Production Down ให้รอด!</div>
+        </div>
+        </div>
+
+        <div class="dino-meta-panel">
           <section class="dino-leaderboard" aria-labelledby="dino-leaderboard-title">
             <h3 id="dino-leaderboard-title">Top 20 Office Dino</h3>
             <div id="dino-leaderboard-empty">ยังไม่มีคะแนน บุกเบิกตำนานคนแรกได้เลย</div>
@@ -1676,16 +1697,6 @@ canvas#dino-game {
           </section>
         </div>
 
-        <div class="dino-controls">
-          <div>
-            <span class="dino-badge">Space / ↑</span> กระโดด
-            <span class="dino-badge">↓</span> หมอบ
-            <span class="dino-badge">P</span> Pause
-            <span class="dino-badge">R</span> เริ่มใหม่
-            <button class="hub-btn" onclick="toggleDinoPause()" id="dino-pause-btn" style="margin-left: 8px; padding: 2px 10px; font-size: 12px;">⏸️ พักเบรก (Pause)</button>
-          </div>
-          <div style="color:var(--text-tertiary);">หลบงานด่วน แฟ้มเอกสาร และหัวหน้าให้รอด!</div>
-        </div>
       </div>
 
       <!-- GAME: BOX -->
@@ -2967,9 +2978,11 @@ function renderDinoGlobalLeaderboard(rows, message, speedMode) {
 
   const currentSpeedMode = speedMode || getDinoCurrentSpeedMode();
   const speedLabel = getDinoSpeedLabel(currentSpeedMode);
-  const normalizedRows = normalizeDinoGlobalLeaderboardRows(rows || [], currentSpeedMode);
+  const normalizedRows = typeof normalizeDinoGlobalLeaderboardRows === "function"
+    ? normalizeDinoGlobalLeaderboardRows(rows || [], currentSpeedMode)
+    : (Array.isArray(rows) ? rows : []).slice(0, dinoLeaderboardLimit);
   if (title) title.textContent = "Global Top 20 - " + speedLabel;
-  status.textContent = message || (getDinoGlobalLeaderboardEndpoint() ? "พร้อมแข่งบนอันดับรวมระดับ " + speedLabel + " แล้ว" : "ตั้งค่า Google Apps Script URL ก่อน แล้วอันดับรวมจะแสดงตรงนี้");
+  status.textContent = message || (isDinoGlobalLeaderboardReady() && getDinoGlobalLeaderboardEndpoint() ? "พร้อมแข่งบนอันดับรวมระดับ " + speedLabel + " แล้ว" : "อันดับรวมยังไม่พร้อมใช้งาน แต่คะแนนเครื่องนี้ยังบันทึกได้ตามปกติ");
   empty.style.display = normalizedRows.length ? "none" : "block";
   list.innerHTML = normalizedRows.map(function(row, index) {
     return '<li class="dino-leaderboard-item">'
@@ -2978,6 +2991,13 @@ function renderDinoGlobalLeaderboard(rows, message, speedMode) {
       + '<span class="dino-leaderboard-score">' + row.score + '</span>'
       + '</li>';
   }).join("");
+}
+
+function isDinoGlobalLeaderboardReady() {
+  return typeof getDinoGlobalLeaderboardEndpoint === "function"
+    && typeof loadDinoGlobalLeaderboard === "function"
+    && typeof submitDinoGlobalLeaderboardEntry === "function"
+    && typeof normalizeDinoGlobalLeaderboardRows === "function";
 }
 
 function clearDinoLeaderboard() {
@@ -3019,6 +3039,10 @@ function importDinoLeaderboardFromPrompt() {
 }
 
 function syncDinoGlobalLeaderboard(showToastOnError) {
+  if (!isDinoGlobalLeaderboardReady()) {
+    renderDinoGlobalLeaderboard([], "อันดับรวมยังไม่พร้อมใช้งาน แต่คะแนนเครื่องนี้ยังบันทึกได้ตามปกติ", getDinoCurrentSpeedMode());
+    return Promise.resolve({ ok: false, rows: [], message: "global leaderboard helper is not ready" });
+  }
   const speedMode = getDinoCurrentSpeedMode();
   const speedLabel = getDinoSpeedLabel(speedMode);
   renderDinoGlobalLeaderboard([], "กำลังโหลดอันดับรวมระดับ " + speedLabel + "...", speedMode);
@@ -3035,6 +3059,10 @@ function syncDinoGlobalLeaderboard(showToastOnError) {
 }
 
 function submitDinoGlobalScore(entry) {
+  if (!isDinoGlobalLeaderboardReady()) {
+    renderDinoGlobalLeaderboard([], "บันทึกคะแนนเครื่องนี้แล้ว แต่อันดับรวมยังไม่พร้อมใช้งาน", entry.speedMode || getDinoCurrentSpeedMode());
+    return Promise.resolve({ ok: false, message: "global leaderboard helper is not ready" });
+  }
   if (!getDinoGlobalLeaderboardEndpoint()) return Promise.resolve();
   const speedMode = entry.speedMode || getDinoCurrentSpeedMode();
   renderDinoGlobalLeaderboard([], "กำลังส่งคะแนนขึ้นอันดับรวมระดับ " + getDinoSpeedLabel(speedMode) + "...", speedMode);
@@ -3104,19 +3132,23 @@ const dinoObstacleTypes = [
   { emoji: "🧑‍💼", label: "PM ตามงาน", w: 62, h: 58 },
   { emoji: "📌", label: "งานฝาก", w: 46, h: 50 },
   { emoji: "💸", label: "หักเงินเดือน", w: 52, h: 52 },
-  { emoji: "🤡", label: "เพื่อนโยนขี้", w: 56, h: 56 }
+  { emoji: "🤡", label: "เพื่อนโยนขี้", w: 56, h: 56 },
+  { emoji: "🐞", label: "Bug มรณะ", w: 48, h: 52 },
+  { emoji: "🌱", label: "Scope งอก", w: 50, h: 54 },
+  { emoji: "🔧", label: "Build Failed", w: 52, h: 52 },
+  { emoji: "📅", label: "Meeting ซ้อน Meeting", w: 58, h: 56 },
+  { emoji: "❓", label: "Requirement ไม่ชัด", w: 52, h: 52 },
+  { emoji: "⏰", label: "Deadline บีบคอ", w: 54, h: 54 }
 ];
 
 const dinoRushObstacleTypes = [
-  { emoji: "\uD83D\uDCC5", label: "\u0e1b\u0e23\u0e30\u0e0a\u0e38\u0e21\u0e14\u0e48\u0e27\u0e19", w: 52, h: 54 },
-  { emoji: "\uD83D\uDEB6", label: "\u0e2b\u0e31\u0e27\u0e2b\u0e19\u0e49\u0e32\u0e40\u0e14\u0e34\u0e19\u0e15\u0e23\u0e27\u0e08", w: 58, h: 58 },
-  { emoji: "\uD83D\uDCE8", label: "Email \u0e15\u0e32\u0e21\u0e07\u0e32\u0e19", w: 50, h: 52 }
+  { emoji: "🔥", label: "Hotfix ตอน 5 โมงเย็น", w: 56, h: 56 },
+  { emoji: "💥", label: "Regression ถล่มเมือง", w: 58, h: 58 }
 ];
 
 const dinoHellObstacleTypes = [
-  { emoji: "\uD83D\uDEA8", label: "Audit \u0e21\u0e32\u0e41\u0e25\u0e49\u0e27", w: 56, h: 58 },
-  { emoji: "\uD83D\uDCA5", label: "Deploy \u0e1e\u0e31\u0e07", w: 54, h: 56 },
-  { emoji: "\uD83D\uDCC9", label: "KPI \u0e15\u0e01", w: 52, h: 54 }
+  { emoji: "🧱", label: "Tech Debt ก้อนยักษ์", w: 60, h: 58 },
+  { emoji: "🚨", label: "Production Down", w: 58, h: 58 }
 ];
 
 const dinoDifficultyTiers = [
@@ -3167,16 +3199,79 @@ function normalizeDinoPickupType(type, kind) {
 
 const dinoLevels = [
   { score: 0, text: "ยังพอทำงานอยู่" },
-  { score: 50, text: "สลับจอหนีเก่ง" },
-  { score: 120, text: "ตีเนียนเข้าห้องน้ำ" },
-  { score: 250, text: "แอบหลับในส้วม" },
-  { score: 450, text: "รับเงินเดือนไปวันๆ" },
-  { score: 700, text: "วิญญาณสิงเก้าอี้" },
-  { score: 1000, text: "ปรมาจารย์การอู้" },
-  { score: 1400, text: "HR ถือซองขาวรอ" },
-  { score: 1900, text: "ตำนานพนักงานไร้ตัวตน" },
-  { score: 2500, text: "บริษัทขาดทุนเพราะคุณ" },
-  { score: 3500, text: "ลูกรัก CEO" }
+  { score: 50, text: "พอมีเวลาหายใจ" },
+  { score: 120, text: "สลับจอหนีเก่ง" },
+  { score: 250, text: "ว่างนิดหน่อย อย่าเพิ่งโยนงาน" },
+  { score: 450, text: "ตีเนียนเข้าห้องน้ำ" },
+  { score: 700, text: "เริ่มชิว แต่ยังไม่ปลอดภัย" },
+  { score: 1000, text: "แอบหลับในส้วม" },
+  { score: 1400, text: "ว่างมากจนเปิด YouTube ได้" },
+  { score: 1900, text: "รับเงินเดือนไปวันๆ" },
+  { score: 2500, text: "มาทำไม วันนี้น่าจะลา" },
+  { score: 3200, text: "วิญญาณสิงเก้าอี้" },
+  { score: 4000, text: "อยู่เฉยๆ ก็โดนงานหาเจอ" },
+  { score: 5000, text: "ปรมาจารย์การอู้" },
+  { score: 6200, text: "ว่างระดับเสี่ยงถูกจับเข้าประชุม" },
+  { score: 7500, text: "HR ถือซองขาวรอ" },
+  { score: 9000, text: "สงบผิดปกติ เดี๋ยวมีเรื่องแน่" },
+  { score: 11000, text: "ตำนานพนักงานไร้ตัวตน" },
+  { score: 13000, text: "ว่างแบบ Production ยังไม่รู้ตัว" },
+  { score: 15000, text: "บริษัทขาดทุนเพราะคุณ" },
+  { score: 18000, text: "นิพพานแห่ง Sprint" },
+  { score: 22000, text: "ลูกรัก CEO" }
+];
+
+const dinoExcuseSigns = [
+  "วันนี้ไม่ไหวครับ ไข้ขึ้น… ตอนเห็นงาน",
+  "ท้องเสียครับ เสียใจที่ต้องทำงาน",
+  "ปวดหัวมากครับ โดยเฉพาะตอนเปิด Jira",
+  "หมอบอกให้พักผ่อน ห้ามแตะงานด่วน",
+  "เป็นภูมิแพ้ครับ แพ้งานเร่ง",
+  "ระบบร่างกาย Error 500",
+  "วันนี้เน็ตช้า แต่ใจช้ากว่า",
+  "CPU สมองทำงาน 100% ตั้งแต่ 9 โมง",
+  "ขอพักสายตา 5 นาที เริ่มนับใหม่ทุก 5 นาที",
+  "ติดประชุมกับตัวเองอยู่ครับ",
+  "กำลัง Research อยู่ครับ จริงๆ คือเปิด YouTube",
+  "รอ Requirement ชัดก่อนครับ เลยยังไม่เริ่ม",
+  "กำลัง Sync สมองกับกาแฟ",
+  "วันนี้พลังงานต่ำกว่า Battery Saver",
+  "ติดบั๊กชีวิตครับ ยัง Debug ไม่เจอ",
+  "ขอไปเข้าห้องน้ำแป๊บครับ อาจจะ Deploy นาน",
+  "ปวดหลังจากการแบกทีม",
+  "เมื่อคืนฝันว่า Deploy พัง เลยพักใจอยู่",
+  "ระบบภายในล่ม หมายถึงตัวผม",
+  "กำลังรัน Process คิดงานอยู่ ห้าม Interrupt",
+  "ขอลาใจครึ่งวันครับ",
+  "อยู่ในโหมด Maintenance",
+  "กำลังโหลดแรงบันดาลใจ… 1%",
+  "พักก่อน เดี๋ยวค่อย Productive",
+  "วันนี้สมองขึ้น Read-only",
+  "ทำงานไม่ได้ครับ เมาส์ไม่รัก",
+  "กำลังรอ Build ตัวเองให้ผ่าน",
+  "มีอาการแพ้คำว่า “ขอเพิ่มนิดเดียว”",
+  "งานไม่ได้ยากครับ แค่ใจยังไม่พร้อม",
+  "ขอลาไปเป็นคนธรรมดา 10 นาที",
+  "ร่างกายต้องการกาแฟ ไม่ใช่ Requirement",
+  "ไม่ได้อู้ครับ กำลัง Optimize การพัก",
+  "ขอ Standby แบบไม่ Active",
+  "ตอนนี้อยู่ในสถานะ Pending Motivation",
+  "ขอพักเพราะ Sprint นี้ใจบาง",
+  "เครื่องผมไม่ค้างครับ ผมค้างเอง",
+  "กำลัง Clear Cache สมอง",
+  "สมอง Timeout กรุณาลองใหม่ภายหลัง",
+  "วันนี้ Working From Bed",
+  "ไม่ได้หลับครับ กำลัง Compile ความคิด",
+  "ขอเลื่อนงาน เพราะดาวพุธถอยหลัง",
+  "กำลังทำ Deep Work ในฝัน",
+  "อาการหนักครับ เปิด Excel แล้วเวียนหัว",
+  "ขอไปหาแรงบันดาลใจที่ร้านกาแฟ",
+  "ไม่ได้หนีงานครับ แค่หลบ Cooldown",
+  "งานเข้าเยอะจน Antivirus ใจเตือน",
+  "ขอพักก่อน เดี๋ยวค่อยกลับมาเป็นทรัพยากรบุคคล",
+  "วันนี้ใจติด Merge Conflict",
+  "กำลังรออนุมัติจากตัวเอง",
+  "ขอเวลา Reboot ชีวิต"
 ];
 
 function changeDinoChar() {
@@ -3190,7 +3285,7 @@ function changeDinoSpeed() {
   else if (mode === "normal") { dinoConfig.baseSpeed = 4.3; dinoConfig.maxSpeed = 10.5; }
   else if (mode === "hard") { dinoConfig.baseSpeed = 5.8; dinoConfig.maxSpeed = 14.5; }
   resetDinoGame();
-  if (getDinoGlobalLeaderboardEndpoint()) {
+  if (isDinoGlobalLeaderboardReady() && getDinoGlobalLeaderboardEndpoint()) {
     syncDinoGlobalLeaderboard(false);
   } else {
     renderDinoGlobalLeaderboard([], "", getDinoCurrentSpeedMode());
@@ -3506,12 +3601,14 @@ function drawDinoGround() {
 }
 
 function drawDinoBg() {
-  dinoCtx.font = "18px Tahoma";
+  dinoCtx.font = "15px Tahoma";
   dinoCtx.fillStyle = "#ddd";
-  const signs = ["OPEN OFFICE", "TODO", "ประชุม", "Deadline", "Coffee?"];
-  for (let i = 0; i < signs.length; i++) {
-    const x = 80 + i * 170 - ((dinoFrame * dinoSpeed * 0.25) % 170);
-    dinoCtx.fillText(signs[i], x, 55 + (i % 2) * 28);
+  const signOffsets = [0, 7, 14, 21, 28, 33];
+  const startIndex = Math.floor(dinoFrame / 140) % dinoExcuseSigns.length;
+  for (let i = 0; i < signOffsets.length; i++) {
+    const sign = dinoExcuseSigns[(startIndex + signOffsets[i]) % dinoExcuseSigns.length];
+    const x = 60 + i * 170 - ((dinoFrame * dinoSpeed * 0.18) % 170);
+    dinoCtx.fillText(sign, x, 48 + (i % 3) * 27);
   }
 }
 
@@ -3523,15 +3620,17 @@ function drawDinoPixelRect(x, y, w, h, color) {
 function drawDinoPixelActor(x, y, pose) {
   const skin = "#f4c27a";
   const hair = "#263238";
-  const shirt = "#1abc9c";
-  const shirtDark = "#108d74";
-  const pants = "#34495e";
-  const shoe = "#1f2933";
+  const shirt = "#38bdf8";
+  const shirtDark = "#0ea5e9";
+  const pants = "#050505";
+  const shoe = "#111827";
   const tie = "#e74c3c";
-  const highlight = "#ecfdf5";
+  const highlight = "#f8fafc";
 
   if (pose === "duck") {
     drawDinoPixelRect(x + 8, y + 18, 38, 16, shirt);
+    drawDinoPixelRect(x + 14, y + 20, 8, 12, highlight);
+    drawDinoPixelRect(x + 30, y + 20, 8, 12, highlight);
     drawDinoPixelRect(x + 10, y + 30, 42, 8, shirtDark);
     drawDinoPixelRect(x + 42, y + 4, 18, 18, skin);
     drawDinoPixelRect(x + 40, y + 2, 22, 7, hair);
@@ -3552,7 +3651,8 @@ function drawDinoPixelActor(x, y, pose) {
   drawDinoPixelRect(x + 28, y + 9, 4, 4, hair);
   drawDinoPixelRect(x + 19, y + 18, 9, 5, skin);
   drawDinoPixelRect(x + 12, y + 23, 25, 21, shirt);
-  drawDinoPixelRect(x + 15, y + 24, 4, 18, highlight);
+  drawDinoPixelRect(x + 15, y + 24, 5, 18, highlight);
+  drawDinoPixelRect(x + 29, y + 24, 5, 18, highlight);
   drawDinoPixelRect(x + 24, y + 24, 5, 18, tie);
 
   if (jumping) {
@@ -3942,8 +4042,8 @@ document.addEventListener("keyup", function(e) {
 dinoCanvas.addEventListener("click", dinoJump);
 
 renderDinoLeaderboard();
-renderDinoGlobalLeaderboard([], getDinoGlobalLeaderboardEndpoint() ? "กำลังโหลดอันดับรวมล่าสุด..." : "ตั้งค่า Google Apps Script URL ก่อน แล้วอันดับรวมจะแสดงตรงนี้");
-if (getDinoGlobalLeaderboardEndpoint()) {
+renderDinoGlobalLeaderboard([], isDinoGlobalLeaderboardReady() && getDinoGlobalLeaderboardEndpoint() ? "กำลังโหลดอันดับรวมล่าสุด..." : "อันดับรวมยังไม่พร้อมใช้งาน แต่คะแนนเครื่องนี้ยังบันทึกได้ตามปกติ");
+if (isDinoGlobalLeaderboardReady() && getDinoGlobalLeaderboardEndpoint()) {
   syncDinoGlobalLeaderboard(false);
 }
 

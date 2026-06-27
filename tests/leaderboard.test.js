@@ -8,6 +8,7 @@ function loadLeaderboardHarness() {
   const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
   const uiScript = fs.readFileSync(path.join(__dirname, "..", "assets", "js", "shared", "ui.js"), "utf8");
   const storageScript = fs.readFileSync(path.join(__dirname, "..", "assets", "js", "shared", "storage.js"), "utf8");
+  const globalLeaderboardScript = fs.readFileSync(path.join(__dirname, "..", "assets", "js", "shared", "global-leaderboard.js"), "utf8");
   const scriptMatch = html.match(/const dinoCanvas[\s\S]*?dinoCanvas\.addEventListener\("click", dinoJump\);/);
   if (!scriptMatch) {
     throw new Error("Office Dino script not found");
@@ -45,7 +46,11 @@ function loadLeaderboardHarness() {
     "dino-player-name": { value: "" },
     "dino-current-player-name": { textContent: "" },
     "dino-leaderboard-list": { innerHTML: "" },
-    "dino-leaderboard-empty": { style: { display: "block" } }
+    "dino-leaderboard-empty": { style: { display: "block" } },
+    "dino-global-leaderboard-list": { innerHTML: "" },
+    "dino-global-leaderboard-empty": { style: { display: "block" } },
+    "dino-global-leaderboard-status": { textContent: "" },
+    "dino-global-leaderboard-title": { textContent: "" }
   };
 
   const context = {
@@ -56,6 +61,9 @@ function loadLeaderboardHarness() {
         const el = elements[id];
         if (!el) throw new Error("Missing element: " + id);
         return el;
+      },
+      querySelector() {
+        return null;
       },
       addEventListener() {}
     },
@@ -82,6 +90,7 @@ function loadLeaderboardHarness() {
   vm.runInContext(
     uiScript + "\n" +
       storageScript + "\n" +
+      globalLeaderboardScript + "\n" +
       scriptMatch[0] +
       `
       globalThis.__leaderboardTestApi = {
@@ -91,8 +100,14 @@ function loadLeaderboardHarness() {
         exportLeaderboard,
         importLeaderboard,
         beginDinoRun: typeof beginDinoRun === "function" ? beginDinoRun : undefined,
+        onDinoGameOver,
         getCurrentPlayerName() {
           return typeof dinoCurrentPlayerName === "string" ? dinoCurrentPlayerName : "";
+        },
+        setGameOverState(next) {
+          dinoCurrentPlayerName = next.name;
+          dinoScore = next.score;
+          dinoState = "gameover";
         }
       };
     `,
@@ -110,6 +125,21 @@ test("getDefaultPlayerName returns a non-empty funny fallback name", () => {
   const name = api.getDefaultPlayerName();
   assert.equal(typeof name, "string");
   assert.ok(name.trim().length > 0);
+});
+
+test("office dino game over saves and immediately renders the local leaderboard", () => {
+  const { api, elements } = loadLeaderboardHarness();
+
+  api.setGameOverState({ name: "Pixel Runner", score: 1234 });
+  api.onDinoGameOver();
+
+  const rows = api.loadLeaderboard();
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].name, "Pixel Runner");
+  assert.equal(rows[0].score, 1234);
+  assert.equal(elements["dino-leaderboard-empty"].style.display, "none");
+  assert.match(elements["dino-leaderboard-list"].innerHTML, /Pixel Runner/);
+  assert.match(elements["dino-leaderboard-list"].innerHTML, /1234/);
 });
 
 test("saveLeaderboardEntry keeps only the top 20 scores in descending order", () => {

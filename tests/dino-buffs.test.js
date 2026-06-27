@@ -63,10 +63,19 @@ function loadDinoHarness() {
     "ptab-minigame": { addEventListener() {} },
     "dino-pause-btn": { textContent: "" },
     "dino-char": { value: "ðŸ‘¨â€ðŸ’»" },
-    "dino-speed": { value: "normal" }
+    "dino-speed": { value: "normal" },
+    "dino-player-name": { value: "" },
+    "dino-current-player-name": { textContent: "" },
+    "dino-leaderboard-list": { innerHTML: "" },
+    "dino-leaderboard-empty": { style: { display: "block" } },
+    "dino-global-leaderboard-list": { innerHTML: "" },
+    "dino-global-leaderboard-empty": { style: { display: "block" } },
+    "dino-global-leaderboard-status": { textContent: "" },
+    "dino-global-leaderboard-title": { textContent: "" }
   };
 
   const math = Object.create(Math);
+  const store = new Map();
   const context = {
     console,
     Math: math,
@@ -76,13 +85,17 @@ function loadDinoHarness() {
         if (!el) throw new Error("Missing element: " + id);
         return el;
       },
+      querySelector() {
+        return null;
+      },
       addEventListener() {}
     },
     window: { addEventListener() {} },
     requestAnimationFrame() {},
     localStorage: {
-      getItem() { return "0"; },
-      setItem() {}
+      getItem(key) { return store.has(key) ? store.get(key) : null; },
+      setItem(key, value) { store.set(key, String(value)); },
+      removeItem(key) { store.delete(key); }
     },
     setTimeout,
     clearTimeout,
@@ -104,7 +117,9 @@ function loadDinoHarness() {
         updateDino,
         dinoJump,
         drawDinoObs,
+        drawDinoBg,
         getDinoDifficultyTier,
+        loadLeaderboard,
         getState() {
           return {
             dinoState,
@@ -129,6 +144,7 @@ function loadDinoHarness() {
           if (typeof next.dinoInvincible === "number") dinoInvincible = next.dinoInvincible;
           if (typeof next.dinoDashTimer === "number") dinoDashTimer = next.dinoDashTimer;
           if (typeof next.dinoJumpBufferTimer === "number") dinoJumpBufferTimer = next.dinoJumpBufferTimer;
+          if (typeof next.dinoCurrentPlayerName === "string") dinoCurrentPlayerName = next.dinoCurrentPlayerName;
           if (Array.isArray(next.dinoObstacles)) dinoObstacles = next.dinoObstacles.map(function(obs) { return Object.assign({}, obs); });
           if (Array.isArray(next.floatingTexts)) floatingTexts = next.floatingTexts.map(function(ft) { return Object.assign({}, ft); });
           if (next.dinoMilestoneBanner !== undefined) dinoMilestoneBanner = next.dinoMilestoneBanner;
@@ -149,6 +165,7 @@ function loadDinoHarness() {
 
   return {
     api: context.__dinoTestApi,
+    elements,
     drawCalls,
     math
   };
@@ -272,14 +289,75 @@ test("powerups and special boosts render lightweight pixel pickup cues beyond or
   assert.ok(drawCalls.some((entry) => String(entry.text).includes("BOOST")));
 });
 
+test("office dino uses playful vacancy checkpoints and developer obstacle labels", () => {
+  const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+  [
+    "ยังพอทำงานอยู่",
+    "สลับจอหนีเก่ง",
+    "ตีเนียนเข้าห้องน้ำ",
+    "แอบหลับในส้วม",
+    "รับเงินเดือนไปวันๆ",
+    "วิญญาณสิงเก้าอี้",
+    "ปรมาจารย์การอู้",
+    "HR ถือซองขาวรอ",
+    "ตำนานพนักงานไร้ตัวตน",
+    "บริษัทขาดทุนเพราะคุณ",
+    "ลูกรัก CEO",
+    "พอมีเวลาหายใจ",
+    "ว่างนิดหน่อย อย่าเพิ่งโยนงาน",
+    "เริ่มชิว แต่ยังไม่ปลอดภัย",
+    "ว่างมากจนเปิด YouTube ได้",
+    "มาทำไม วันนี้น่าจะลา",
+    "อยู่เฉยๆ ก็โดนงานหาเจอ",
+    "ว่างระดับเสี่ยงถูกจับเข้าประชุม",
+    "สงบผิดปกติ เดี๋ยวมีเรื่องแน่",
+    "ว่างแบบ Production ยังไม่รู้ตัว",
+    "นิพพานแห่ง Sprint"
+  ].forEach((label) => assert.match(html, new RegExp(label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))));
+
+  [
+    "กระดาษ",
+    "แฟ้มเอกสาร",
+    "งานด่วน",
+    "Excel พัง",
+    "หัวหน้าด่า",
+    "กาแฟหมด",
+    "ลูกค้าโทร",
+    "Bug Prod",
+    "PM ตามงาน",
+    "งานฝาก",
+    "หักเงินเดือน",
+    "เพื่อนโยนขี้",
+    "Bug มรณะ",
+    "Scope งอก",
+    "Build Failed",
+    "Meeting ซ้อน Meeting",
+    "Hotfix ตอน 5 โมงเย็น",
+    "Requirement ไม่ชัด",
+    "Regression ถล่มเมือง",
+    "Deadline บีบคอ",
+    "Tech Debt ก้อนยักษ์",
+    "Production Down"
+  ].forEach((label) => assert.match(html, new RegExp(label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))));
+});
+
+test("office dino background renders rotating excuse signs", () => {
+  const { api, drawCalls } = loadDinoHarness();
+
+  api.drawDinoBg();
+
+  assert.ok(drawCalls.some((entry) => String(entry.text).includes("CPU สมองทำงาน 100%")));
+  assert.ok(drawCalls.some((entry) => String(entry.text).includes("Pending Motivation")));
+});
+
 function getActorPixelBounds(drawCalls) {
   const rects = drawCalls.filter((entry) =>
     entry.kind === "fillRect" &&
     entry.x >= 55 &&
-    entry.x <= 145 &&
+    entry.x <= 150 &&
     entry.y >= 110 &&
     entry.y <= 240 &&
-    entry.w <= 26 &&
+    entry.w <= 45 &&
     entry.h <= 26
   );
 
@@ -298,6 +376,7 @@ test("office dino player renders as pixel actor poses for run jump and duck", ()
   runHarness.api.setState({ dinoState: "running", dinoNextSpawn: 999, playerBox: { x: 80, y: 177, w: 46, h: 58, grounded: true, ducking: false } });
   runHarness.api.renderDino();
   const runBounds = getActorPixelBounds(runHarness.drawCalls);
+  const runActorColors = new Set(runBounds.rects.map((entry) => entry.fillStyle));
 
   const jumpHarness = loadDinoHarness();
   jumpHarness.api.setState({ dinoState: "running", dinoNextSpawn: 999, playerBox: { x: 80, y: 145, w: 46, h: 58, grounded: false, ducking: false } });
@@ -308,10 +387,44 @@ test("office dino player renders as pixel actor poses for run jump and duck", ()
   duckHarness.api.setState({ dinoState: "running", dinoNextSpawn: 999, playerBox: { x: 80, y: 197, w: 62, h: 38, grounded: true, ducking: true } });
   duckHarness.api.renderDino();
   const duckBounds = getActorPixelBounds(duckHarness.drawCalls);
+  const duckActorColors = new Set(duckBounds.rects.map((entry) => entry.fillStyle));
 
   assert.ok(jumpBounds.top < runBounds.top);
   assert.ok(duckBounds.bottom - duckBounds.top < runBounds.bottom - runBounds.top);
   assert.ok(duckBounds.right - duckBounds.left > runBounds.right - runBounds.left);
+  assert.ok(runActorColors.has("#38bdf8"));
+  assert.ok(runActorColors.has("#f8fafc"));
+  assert.ok(runActorColors.has("#050505"));
+  assert.ok(duckActorColors.has("#38bdf8"));
+  assert.ok(duckActorColors.has("#f8fafc"));
+  assert.ok(duckActorColors.has("#050505"));
+});
+
+test("office dino collision game over saves and renders the local leaderboard", () => {
+  const { api, elements } = loadDinoHarness();
+  api.setState({
+    dinoState: "running",
+    dinoScore: 4321,
+    dinoHP: 1,
+    dinoInvincible: 0,
+    dinoCurrentPlayerName: "Crash Tester",
+    playerBox: { x: 80, y: 177, w: 46, h: 58, grounded: true, ducking: false },
+    dinoObstacles: [
+      { x: 80, y: 177, w: 46, h: 58, emoji: "\uD83D\uDCC4", label: "Paper", isPowerup: false, isSpecial: false }
+    ]
+  });
+
+  api.checkDinoCollision();
+
+  const state = api.getState();
+  const rows = api.loadLeaderboard();
+  assert.equal(state.dinoState, "gameover");
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].name, "Crash Tester");
+  assert.equal(rows[0].score, 4321);
+  assert.equal(elements["dino-leaderboard-empty"].style.display, "none");
+  assert.match(elements["dino-leaderboard-list"].innerHTML, /Crash Tester/);
+  assert.match(elements["dino-leaderboard-list"].innerHTML, /4321/);
 });
 
 test("jump input buffers shortly before landing", () => {

@@ -19,13 +19,15 @@ test("legacy index keeps both local and global Office Dino leaderboards", () => 
   assert.match(html, /Global Top 20/i);
 });
 
-test("legacy index styles Office Dino like a stage plus side panel", () => {
+test("legacy index styles Office Dino as full-width gameplay with ranking below", () => {
   const html = fs.readFileSync(indexPath, "utf8");
 
-  assert.match(html, /#mg-hub-dino\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*2fr\)\s*minmax\(300px,\s*1fr\)/i);
-  assert.match(html, /\.dino-meta-panel\s*\{[\s\S]*grid-column:\s*2/i);
-  assert.match(html, /\.dino-meta-panel\s*\{[\s\S]*grid-row:\s*2;/i);
-  assert.doesNotMatch(html, /\.dino-meta-panel\s*\{[\s\S]*grid-row:\s*2\s*\/\s*span\s*2/i);
+  assert.match(html, /#mg-hub-dino\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*1fr\)/i);
+  assert.match(html, /\.dino-stage-panel\s*\{[\s\S]*grid-column:\s*1\s*\/\s*-1/i);
+  assert.match(html, /\.dino-meta-panel\s*\{[\s\S]*grid-column:\s*1\s*\/\s*-1/i);
+  assert.match(html, /\.dino-meta-panel\s*\{[\s\S]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/i);
+  assert.match(html, /<form class="dino-player-form"[\s\S]*?<div class="dino-canvas-wrap">[\s\S]*?<div class="dino-controls">[\s\S]*?<div class="dino-meta-panel">/i);
+  assert.doesNotMatch(html, /grid-template-columns:\s*minmax\(0,\s*2fr\)\s*minmax\(300px,\s*1fr\)/i);
 });
 
 test("legacy minigame hub restores Office Dino as a grid after switching back from box game", () => {
