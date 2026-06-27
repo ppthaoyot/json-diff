@@ -37,7 +37,7 @@ function loadDinoHarness() {
     stroke() {},
     clearRect() {},
     fillRect(x, y, w, h) {
-      drawCalls.push({ kind: "fillRect", x, y, w, h });
+      drawCalls.push({ kind: "fillRect", x, y, w, h, fillStyle: this.fillStyle, globalAlpha: this.globalAlpha });
     },
     strokeRect() {},
     translate() {},
@@ -108,6 +108,7 @@ function loadDinoHarness() {
         getState() {
           return {
             dinoState,
+            dinoConfig: Object.assign({}, dinoConfig),
             dinoScore,
             dinoNextSpawn,
             dinoHP,
@@ -271,6 +272,48 @@ test("powerups and special boosts render lightweight pixel pickup cues beyond or
   assert.ok(drawCalls.some((entry) => String(entry.text).includes("BOOST")));
 });
 
+function getActorPixelBounds(drawCalls) {
+  const rects = drawCalls.filter((entry) =>
+    entry.kind === "fillRect" &&
+    entry.x >= 55 &&
+    entry.x <= 145 &&
+    entry.y >= 110 &&
+    entry.y <= 240 &&
+    entry.w <= 26 &&
+    entry.h <= 26
+  );
+
+  assert.ok(rects.length >= 8);
+  return {
+    left: Math.min(...rects.map((entry) => entry.x)),
+    top: Math.min(...rects.map((entry) => entry.y)),
+    right: Math.max(...rects.map((entry) => entry.x + entry.w)),
+    bottom: Math.max(...rects.map((entry) => entry.y + entry.h)),
+    rects
+  };
+}
+
+test("office dino player renders as pixel actor poses for run jump and duck", () => {
+  const runHarness = loadDinoHarness();
+  runHarness.api.setState({ dinoState: "running", dinoNextSpawn: 999, playerBox: { x: 80, y: 177, w: 46, h: 58, grounded: true, ducking: false } });
+  runHarness.api.renderDino();
+  const runBounds = getActorPixelBounds(runHarness.drawCalls);
+
+  const jumpHarness = loadDinoHarness();
+  jumpHarness.api.setState({ dinoState: "running", dinoNextSpawn: 999, playerBox: { x: 80, y: 145, w: 46, h: 58, grounded: false, ducking: false } });
+  jumpHarness.api.renderDino();
+  const jumpBounds = getActorPixelBounds(jumpHarness.drawCalls);
+
+  const duckHarness = loadDinoHarness();
+  duckHarness.api.setState({ dinoState: "running", dinoNextSpawn: 999, playerBox: { x: 80, y: 197, w: 62, h: 38, grounded: true, ducking: true } });
+  duckHarness.api.renderDino();
+  const duckBounds = getActorPixelBounds(duckHarness.drawCalls);
+
+  assert.ok(jumpBounds.top < runBounds.top);
+  assert.ok(duckBounds.bottom - duckBounds.top < runBounds.bottom - runBounds.top);
+  assert.ok(duckBounds.right - duckBounds.left > runBounds.right - runBounds.left);
+});
+
 test("jump input buffers shortly before landing", () => {
   const { api } = loadDinoHarness();
   api.resetDinoGame();
@@ -303,7 +346,7 @@ test("jump input buffers shortly before landing", () => {
 test("difficulty milestones render a cinematic center-screen banner", () => {
   const { api, drawCalls } = loadDinoHarness();
   api.resetDinoGame();
-  api.setState({ dinoState: "running", dinoScore: 4999, dinoNextSpawn: 999 });
+  api.setState({ dinoState: "running", dinoScore: 9999, dinoNextSpawn: 999 });
 
   api.updateDino();
   let state = api.getState();
@@ -315,7 +358,7 @@ test("difficulty milestones render a cinematic center-screen banner", () => {
   assert.ok(drawCalls.some((entry) => String(entry.text).includes("RUSH MODE")));
   assert.ok(drawCalls.some((entry) => String(entry.text).includes("\u0e07\u0e32\u0e19\u0e16\u0e32\u0e42\u0e16\u0e21")));
 
-  api.setState({ dinoState: "running", dinoScore: 9999, dinoNextSpawn: 999 });
+  api.setState({ dinoState: "running", dinoScore: 14999, dinoNextSpawn: 999 });
   api.updateDino();
   state = api.getState();
 
@@ -333,22 +376,22 @@ test("ordinary obstacles render clear jump and duck action cues", () => {
   assert.ok(drawCalls.some((entry) => String(entry.text).includes("\u0e2b\u0e21\u0e2d\u0e1a!")));
 });
 
-test("office dino increases difficulty after 5000 and 10000 points", () => {
+test("office dino stays gentle until 10000 and reaches hell at 15000 points", () => {
   const { api } = loadDinoHarness();
 
-  api.setState({ dinoScore: 4999 });
+  api.setState({ dinoScore: 9999 });
   assert.equal(api.getDinoDifficultyTier().name, "normal");
 
-  api.setState({ dinoScore: 5000 });
+  api.setState({ dinoScore: 10000 });
   assert.equal(api.getDinoDifficultyTier().name, "rush");
 
-  api.setState({ dinoScore: 10000 });
+  api.setState({ dinoScore: 15000 });
   assert.equal(api.getDinoDifficultyTier().name, "hell");
 });
 
 test("late game can spawn controlled obstacle combos", () => {
   const { api, math } = loadDinoHarness();
-  api.setState({ dinoScore: 10000, dinoObstacles: [] });
+  api.setState({ dinoScore: 15000, dinoObstacles: [] });
   const rolls = [0.9, 0.9, 0, 0.9, 0, 0.9, 0];
   math.random = () => rolls.shift() ?? 0.9;
 
@@ -359,5 +402,5 @@ test("late game can spawn controlled obstacle combos", () => {
   assert.ok(state.dinoObstacles[1].x > state.dinoObstacles[0].x);
   assert.equal(Boolean(state.dinoObstacles[0].isPowerup), false);
   assert.equal(Boolean(state.dinoObstacles[1].isPowerup), false);
-  assert.ok(state.dinoNextSpawn < 40);
+  assert.ok(state.dinoNextSpawn <= 44);
 });

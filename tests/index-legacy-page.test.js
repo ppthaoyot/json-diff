@@ -41,3 +41,19 @@ test("legacy Office Dino submits global scores with the selected speed mode", ()
   assert.match(html, /speedMode:\s*getDinoCurrentSpeedMode\(\)/i);
   assert.match(html, /syncDinoGlobalLeaderboard\(false\)/i);
 });
+
+test("legacy Office Dino ignores gameplay shortcuts while typing player name", () => {
+  const html = fs.readFileSync(indexPath, "utf8");
+
+  assert.match(html, /function isDinoTypingTarget\(target\)/i);
+  assert.match(html, /if\s*\(isDinoTypingTarget\(e\.target\)\)\s*return;/i);
+});
+
+test("legacy Office Dino speed presets are relaxed for easier early play", () => {
+  const html = fs.readFileSync(indexPath, "utf8");
+
+  assert.match(html, /mode === "baby"[\s\S]*dinoConfig\.baseSpeed\s*=\s*2\.4[\s\S]*dinoConfig\.maxSpeed\s*=\s*5\.2/i);
+  assert.match(html, /mode === "easy"[\s\S]*dinoConfig\.baseSpeed\s*=\s*3\.6[\s\S]*dinoConfig\.maxSpeed\s*=\s*8\.2/i);
+  assert.match(html, /mode === "normal"[\s\S]*dinoConfig\.baseSpeed\s*=\s*4\.3[\s\S]*dinoConfig\.maxSpeed\s*=\s*10\.5/i);
+  assert.match(html, /mode === "hard"[\s\S]*dinoConfig\.baseSpeed\s*=\s*5\.8[\s\S]*dinoConfig\.maxSpeed\s*=\s*14\.5/i);
+});

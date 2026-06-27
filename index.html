@@ -2909,8 +2909,8 @@ const dinoConfig = {
   playerEmoji: "👨‍💻",
   gravity: 0.75,
   jumpPower: -14,
-  baseSpeed: 5.5,
-  maxSpeed: 14
+  baseSpeed: 4.3,
+  maxSpeed: 10.5
 };
 
 function resolveDinoPlayerName() {
@@ -3120,9 +3120,9 @@ const dinoHellObstacleTypes = [
 ];
 
 const dinoDifficultyTiers = [
-  { name: "hell", score: 10000, maxSpeedBonus: 4, spawnMin: 24, spawnMax: 36, floatingChance: 0.52, specialChance: 0.14, comboChance: 0.35, message: "\u0e40\u0e02\u0e49\u0e32\u0e2a\u0e39\u0e48\u0e42\u0e2b\u0e21\u0e14\u0e19\u0e23\u0e01\u0e2d\u0e2d\u0e1f\u0e1f\u0e34\u0e28!" },
-  { name: "rush", score: 5000, maxSpeedBonus: 2, spawnMin: 32, spawnMax: 48, floatingChance: 0.38, specialChance: 0.11, comboChance: 0.18, message: "\u0e07\u0e32\u0e19\u0e40\u0e23\u0e34\u0e48\u0e21\u0e16\u0e32\u0e42\u0e16\u0e21!" },
-  { name: "normal", score: 0, maxSpeedBonus: 0, spawnMin: 40, spawnMax: 70, floatingChance: 0.25, specialChance: 0.08, comboChance: 0, message: "" }
+  { name: "hell", score: 15000, maxSpeedBonus: 2.6, spawnMin: 30, spawnMax: 44, floatingChance: 0.46, specialChance: 0.13, comboChance: 0.28, message: "\u0e40\u0e02\u0e49\u0e32\u0e2a\u0e39\u0e48\u0e42\u0e2b\u0e21\u0e14\u0e19\u0e23\u0e01\u0e2d\u0e2d\u0e1f\u0e1f\u0e34\u0e28!" },
+  { name: "rush", score: 10000, maxSpeedBonus: 1.4, spawnMin: 38, spawnMax: 56, floatingChance: 0.34, specialChance: 0.10, comboChance: 0.12, message: "\u0e07\u0e32\u0e19\u0e40\u0e23\u0e34\u0e48\u0e21\u0e16\u0e32\u0e42\u0e16\u0e21!" },
+  { name: "normal", score: 0, maxSpeedBonus: 0, spawnMin: 52, spawnMax: 82, floatingChance: 0.20, specialChance: 0.07, comboChance: 0, message: "" }
 ];
 
 const dinoPowerupTypes = [
@@ -3185,10 +3185,10 @@ function changeDinoChar() {
 
 function changeDinoSpeed() {
   const mode = document.getElementById("dino-speed").value;
-  if (mode === "baby") { dinoConfig.baseSpeed = 3; dinoConfig.maxSpeed = 6.5; }
-  else if (mode === "easy") { dinoConfig.baseSpeed = 4.5; dinoConfig.maxSpeed = 11; }
-  else if (mode === "normal") { dinoConfig.baseSpeed = 5.5; dinoConfig.maxSpeed = 14; }
-  else if (mode === "hard") { dinoConfig.baseSpeed = 7.5; dinoConfig.maxSpeed = 19; }
+  if (mode === "baby") { dinoConfig.baseSpeed = 2.4; dinoConfig.maxSpeed = 5.2; }
+  else if (mode === "easy") { dinoConfig.baseSpeed = 3.6; dinoConfig.maxSpeed = 8.2; }
+  else if (mode === "normal") { dinoConfig.baseSpeed = 4.3; dinoConfig.maxSpeed = 10.5; }
+  else if (mode === "hard") { dinoConfig.baseSpeed = 5.8; dinoConfig.maxSpeed = 14.5; }
   resetDinoGame();
   if (getDinoGlobalLeaderboardEndpoint()) {
     syncDinoGlobalLeaderboard(false);
@@ -3515,31 +3515,102 @@ function drawDinoBg() {
   }
 }
 
+function drawDinoPixelRect(x, y, w, h, color) {
+  dinoCtx.fillStyle = color;
+  dinoCtx.fillRect(Math.round(x), Math.round(y), w, h);
+}
+
+function drawDinoPixelActor(x, y, pose) {
+  const skin = "#f4c27a";
+  const hair = "#263238";
+  const shirt = "#1abc9c";
+  const shirtDark = "#108d74";
+  const pants = "#34495e";
+  const shoe = "#1f2933";
+  const tie = "#e74c3c";
+  const highlight = "#ecfdf5";
+
+  if (pose === "duck") {
+    drawDinoPixelRect(x + 8, y + 18, 38, 16, shirt);
+    drawDinoPixelRect(x + 10, y + 30, 42, 8, shirtDark);
+    drawDinoPixelRect(x + 42, y + 4, 18, 18, skin);
+    drawDinoPixelRect(x + 40, y + 2, 22, 7, hair);
+    drawDinoPixelRect(x + 55, y + 11, 4, 4, hair);
+    drawDinoPixelRect(x + 22, y + 21, 5, 13, tie);
+    drawDinoPixelRect(x + 4, y + 28, 28, 8, pants);
+    drawDinoPixelRect(x + 29, y + 30, 26, 8, pants);
+    drawDinoPixelRect(x, y + 34, 16, 5, shoe);
+    drawDinoPixelRect(x + 48, y + 34, 16, 5, shoe);
+    drawDinoPixelRect(x + 7, y + 14, 10, 6, skin);
+    return;
+  }
+
+  const runFrame = Math.floor(dinoFrame / 7) % 2;
+  const jumping = pose === "jump";
+  drawDinoPixelRect(x + 15, y + 2, 18, 18, skin);
+  drawDinoPixelRect(x + 13, y, 22, 7, hair);
+  drawDinoPixelRect(x + 28, y + 9, 4, 4, hair);
+  drawDinoPixelRect(x + 19, y + 18, 9, 5, skin);
+  drawDinoPixelRect(x + 12, y + 23, 25, 21, shirt);
+  drawDinoPixelRect(x + 15, y + 24, 4, 18, highlight);
+  drawDinoPixelRect(x + 24, y + 24, 5, 18, tie);
+
+  if (jumping) {
+    drawDinoPixelRect(x + 5, y + 22, 9, 21, skin);
+    drawDinoPixelRect(x + 35, y + 19, 9, 22, skin);
+    drawDinoPixelRect(x + 14, y + 42, 10, 13, pants);
+    drawDinoPixelRect(x + 30, y + 38, 10, 15, pants);
+    drawDinoPixelRect(x + 8, y + 51, 15, 5, shoe);
+    drawDinoPixelRect(x + 34, y + 50, 15, 5, shoe);
+    return;
+  }
+
+  if (runFrame === 0) {
+    drawDinoPixelRect(x + 7, y + 25, 8, 19, skin);
+    drawDinoPixelRect(x + 35, y + 25, 8, 15, skin);
+    drawDinoPixelRect(x + 14, y + 42, 9, 15, pants);
+    drawDinoPixelRect(x + 29, y + 42, 9, 11, pants);
+    drawDinoPixelRect(x + 8, y + 55, 15, 5, shoe);
+    drawDinoPixelRect(x + 30, y + 51, 15, 5, shoe);
+  } else {
+    drawDinoPixelRect(x + 7, y + 25, 8, 15, skin);
+    drawDinoPixelRect(x + 35, y + 25, 8, 19, skin);
+    drawDinoPixelRect(x + 14, y + 42, 9, 11, pants);
+    drawDinoPixelRect(x + 29, y + 42, 9, 15, pants);
+    drawDinoPixelRect(x + 8, y + 51, 15, 5, shoe);
+    drawDinoPixelRect(x + 30, y + 55, 15, 5, shoe);
+  }
+}
+
 function drawDinoPlayer() {
   dinoCtx.save();
   if (dinoInvincible > 0 && Math.floor(dinoFrame / 4) % 2 === 0) {
-    dinoCtx.globalAlpha = 0.4;
+    dinoCtx.globalAlpha = 0.55;
   }
   
-  dinoCtx.font = dinoPlayer.ducking ? "44px Tahoma" : "54px Tahoma";
-  dinoCtx.textAlign = "center";
-  dinoCtx.textBaseline = "middle";
-  const bob = dinoPlayer.grounded ? Math.sin(dinoFrame / 5) * 2 : 0;
+  const bob = dinoPlayer.grounded && !dinoPlayer.ducking ? Math.sin(dinoFrame / 5) * 2 : 0;
+  const actorX = dinoPlayer.ducking ? dinoPlayer.x - 2 : dinoPlayer.x;
+  const actorY = dinoPlayer.y + bob;
+  const pose = dinoPlayer.ducking ? "duck" : (dinoPlayer.grounded ? "run" : "jump");
   
   if (dinoDashTimer > 0) {
     dinoCtx.shadowColor = "#9b59b6";
-    dinoCtx.shadowBlur = 0;
-    dinoCtx.shadowOffsetY = 0;
+    dinoCtx.shadowBlur = 10;
+  } else if (dinoInvincible > 0) {
+    dinoCtx.shadowColor = "#f1c40f";
+    dinoCtx.shadowBlur = 8;
   } else {
     dinoCtx.shadowColor = "transparent";
     dinoCtx.shadowBlur = 0;
-    dinoCtx.shadowOffsetY = 0;
   }
   
-  dinoCtx.fillText(dinoConfig.playerEmoji, dinoPlayer.x + dinoPlayer.w / 2, dinoPlayer.y + dinoPlayer.h / 2 + bob);
+  drawDinoPixelActor(actorX, actorY, pose);
   
   dinoCtx.shadowColor = "transparent";
+  dinoCtx.shadowBlur = 0;
   dinoCtx.font = "bold 13px Tahoma";
+  dinoCtx.textAlign = "center";
+  dinoCtx.textBaseline = "middle";
   dinoCtx.fillStyle = "#2c3e50";
   dinoCtx.fillText("หนีงาน", dinoPlayer.x + dinoPlayer.w / 2, dinoPlayer.y - 12);
   dinoCtx.restore();
@@ -3848,7 +3919,14 @@ function dinoLoop() {
   requestAnimationFrame(dinoLoop);
 }
 
+function isDinoTypingTarget(target) {
+  if (!target) return false;
+  const tagName = String(target.tagName || "").toLowerCase();
+  return tagName === "input" || tagName === "textarea" || tagName === "select" || target.isContentEditable;
+}
+
 document.addEventListener("keydown", function(e) {
+  if (isDinoTypingTarget(e.target)) return;
   if (document.getElementById('mg-hub-dino').style.display === 'none' || !document.getElementById('page-minigame').classList.contains('active')) return;
   if (e.code === "Space" || e.code === "ArrowUp") { e.preventDefault(); dinoJump(); }
   if (e.code === "ArrowDown") { e.preventDefault(); setDinoDuck(true); }
@@ -3857,6 +3935,7 @@ document.addEventListener("keydown", function(e) {
 });
 
 document.addEventListener("keyup", function(e) {
+  if (isDinoTypingTarget(e.target)) return;
   if (e.code === "ArrowDown") setDinoDuck(false);
 });
 
