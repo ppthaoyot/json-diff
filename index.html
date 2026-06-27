@@ -3245,6 +3245,8 @@ let dinoLastDifficultyTier = "normal";
 let dinoShieldCharges = 0;
 let dinoSlowTimer = 0;
 let dinoWfhCooldownTimer = 0;
+let dinoWfhSeenThisRun = false;
+let dinoLastWfhScore = 0;
 let dinoBossEvent = null;
 let dinoTriggeredBossScores = new Set();
 
@@ -3298,6 +3300,8 @@ const dinoDifficultyTiers = [
 const dinoPowerupTypes = [
   { emoji: "☕", label: "กาแฟเติมใจ", w: 48, h: 52, effect: "coffee-heal" },
   { emoji: "🛡️", label: "ประชุมบังหน้า", w: 50, h: 52, effect: "shield" },
+  { emoji: "🏠", label: "WFH Mode", w: 50, h: 52, effect: "slow" },
+  { emoji: "🏠", label: "WFH Mode", w: 50, h: 52, effect: "slow" },
   { emoji: "🏠", label: "WFH Mode", w: 50, h: 52, effect: "slow" },
   { emoji: "🍵", label: "ชาไข่มุกต่อชีวิต" },
   { emoji: "🚽", label: "อู้ไปขี้" },
@@ -3466,6 +3470,8 @@ function resetDinoGame() {
   dinoBossEvent = null;
   dinoTriggeredBossScores = new Set();
   dinoWfhCooldownTimer = 0;
+  dinoWfhSeenThisRun = false;
+  dinoLastWfhScore = 0;
   floatingTexts = [];
   dinoMilestoneBanner = null;
   dinoLastDifficultyTier = "normal";
@@ -3536,6 +3542,19 @@ function getDinoObstaclePool(tier) {
   if (tier.name === "hell") return dinoObstacleTypes.concat(dinoRushObstacleTypes, dinoHellObstacleTypes);
   if (tier.name === "rush") return dinoObstacleTypes.concat(dinoRushObstacleTypes);
   return dinoObstacleTypes;
+}
+
+function getDinoPowerupType() {
+  const shouldGuaranteeWfh = dinoScore >= 1500 && !dinoWfhSeenThisRun;
+  const selected = shouldGuaranteeWfh
+    ? dinoPowerupTypes.find(function(type) { return type.effect === "slow"; })
+    : dinoPowerupTypes[Math.floor(Math.random() * dinoPowerupTypes.length)];
+  const powerup = selected || dinoPowerupTypes[0];
+  if (powerup.effect === "slow") {
+    dinoWfhSeenThisRun = true;
+    dinoLastWfhScore = dinoScore;
+  }
+  return normalizeDinoPickupType(powerup, "powerup");
 }
 
 function createDinoObstacle(type, x, floating, flags) {
@@ -3620,7 +3639,7 @@ function spawnDinoObstacle() {
   let isSpecial = false;
   let type;
   if (isPowerup) {
-    type = normalizeDinoPickupType(dinoPowerupTypes[Math.floor(Math.random() * dinoPowerupTypes.length)], "powerup");
+    type = getDinoPowerupType();
   } else {
     if (!bossActive && dinoScore > 400 && Math.random() < tier.specialChance) {
       isSpecial = true;
@@ -3674,6 +3693,8 @@ function checkDinoCollision() {
           dinoShieldCharges = Math.min(2, dinoShieldCharges + 1);
           floatingTexts.push({ x: dinoPlayer.x, y: dinoPlayer.y - 20, text: "ประชุมบังหน้า +1", color: "#3498db", life: 45, maxLife: 45 });
         } else if (powerupEffect === "slow") {
+          dinoWfhSeenThisRun = true;
+          dinoLastWfhScore = dinoScore;
           dinoSlowTimer = 300;
           floatingTexts.push({ x: dinoPlayer.x, y: dinoPlayer.y - 20, text: "WFH Mode 5s", color: "#16a085", life: 45, maxLife: 45 });
         } else if (powerupEffect === "refill") {

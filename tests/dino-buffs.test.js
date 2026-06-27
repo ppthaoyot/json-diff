@@ -125,6 +125,9 @@ function loadDinoHarness() {
         drawDinoBg,
         getDinoDifficultyTier,
         loadLeaderboard,
+        getDinoPowerupLabels() {
+          return dinoPowerupTypes.map(function(type) { return type.label; });
+        },
         getState() {
           return {
             dinoState,
@@ -138,6 +141,8 @@ function loadDinoHarness() {
             dinoShieldCharges: typeof dinoShieldCharges === "number" ? dinoShieldCharges : 0,
             dinoSlowTimer: typeof dinoSlowTimer === "number" ? dinoSlowTimer : 0,
             dinoWfhCooldownTimer: typeof dinoWfhCooldownTimer === "number" ? dinoWfhCooldownTimer : 0,
+            dinoWfhSeenThisRun: typeof dinoWfhSeenThisRun === "boolean" ? dinoWfhSeenThisRun : false,
+            dinoLastWfhScore: typeof dinoLastWfhScore === "number" ? dinoLastWfhScore : 0,
             dinoBossEvent: typeof dinoBossEvent === "object" && dinoBossEvent ? Object.assign({}, dinoBossEvent) : null,
             dinoTriggeredBossScores: typeof dinoTriggeredBossScores !== "undefined" ? Array.from(dinoTriggeredBossScores) : [],
             dinoPlayer: Object.assign({}, dinoPlayer),
@@ -157,6 +162,8 @@ function loadDinoHarness() {
           if (typeof next.dinoShieldCharges === "number") dinoShieldCharges = next.dinoShieldCharges;
           if (typeof next.dinoSlowTimer === "number") dinoSlowTimer = next.dinoSlowTimer;
           if (typeof next.dinoWfhCooldownTimer === "number") dinoWfhCooldownTimer = next.dinoWfhCooldownTimer;
+          if (typeof next.dinoWfhSeenThisRun === "boolean") dinoWfhSeenThisRun = next.dinoWfhSeenThisRun;
+          if (typeof next.dinoLastWfhScore === "number") dinoLastWfhScore = next.dinoLastWfhScore;
           if (next.dinoBossEvent !== undefined) dinoBossEvent = next.dinoBossEvent;
           if (Array.isArray(next.dinoTriggeredBossScores)) dinoTriggeredBossScores = new Set(next.dinoTriggeredBossScores);
           if (typeof next.dinoCurrentPlayerName === "string") dinoCurrentPlayerName = next.dinoCurrentPlayerName;
@@ -189,7 +196,7 @@ function loadDinoHarness() {
 test("spawned powerup pickup has a drawable hitbox", () => {
   const { api, math } = loadDinoHarness();
   api.setState({ dinoScore: 400 });
-  const rolls = [0.1, 0.75];
+  const rolls = [0.1, 0.85];
   math.random = () => rolls.shift() ?? 0.5;
 
   api.spawnDinoObstacle();
@@ -201,6 +208,42 @@ test("spawned powerup pickup has a drawable hitbox", () => {
   assert.equal(typeof state.dinoObstacles[0].h, "number");
   assert.ok(state.dinoObstacles[0].w > 0);
   assert.ok(state.dinoObstacles[0].h > 0);
+});
+
+test("WFH mode has extra weight in the powerup pool", () => {
+  const { api } = loadDinoHarness();
+  const labels = api.getDinoPowerupLabels();
+  const wfhCount = labels.filter((label) => label === "WFH Mode").length;
+
+  assert.ok(wfhCount >= 3);
+});
+
+test("WFH mode is guaranteed once after 1500 points if it has not appeared", () => {
+  const { api, math } = loadDinoHarness();
+  api.resetDinoGame();
+  api.setState({
+    dinoScore: 1600,
+    dinoWfhSeenThisRun: false,
+    dinoObstacles: []
+  });
+  const rolls = [0.01, 0.99, 0.5];
+  math.random = () => rolls.shift() ?? 0.5;
+
+  api.spawnDinoObstacle();
+  let state = api.getState();
+
+  assert.equal(state.dinoObstacles[0].label, "WFH Mode");
+  assert.equal(state.dinoWfhSeenThisRun, true);
+  assert.equal(state.dinoLastWfhScore, 1600);
+
+  api.setState({ dinoObstacles: [] });
+  const nextRolls = [0.01, 0.99, 0.5];
+  math.random = () => nextRolls.shift() ?? 0.5;
+
+  api.spawnDinoObstacle();
+  state = api.getState();
+
+  assert.notEqual(state.dinoObstacles[0].label, "WFH Mode");
 });
 
 test("early game keeps normal drop rate by spawning a regular obstacle instead of a powerup", () => {
