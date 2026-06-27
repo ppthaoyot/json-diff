@@ -1726,8 +1726,8 @@ canvas#dino-game {
           </div>
           <div>
             Mini Boss:
-            <span class="dino-badge">Z</span> ปาลูกอม
-            <span class="dino-badge">X</span> เถียงอย่างสุภาพ
+            <span class="dino-badge">Z</span> ยิงลูกอม
+            <span class="dino-badge">X</span> ยิงคำชี้แจง
             <span class="dino-badge">C</span> ใจเย็น
           </div>
           <div style="color:var(--text-tertiary);">หลบ Bug มรณะ Scope งอก Deadline บีบคอ และ Production Down ให้รอด!</div>
@@ -3257,6 +3257,8 @@ let dinoBossEvent = null;
 let dinoTriggeredBossScores = new Set();
 let dinoBossFight = null;
 let dinoBossProjectiles = [];
+let dinoBossPlayerProjectiles = [];
+let dinoBossEnemy = null;
 let dinoBossTriggeredScores = new Set();
 
 const dinoBossPlayer = {
@@ -3285,6 +3287,7 @@ const dinoBossConfigs = {
     defeatedText: "PM ขอไปตั้งประชุมใหม่ก่อน",
     projectileInterval: 42,
     projectileSpeed: 4.1,
+    enemySpeed: 1.4,
     attacks: ["งานด่วน", "ตามงาน", "เดดไลน์"]
   },
   10000: {
@@ -3294,6 +3297,7 @@ const dinoBossConfigs = {
     defeatedText: "Requirement กลับสู่ร่างแรกชั่วคราว",
     projectileInterval: 38,
     projectileSpeed: 4.4,
+    enemySpeed: 1.6,
     attacks: ["Change Request", "Scope งอก", "ขอเพิ่มนิดเดียว"]
   },
   15000: {
@@ -3303,6 +3307,7 @@ const dinoBossConfigs = {
     defeatedText: "QA ปิด ticket ให้แบบมีพิรุธ",
     projectileInterval: 34,
     projectileSpeed: 4.8,
+    enemySpeed: 1.8,
     attacks: ["Bug Reopen", "Regression", "หลักฐานเพิ่ม"]
   },
   20000: {
@@ -3312,6 +3317,7 @@ const dinoBossConfigs = {
     defeatedText: "Deadline ยอมถอยหนึ่ง sprint",
     projectileInterval: 32,
     projectileSpeed: 5.1,
+    enemySpeed: 2,
     attacks: ["Hotfix", "Production ถามหา", "ผู้บริหารถาม"]
   }
 };
@@ -3539,6 +3545,8 @@ function resetDinoGame() {
   dinoTriggeredBossScores = new Set();
   dinoBossFight = null;
   dinoBossProjectiles = [];
+  dinoBossPlayerProjectiles = [];
+  dinoBossEnemy = null;
   dinoBossTriggeredScores = new Set();
   resetDinoBossPlayer();
   dinoWfhCooldownTimer = 0;
@@ -3602,6 +3610,71 @@ function resetDinoBossPlayer() {
   dinoBossPlayer.projectileSlowTimer = 0;
 }
 
+function createDinoBossEnemy(config) {
+  const w = 96;
+  const h = 54;
+  const minX = 80;
+  const maxX = dW - minX - w;
+  return {
+    x: dW / 2 - w / 2,
+    y: 112,
+    w,
+    h,
+    vx: config.enemySpeed || 1.5,
+    minX,
+    maxX
+  };
+}
+
+function updateDinoBossEnemy() {
+  if (!dinoBossEnemy) return;
+  dinoBossEnemy.x += dinoBossEnemy.vx;
+  if (dinoBossEnemy.x <= dinoBossEnemy.minX) {
+    dinoBossEnemy.x = dinoBossEnemy.minX;
+    dinoBossEnemy.vx = Math.abs(dinoBossEnemy.vx);
+  } else if (dinoBossEnemy.x >= dinoBossEnemy.maxX) {
+    dinoBossEnemy.x = dinoBossEnemy.maxX;
+    dinoBossEnemy.vx = -Math.abs(dinoBossEnemy.vx);
+  }
+}
+
+function spawnDinoBossPlayerProjectile(kind) {
+  const isArgue = kind === "argue";
+  const w = isArgue ? 18 : 12;
+  const h = isArgue ? 24 : 18;
+  dinoBossPlayerProjectiles.push({
+    kind,
+    x: dinoBossPlayer.x + dinoBossPlayer.w / 2 - w / 2,
+    y: dinoBossPlayer.y - h + 4,
+    w,
+    h,
+    speed: isArgue ? 7 : 8,
+    damage: isArgue ? 14 : 6,
+    label: isArgue ? "ชี้แจง" : "ลูกอม",
+    color: isArgue ? "#38bdf8" : "#f59e0b"
+  });
+}
+
+function updateDinoBossPlayerProjectiles() {
+  if (!dinoBossPlayerProjectiles.length) return;
+  for (let i = 0; i < dinoBossPlayerProjectiles.length; i++) {
+    const projectile = dinoBossPlayerProjectiles[i];
+    projectile.y -= projectile.speed;
+    if (dinoBossEnemy && isDinoBossHit(projectile, dinoBossEnemy)) {
+      const damage = projectile.damage || 0;
+      const hitX = projectile.x + projectile.w / 2;
+      floatingTexts.push({ x: hitX, y: dinoBossEnemy.y - 10, text: "โดนบอส! -" + damage, color: projectile.color || "#f59e0b", life: 35, maxLife: 35 });
+      dinoBossPlayerProjectiles.splice(i, 1);
+      i--;
+      damageDinoBoss(damage);
+      if (dinoState !== "bossFight") return;
+    }
+  }
+  dinoBossPlayerProjectiles = dinoBossPlayerProjectiles.filter(function(projectile) {
+    return projectile.y + projectile.h > 0;
+  });
+}
+
 function getDinoBossCheckpoint() {
   for (const checkpoint of dinoBossCheckpoints) {
     if (dinoScore >= checkpoint && !dinoBossTriggeredScores.has(checkpoint)) return checkpoint;
@@ -3625,6 +3698,7 @@ function startDinoBossIntro(checkpoint) {
     defeatedText: config.defeatedText,
     projectileInterval: config.projectileInterval,
     projectileSpeed: config.projectileSpeed,
+    enemySpeed: config.enemySpeed,
     attacks: config.attacks.slice(),
     introTimer: 60,
     winTimer: 90,
@@ -3632,6 +3706,8 @@ function startDinoBossIntro(checkpoint) {
   };
   resetDinoBossPlayer();
   dinoBossProjectiles = [];
+  dinoBossPlayerProjectiles = [];
+  dinoBossEnemy = null;
   dinoMilestoneBanner = null;
   dinoState = "bossIntro";
 }
@@ -3648,6 +3724,8 @@ function startDinoBossFight() {
   dinoState = "bossFight";
   dinoBossFight.projectileTimer = 24;
   dinoBossProjectiles = [];
+  dinoBossPlayerProjectiles = [];
+  dinoBossEnemy = createDinoBossEnemy(dinoBossFight);
   resetDinoBossPlayer();
 }
 
@@ -3679,11 +3757,11 @@ function damageDinoBoss(amount) {
 function useDinoBossAction(action) {
   if (dinoState !== "bossFight" || !dinoBossFight) return;
   if (action === "candy" && dinoBossPlayer.candyCooldown <= 0) {
-    damageDinoBoss(6);
+    spawnDinoBossPlayerProjectile("candy");
     dinoBossPlayer.candyCooldown = 24;
     floatingTexts.push({ x: dinoBossPlayer.x, y: dinoBossPlayer.y - 18, text: "ลูกอมสวนกลับ!", color: "#f59e0b", life: 35, maxLife: 35 });
   } else if (action === "argue" && dinoBossPlayer.argueCooldown <= 0) {
-    damageDinoBoss(14);
+    spawnDinoBossPlayerProjectile("argue");
     dinoBossPlayer.argueCooldown = 75;
     dinoBossPlayer.projectileSlowTimer = 75;
     floatingTexts.push({ x: dinoBossPlayer.x, y: dinoBossPlayer.y - 18, text: "เถียงสุภาพ!", color: "#38bdf8", life: 40, maxLife: 40 });
@@ -3703,6 +3781,7 @@ function defeatDinoBoss() {
   dinoState = "bossWin";
   dinoBossFight.winTimer = 90;
   dinoBossProjectiles = [];
+  dinoBossPlayerProjectiles = [];
   dinoScore += 250;
   floatingTexts.push({ x: dW / 2 - 20, y: dH / 2, text: "+250 Boss Clear", color: "#f59e0b", life: 55, maxLife: 55 });
 }
@@ -3711,6 +3790,8 @@ function returnDinoToRunner() {
   dinoState = "running";
   dinoBossFight = null;
   dinoBossProjectiles = [];
+  dinoBossPlayerProjectiles = [];
+  dinoBossEnemy = null;
   dinoBossPlayer.move = 0;
   dinoPlayer.x = 80;
   dinoPlayer.y = dinoGroundY - 58;
@@ -3749,6 +3830,9 @@ function updateDinoBossFight() {
   updateDinoBossTimers();
   dinoBossPlayer.x += dinoBossPlayer.move * 7;
   dinoBossPlayer.x = Math.max(30, Math.min(dW - dinoBossPlayer.w - 30, dinoBossPlayer.x));
+  updateDinoBossEnemy();
+  updateDinoBossPlayerProjectiles();
+  if (dinoState !== "bossFight") return;
   dinoBossFight.projectileTimer--;
   if (dinoBossFight.projectileTimer <= 0) {
     spawnDinoBossProjectile();
@@ -4663,6 +4747,52 @@ function drawDinoBossProjectiles() {
   dinoCtx.restore();
 }
 
+function drawDinoBossEnemy() {
+  if (!dinoBossEnemy || !dinoBossFight) return;
+  const x = dinoBossEnemy.x;
+  const y = dinoBossEnemy.y;
+  const w = dinoBossEnemy.w;
+  const h = dinoBossEnemy.h;
+  dinoCtx.save();
+  dinoCtx.fillStyle = "rgba(239, 68, 68, 0.12)";
+  dinoCtx.fillRect(x - 10, y - 10, w + 20, h + 20);
+  dinoCtx.strokeStyle = "#ef4444";
+  dinoCtx.lineWidth = 3;
+  dinoCtx.strokeRect(x - 6, y - 6, w + 12, h + 12);
+  dinoCtx.fillStyle = "#7f1d1d";
+  dinoCtx.fillRect(x + 14, y + 8, w - 28, h - 10);
+  dinoCtx.fillStyle = "#fecaca";
+  dinoCtx.fillRect(x + 28, y - 8, w - 56, 24);
+  dinoCtx.fillStyle = "#111827";
+  dinoCtx.fillRect(x + 34, y - 2, 8, 8);
+  dinoCtx.fillRect(x + w - 42, y - 2, 8, 8);
+  dinoCtx.fillStyle = "#facc15";
+  dinoCtx.fillRect(x + 8, y + h - 12, w - 16, 8);
+  dinoCtx.fillStyle = "#ffffff";
+  dinoCtx.font = "bold 13px Tahoma";
+  dinoCtx.textAlign = "center";
+  dinoCtx.textBaseline = "middle";
+  dinoCtx.fillText(dinoBossFight.name, x + w / 2, y + h / 2 + 4);
+  dinoCtx.restore();
+}
+
+function drawDinoBossPlayerProjectiles() {
+  dinoCtx.save();
+  dinoCtx.textAlign = "center";
+  dinoCtx.textBaseline = "middle";
+  for (const projectile of dinoBossPlayerProjectiles) {
+    dinoCtx.fillStyle = projectile.color || "#f59e0b";
+    dinoCtx.fillRect(projectile.x, projectile.y, projectile.w, projectile.h);
+    dinoCtx.strokeStyle = "#ffffff";
+    dinoCtx.lineWidth = 2;
+    dinoCtx.strokeRect(projectile.x - 2, projectile.y - 2, projectile.w + 4, projectile.h + 4);
+    dinoCtx.fillStyle = "#0f172a";
+    dinoCtx.font = "bold 10px Tahoma";
+    dinoCtx.fillText(projectile.kind === "argue" ? "X" : "Z", projectile.x + projectile.w / 2, projectile.y + projectile.h / 2);
+  }
+  dinoCtx.restore();
+}
+
 function drawDinoBossPlayer() {
   const palette = getDinoSkinPalette();
   dinoCtx.save();
@@ -4682,7 +4812,7 @@ function drawDinoBossHud() {
   dinoCtx.fillText(dinoBossFight.name, dW / 2, 32);
   dinoCtx.font = "bold 13px Tahoma";
   dinoCtx.fillStyle = "#475569";
-  dinoCtx.fillText("Z ปาลูกอม | X เถียงอย่างสุภาพ | C ใจเย็น | A/D หรือ ←/→ ขยับ", dW / 2, 56);
+  dinoCtx.fillText("Z ยิงลูกอม | X ยิงคำชี้แจง | C ใจเย็น | A/D หรือ ←/→ ขยับ", dW / 2, 56);
   dinoCtx.restore();
   drawDinoBossBar(28, 82, 320, 14, dinoBossFight.hp, dinoBossFight.maxHp, "#ef4444", "Boss HP");
   drawDinoBossBar(dW - 348, 82, 150, 12, dinoBossPlayer.hp, dinoBossPlayer.maxHp, "#22c55e", "ใจ");
@@ -4716,7 +4846,9 @@ function renderDinoBossFight() {
     return;
   }
 
+  drawDinoBossEnemy();
   drawDinoBossProjectiles();
+  drawDinoBossPlayerProjectiles();
   drawDinoBossPlayer();
 
   if (dinoState === "bossWin") {

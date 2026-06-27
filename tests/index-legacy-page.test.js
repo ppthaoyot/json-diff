@@ -15,8 +15,8 @@ test("legacy index uses an in-page minigame tab again", () => {
 test("legacy Office Dino shows mini boss keyboard hints", () => {
   const html = fs.readFileSync(indexPath, "utf8");
 
-  assert.match(html, /Z\s*ปาลูกอม/i);
-  assert.match(html, /X\s*เถียงอย่างสุภาพ/i);
+  assert.match(html, /Z\s*ยิงลูกอม/i);
+  assert.match(html, /X\s*ยิงคำชี้แจง/i);
   assert.match(html, /C\s*ใจเย็น/i);
 });
 

@@ -148,6 +148,8 @@ function loadDinoHarness() {
             dinoTriggeredBossScores: typeof dinoTriggeredBossScores !== "undefined" ? Array.from(dinoTriggeredBossScores) : [],
             dinoBossFight: typeof dinoBossFight === "object" && dinoBossFight ? Object.assign({}, dinoBossFight) : null,
             dinoBossProjectiles: typeof dinoBossProjectiles !== "undefined" ? dinoBossProjectiles.map(function(projectile) { return Object.assign({}, projectile); }) : [],
+            dinoBossPlayerProjectiles: typeof dinoBossPlayerProjectiles !== "undefined" ? dinoBossPlayerProjectiles.map(function(projectile) { return Object.assign({}, projectile); }) : [],
+            dinoBossEnemy: typeof dinoBossEnemy === "object" && dinoBossEnemy ? Object.assign({}, dinoBossEnemy) : null,
             dinoBossPlayer: typeof dinoBossPlayer === "object" && dinoBossPlayer ? Object.assign({}, dinoBossPlayer) : null,
             dinoBossTriggeredScores: typeof dinoBossTriggeredScores !== "undefined" ? Array.from(dinoBossTriggeredScores) : [],
             dinoPlayer: Object.assign({}, dinoPlayer),
@@ -173,6 +175,8 @@ function loadDinoHarness() {
           if (Array.isArray(next.dinoTriggeredBossScores)) dinoTriggeredBossScores = new Set(next.dinoTriggeredBossScores);
           if (next.dinoBossFight !== undefined) dinoBossFight = next.dinoBossFight;
           if (Array.isArray(next.dinoBossProjectiles)) dinoBossProjectiles = next.dinoBossProjectiles.map(function(projectile) { return Object.assign({}, projectile); });
+          if (Array.isArray(next.dinoBossPlayerProjectiles)) dinoBossPlayerProjectiles = next.dinoBossPlayerProjectiles.map(function(projectile) { return Object.assign({}, projectile); });
+          if (next.dinoBossEnemy !== undefined) dinoBossEnemy = next.dinoBossEnemy ? Object.assign({}, next.dinoBossEnemy) : null;
           if (next.dinoBossPlayer && typeof dinoBossPlayer === "object") Object.assign(dinoBossPlayer, next.dinoBossPlayer);
           if (Array.isArray(next.dinoBossTriggeredScores)) dinoBossTriggeredScores = new Set(next.dinoBossTriggeredScores);
           if (typeof next.dinoCurrentPlayerName === "string") dinoCurrentPlayerName = next.dinoCurrentPlayerName;
@@ -823,6 +827,9 @@ test("mini boss intro advances to a playable fight and blocks runner obstacle sp
   assert.equal(state.dinoState, "bossFight");
   assert.equal(state.dinoObstacles.length, 0);
   assert.equal(state.dinoBossPlayer.hp, state.dinoBossPlayer.maxHp);
+  assert.ok(state.dinoBossEnemy);
+  assert.ok(state.dinoBossEnemy.w > 0);
+  assert.ok(state.dinoBossEnemy.h > 0);
 });
 
 test("mini boss fight spawns falling work cards that can hurt the boss player", () => {
@@ -859,7 +866,42 @@ test("mini boss fight spawns falling work cards that can hurt the boss player", 
   assert.equal(state.dinoBossProjectiles.length, 0);
 });
 
-test("mini boss actions Z X C damage, slow, calm, and protect the player", () => {
+test("mini boss enemy patrols left and right during the fight", () => {
+  const { api } = loadDinoHarness();
+  api.resetDinoGame();
+  api.setState({
+    dinoState: "bossFight",
+    dinoBossFight: {
+      checkpointScore: 5000,
+      name: "PM boss",
+      hp: 60,
+      maxHp: 60,
+      projectileTimer: 999,
+      projectileInterval: 40,
+      projectileSpeed: 4,
+      enemySpeed: 2,
+      attacks: ["work"],
+      introText: "follow up",
+      defeatedText: "break"
+    },
+    dinoBossEnemy: { x: 420, y: 112, w: 96, h: 54, vx: 2, minX: 80, maxX: 720 }
+  });
+
+  api.updateDino();
+  let state = api.getState();
+  assert.equal(state.dinoBossEnemy.x, 422);
+
+  api.setState({
+    dinoBossEnemy: { x: 720, y: 112, w: 96, h: 54, vx: 2, minX: 80, maxX: 720 }
+  });
+  api.updateDino();
+  state = api.getState();
+
+  assert.equal(state.dinoBossEnemy.x, 720);
+  assert.ok(state.dinoBossEnemy.vx < 0);
+});
+
+test("mini boss actions Z X create shots while C calms the player", () => {
   const { api } = loadDinoHarness();
   api.resetDinoGame();
   api.setState({
@@ -876,23 +918,78 @@ test("mini boss actions Z X C damage, slow, calm, and protect the player", () =>
       introText: "ตามงานหน่อย",
       defeatedText: "พักก่อน"
     },
-    dinoBossPlayer: { hp: 5, maxHp: 5, stress: 50, invincibleTime: 0, projectileSlowTimer: 0 }
+    dinoBossEnemy: { x: 420, y: 112, w: 96, h: 54, vx: 0, minX: 80, maxX: 720 },
+    dinoBossPlayer: { x: 420, y: 205, w: 46, h: 54, hp: 5, maxHp: 5, stress: 50, invincibleTime: 0, projectileSlowTimer: 0, candyCooldown: 0, argueCooldown: 0, calmCooldown: 0 },
+    dinoBossPlayerProjectiles: []
   });
 
   api.useDinoBossAction("candy");
   let state = api.getState();
-  assert.ok(state.dinoBossFight.hp < 60);
-  const afterCandyHp = state.dinoBossFight.hp;
+  assert.equal(state.dinoBossFight.hp, 60);
+  assert.equal(state.dinoBossPlayerProjectiles.length, 1);
+  assert.equal(state.dinoBossPlayerProjectiles[0].kind, "candy");
+  const candyDamage = state.dinoBossPlayerProjectiles[0].damage;
+  const candyY = state.dinoBossPlayerProjectiles[0].y;
 
+  api.updateDino();
+  state = api.getState();
+  assert.ok(state.dinoBossPlayerProjectiles[0].y < candyY);
+
+  api.setState({ dinoBossPlayer: { argueCooldown: 0 }, dinoBossPlayerProjectiles: [] });
   api.useDinoBossAction("argue");
   state = api.getState();
-  assert.ok(state.dinoBossFight.hp < afterCandyHp - 1);
+  assert.equal(state.dinoBossFight.hp, 60);
+  assert.equal(state.dinoBossPlayerProjectiles.length, 1);
+  assert.equal(state.dinoBossPlayerProjectiles[0].kind, "argue");
+  assert.ok(state.dinoBossPlayerProjectiles[0].damage > candyDamage);
   assert.ok(state.dinoBossPlayer.projectileSlowTimer > 0);
 
   api.useDinoBossAction("calm");
   state = api.getState();
   assert.ok(state.dinoBossPlayer.stress < 50);
   assert.ok(state.dinoBossPlayer.invincibleTime > 0);
+});
+
+test("mini boss player shots only damage the boss when they hit the moving target", () => {
+  const { api } = loadDinoHarness();
+  api.resetDinoGame();
+  api.setState({
+    dinoState: "bossFight",
+    dinoBossFight: {
+      checkpointScore: 5000,
+      name: "PM boss",
+      hp: 60,
+      maxHp: 60,
+      projectileTimer: 999,
+      projectileInterval: 40,
+      projectileSpeed: 4,
+      enemySpeed: 0,
+      attacks: ["work"],
+      introText: "follow up",
+      defeatedText: "break"
+    },
+    dinoBossEnemy: { x: 420, y: 112, w: 96, h: 54, vx: 0, minX: 80, maxX: 720 },
+    dinoBossPlayerProjectiles: [
+      { kind: "candy", x: 450, y: 130, w: 12, h: 18, speed: 8, damage: 6, label: "candy", color: "#f59e0b" }
+    ]
+  });
+
+  api.updateDino();
+  let state = api.getState();
+  assert.equal(state.dinoBossFight.hp, 54);
+  assert.equal(state.dinoBossPlayerProjectiles.length, 0);
+
+  api.setState({
+    dinoBossFight: Object.assign({}, state.dinoBossFight, { hp: 54 }),
+    dinoBossPlayerProjectiles: [
+      { kind: "candy", x: 80, y: -20, w: 12, h: 18, speed: 8, damage: 6, label: "candy", color: "#f59e0b" }
+    ]
+  });
+  api.updateDino();
+  state = api.getState();
+
+  assert.equal(state.dinoBossFight.hp, 54);
+  assert.equal(state.dinoBossPlayerProjectiles.length, 0);
 });
 
 test("mini boss defeat shows a win state then returns to runner without retriggering", () => {
@@ -917,10 +1014,18 @@ test("mini boss defeat shows a win state then returns to runner without retrigge
     dinoBossProjectiles: [{ x: 100, y: 100, w: 42, h: 42, label: "งานถาโถม", speed: 5 }]
   });
 
-  api.useDinoBossAction("candy");
+  api.setState({
+    dinoBossEnemy: { x: 420, y: 112, w: 96, h: 54, vx: 0, minX: 80, maxX: 720 },
+    dinoBossPlayerProjectiles: [
+      { kind: "candy", x: 450, y: 130, w: 12, h: 18, speed: 8, damage: 6, label: "candy", color: "#f59e0b" }
+    ]
+  });
+
+  api.updateDino();
   let state = api.getState();
   assert.equal(state.dinoState, "bossWin");
   assert.equal(state.dinoBossProjectiles.length, 0);
+  assert.equal(state.dinoBossPlayerProjectiles.length, 0);
 
   for (let i = 0; i < 95; i++) api.updateDino();
   state = api.getState();
